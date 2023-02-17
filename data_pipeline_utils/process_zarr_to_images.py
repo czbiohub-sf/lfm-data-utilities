@@ -10,7 +10,7 @@ from pathlib import Path
 from utils import multiprocess_directory_work
 
 
-""" See Data_Pipeline.md in this directory
+""" See README.md in this directory
 
 This does part '1' of the "Operations on the data"
 """
