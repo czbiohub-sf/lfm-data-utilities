@@ -2,7 +2,11 @@
 
 We will use [Label Studio](https://labelstud.io/) for human annotation. Install it from YOGO's root directory like so:
 
-`python3 -m pip install ".[label]"`
+```console
+git clone https://github.com/czbiohub/yogo.git
+cd yogo
+python3 -m pip install ".[label]"
+```
 
 ## Annotating
 
@@ -56,4 +60,4 @@ Now, run the following, substituting in the project ID and the auth token
 curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=YOLO" -H "Authorization: Token <paste the Auth. token here>" --output annotations.zip
 ```
 
-Send that folder to Axel. Thank you!
+Send that folder to Axel, with information about your labelling (which folders you labelled, how many images did you label, e.t.c.). Thank you! We are still working through the process, so also let us know what was annoying, and keep in mind that things may change.
