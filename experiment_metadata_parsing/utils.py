@@ -1,6 +1,9 @@
 from typing import List, Dict
 from pathlib import Path
 from csv import DictReader
+from multiprocessing import Pool
+
+from tqdm import tqdm
 
 
 def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
@@ -15,6 +18,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     -------
     List[Path]
     """
+
     return sorted(Path(top_level_dir).glob("**/*perimage*.csv"))
 
 
@@ -30,6 +34,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     -------
     List[Path]
     """
+
     return sorted(Path(top_level_dir).glob("**/*exp*.csv"))
 
 
@@ -45,6 +50,7 @@ def parse_csv(filepath: str) -> Dict:
     -------
     Dict
     """
+
     d = {}
     with open(filepath) as csvfile:
         reader = DictReader(csvfile)
@@ -52,3 +58,21 @@ def parse_csv(filepath: str) -> Dict:
             for key in row.keys():
                 d.setdefault(key, []).append(row[key])
     return d
+
+
+def multiprocess_parse_csv(filepaths: List[Path]) -> List[Dict]:
+    """Wraps parse_csv with multiprocessing. Takes a list of filepaths to load.
+
+    Parameters
+    ----------
+    filepaths: List[str]
+
+    Returns
+    -------
+    List[Tuple[Dict]]
+        A list of dictionaries mapping columns to a list of their values
+    """
+
+    with Pool() as pool:
+        data = list(tqdm(pool.imap(parse_csv, filepaths), total=len(filepaths)))
+    return data
