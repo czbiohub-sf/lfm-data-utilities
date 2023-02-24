@@ -68,13 +68,23 @@ http://localhost:8080/projects/13/data?tab=9&task=2
                                ^^ "13" is the project id
 ```
 
-Now, run the following, substituting in the project ID and the auth token
+Now, depending on the export format, run the following, substituting in the project ID and the auth token.
+
+### Exporting labels for YOGO
+
+When exporting for training (i.e. you've completed labelling the entire batch of images), use the following command:
 
 ```console
 curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=YOLO&download_resources=false" -H "Authorization: Token <paste the Auth. token here>" --output annotations.zip
 ```
 
 Send that folder to Axel. Thank you!
+
+### Exporting `tasks.json` for further labelling or review
+
+```console
+curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=JSON&download_resources=false" -H "Authorization: Token <paste the Auth. token here>" --output annotations.zip
+```
 
 ## Troubleshooting
 
