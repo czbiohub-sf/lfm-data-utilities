@@ -164,5 +164,5 @@ if __name__ == "__main__":
     gen_labels(path_to_runset)
     try:
         generate_tasks_for_runset(path_to_runset)
-    except ValueError as v:
+    except ValueError:
         print(f"no images and labels found; cant' generate tasks: {path_to_runset}")
