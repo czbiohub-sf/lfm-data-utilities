@@ -25,27 +25,29 @@ def plot_valid_frame_histograms(path, title):
     metadata_files = get_list_of_per_image_metadata_files(path)
     print(f"{len(metadata_files)} per image metadata files found", flush=True)
 
-    valid_focus_counts = []
-    total_focus_counts = []
-
+    valid_focus_percs = []
     valid_flowrate_percs = []
 
+    # Get % good frames for each dataset
     for i in tqdm (range (len(metadata_files)), desc="Loading..."):
         file = metadata_files[i]
         data = load_csv(file)
 
         if  bool(data) and int(data["im_counter"][-1]) >= IMCOUNT_TARGET:
-            valid_focus_count, total_focus_count = count_valid_focus_frames(data["focus_error"])
-            valid_focus_counts.append(valid_focus_count)
-            total_focus_counts.append(total_focus_count)
+            valid_focus_perc = count_valid_focus_frames(data["focus_error"])
+            valid_focus_percs.append(valid_focus_perc)
 
             valid_flowrate_perc = count_valid_flowrate_frames(data["flowrate"], file)
             valid_flowrate_percs.append(valid_flowrate_perc)
 
-    valid_focus_histogram, focus_bin_edges = np.histogram(valid_focus_counts, bins=20)
+    # Filter out nan
+    filtered_valid_focus_percs = [val for val in valid_focus_percs if not np.isnan(val)]
+    filtered_valid_flowrate_percs = [val for val in valid_flowrate_percs if not np.isnan(val)]
+
+
+    valid_focus_histogram, focus_bin_edges = np.histogram(filtered_valid_focus_percs, bins=20)
     focus_bin_centers = [(a + b) / 2 for a, b in zip(focus_bin_edges[0:-1], focus_bin_edges[1:])]
 
-    filtered_valid_flowrate_percs = [val for val in valid_flowrate_percs if not np.isnan(val)]
     valid_flowrate_histogram, flowrate_bin_edges = np.histogram(filtered_valid_flowrate_percs, bins=20)
     flowrate_bin_centers = [(a + b) / 2 for a, b in zip(flowrate_bin_edges[0:-1], flowrate_bin_edges[1:])]
 
@@ -56,11 +58,11 @@ def plot_valid_frame_histograms(path, title):
 
     fig.suptitle(title)
     axs[0].set_title(f"Focus within range {MIN_FOCUS_TARGET, MAX_FOCUS_TARGET} steps")
-    axs[0].set_xlabel(f"# valid frames out of {int(np.mean(total_focus_counts))} focus measurements")
+    axs[0].set_xlabel("% valid frames out of all focus measurements")
     axs[0].set_ylabel("Number of datasets")
 
     axs[1].set_title(f"Flowrate within range {MIN_FLOWRATE_TARGET, MAX_FLOWRATE_TARGET} FoVs / sec")
-    axs[1].set_xlabel(f"% valid frames out of all flowrate measurements")
+    axs[1].set_xlabel("% valid frames out of all flowrate measurements")
     axs[1].set_ylabel("Number of datasets")
 
     plt.show()
@@ -81,8 +83,7 @@ def count_valid_focus_frames(focus_data):
         else:
             ready = True
             
-    return good, total
-
+    return good / total * 100
 
 def count_valid_flowrate_frames(data, file):
     good = sum(1 for val in data if val != "" and MIN_FLOWRATE_TARGET < float(val) < MAX_FLOWRATE_TARGET)
