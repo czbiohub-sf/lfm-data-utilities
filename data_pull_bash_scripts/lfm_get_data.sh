@@ -24,8 +24,8 @@ echo "What is the port? (e.g 18434)"
 read -p "> " port
 
 echo "Where are files stored on the pi? (press enter to use the default)"
-read -p "> [default:/media/pi/SamsungSSD]: " storage_loc
-storage_loc=${storage_loc:-"/media/pi/SamsungSSD"}
+read -p "> [default:/media/pi/SamsungSSD/]: " storage_loc
+storage_loc=${storage_loc:-"/media/pi/SamsungSSD/"}
 echo "Will search: "$storage_loc""
 
 echo "Where do you want to store the files? (press enter to use the default)"
