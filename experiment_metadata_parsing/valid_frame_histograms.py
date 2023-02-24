@@ -9,7 +9,7 @@ from time import perf_counter
 from utils import (
     get_list_of_per_image_metadata_files,
     get_list_of_experiment_level_metadata_files,
-    parse_csv,
+    load_csv,
 )
 from constants import (
     IMCOUNT_TARGET,
@@ -32,7 +32,7 @@ def plot_valid_frame_histograms(path, title):
 
     for i in tqdm (range (len(metadata_files)), desc="Loading..."):
         file = metadata_files[i]
-        data = parse_csv(file)
+        data = load_csv(file)
 
         if  bool(data) and int(data["im_counter"][-1]) >= IMCOUNT_TARGET:
             valid_focus_count, total_focus_count = count_valid_focus_frames(data["focus_error"])
