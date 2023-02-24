@@ -2,7 +2,7 @@
 
 
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union
 from urllib.request import pathname2url
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
@@ -58,7 +58,7 @@ def generate_tasks_for_runset(path_to_runset_folder: Path):
 
     if len(folders) == 0:
         raise ValueError(
-            f"couldn't find labels and images - double check the provided path"
+            "couldn't find labels and images - double check the provided path"
         )
 
     for folder_path in tqdm(folders):
