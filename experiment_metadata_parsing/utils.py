@@ -38,7 +38,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     return sorted(Path(top_level_dir).glob("**/*exp*.csv"))
 
 
-def parse_csv(filepath: str) -> Dict:
+def load_csv(filepath: str) -> Dict:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
 
     Parameters
@@ -60,7 +60,7 @@ def parse_csv(filepath: str) -> Dict:
     return d
 
 
-def multiprocess_parse_csv(filepaths: List[Path]) -> List[Dict]:
+def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
     """Wraps parse_csv with multiprocessing. Takes a list of filepaths to load.
 
     Parameters
@@ -74,5 +74,5 @@ def multiprocess_parse_csv(filepaths: List[Path]) -> List[Dict]:
     """
 
     with Pool() as pool:
-        data = list(tqdm(pool.imap(parse_csv, filepaths), total=len(filepaths)))
+        data = list(tqdm(pool.imap(load_csv, filepaths), total=len(filepaths)))
     return data
