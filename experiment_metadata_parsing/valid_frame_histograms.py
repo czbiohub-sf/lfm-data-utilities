@@ -2,6 +2,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+from tqdm import tqdm
+from time import perf_counter
+
 from utils import (
     get_list_of_per_image_metadata_files,
     get_list_of_experiment_level_metadata_files,
@@ -19,56 +23,77 @@ from constants import (
 def plot_valid_frame_histograms(path, title):
 
     metadata_files = get_list_of_per_image_metadata_files(path)
-    print(f"{len(metadata_files)} per image metadata files found")
+    print(f"{len(metadata_files)} per image metadata files found", flush=True)
 
-    histogram_keys = {"focus", "flowrate"}
-    valid_frame_counts = dict.fromkeys(histogram_keys, [])
+    valid_focus_counts = []
+    total_focus_counts = []
 
-    for file in metadata_files:
+    valid_flowrate_percs = []
+
+    for i in tqdm (range (len(metadata_files)), desc="Loading..."):
+        file = metadata_files[i]
         data = parse_csv(file)
+
         if  bool(data) and int(data["im_counter"][-1]) >= IMCOUNT_TARGET:
-            valid_frame_counts["focus"].append(count_valid_focus_frames(data["focus_error"]))
-            valid_frame_counts["flowrate"].append(count_valid_focus_frames(data["flowrate"]))
+            valid_focus_count, total_focus_count = count_valid_focus_frames(data["focus_error"])
+            valid_focus_counts.append(valid_focus_count)
+            total_focus_counts.append(total_focus_count)
 
-    print(valid_frame_counts)
+            valid_flowrate_perc = count_valid_flowrate_frames(data["flowrate"], file)
+            valid_flowrate_percs.append(valid_flowrate_perc)
 
-    valid_focus_histogram, focus_bin_edges = np.histogram(valid_frame_counts["focus"], bins=20)
+    valid_focus_histogram, focus_bin_edges = np.histogram(valid_focus_counts, bins=20)
     focus_bin_centers = [(a + b) / 2 for a, b in zip(focus_bin_edges[0:-1], focus_bin_edges[1:])]
 
-    valid_flowrate_histogram, flowrate_bin_edges = np.histogram(valid_frame_counts["focus"], bins=20)
+    filtered_valid_flowrate_percs = [val for val in valid_flowrate_percs if not np.isnan(val)]
+    valid_flowrate_histogram, flowrate_bin_edges = np.histogram(filtered_valid_flowrate_percs, bins=20)
     flowrate_bin_centers = [(a + b) / 2 for a, b in zip(flowrate_bin_edges[0:-1], flowrate_bin_edges[1:])]
 
-    # Creating histogram
     fig, axs = plt.subplots(ncols=2, nrows=1, figsize =(10, 7))
 
-    axs[0].bar(focus_bin_centers, valid_focus_histogram, width=100)
-    axs[1].bar(flowrate_bin_centers, valid_flowrate_histogram, width=100)
+    axs[0].bar(focus_bin_centers, valid_focus_histogram)
+    axs[1].bar(flowrate_bin_centers, valid_flowrate_histogram)
 
     fig.suptitle(title)
     axs[0].set_title(f"Focus within range {MIN_FOCUS_TARGET, MAX_FOCUS_TARGET} steps")
-    axs[1].set_title(f"Flowrate within range {MIN_FLOWRATE_TARGET, MAX_FLOWRATE_TARGET} FoVs / sec")
+    axs[0].set_xlabel(f"# valid frames out of {int(np.mean(total_focus_counts))} focus measurements")
+    axs[0].set_ylabel("Number of datasets")
 
-    # Show plot
+    axs[1].set_title(f"Flowrate within range {MIN_FLOWRATE_TARGET, MAX_FLOWRATE_TARGET} FoVs / sec")
+    axs[1].set_xlabel(f"% valid frames out of all flowrate measurements")
+    axs[1].set_ylabel("Number of datasets")
+
     plt.show()
 
-def count_valid_focus_frames(data):
-    # empty = 0
-    # good = 0
-    # bad = 0
-    # for val in data:
-    #     if bool(val):
-    #         empty += 1
-    #     elif MIN_FOCUS_TARGET < int(val) < MAX_FOCUS_TARGET:
-    #         good += 1
-    #     else:
-    #         bad += 1
+def count_valid_focus_frames(focus_data):
+    ready = True
 
-    # print(f"EMPTY {empty} GOOD {good} BAD {bad}")
+    good = 0
+    total = 0
 
-    return sum(1 for val in data if val != "" and MIN_FOCUS_TARGET < int(val) < MAX_FOCUS_TARGET)
+    for focus_val in focus_data:
+        if focus_val:
+            if ready:
+                ready = False
+                total += 1
+                if MIN_FOCUS_TARGET < float(focus_val) < MAX_FOCUS_TARGET:
+                    good += 1
+        else:
+            ready = True
+            
+    return good, total
 
-def count_valid_flowrate_frames(data):
-    return sum(1 for val in data if val != "" and MIN_FLOWRATE_TARGET < float(val) < MAX_FLOWRATE_TARGET)
+
+def count_valid_flowrate_frames(data, file):
+    good = sum(1 for val in data if val != "" and MIN_FLOWRATE_TARGET < float(val) < MAX_FLOWRATE_TARGET)
+    total = sum(1 for val in data if val != "")
+
+    if total == 0:
+        print(f"No flowrate measurements for {file}")
+        return np.nan
+
+    return good / total * 100
+
 
 if __name__ == "__main__":
     try:
