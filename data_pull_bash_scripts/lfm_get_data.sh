@@ -28,7 +28,7 @@ read -p "> [default:/media/pi/SamsungSSD]: " storage_loc
 storage_loc=${storage_loc:-"/media/pi/SamsungSSD"}
 echo "Will search: "$storage_loc""
 
-echo "Where do you want to storage the files? (press enter to use the default)"
+echo "Where do you want to store the files? (press enter to use the default)"
 read -p "> [default:'.']: " local_save_loc
 local_save_loc=${local_save_loc:-"."}
 
