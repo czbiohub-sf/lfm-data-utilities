@@ -29,7 +29,7 @@ We will use [Label Studio](https://labelstud.io/) for human annotation. First, i
     </RectangleLabels>
 </View>
 ```
-  - Go to the "Data Import" tab, click "Upload Files", and import the `tasks.json` in the run folder that you are annotating. It will be somewhere in `scope-parasite-data/run-sets`.
+  - Go to the "Data Import" tab, click "Upload Files", and import the `tasks.json` in the run folder that you are annotating. It will be somewhere in `.../scope-parasite-data/run-sets`. **Note**: If this fails (e.g "too many SQL variables") - try creating the project _without_ doing this "Data Import" step. Then, once the project has been created, upload the data after.
   - Click "Save"
 
 and you are ready to annotate!
@@ -61,3 +61,11 @@ Send that folder to Axel. Thank you!
 ### "Package Not Found" during installation
 
 If your `pip` version is really low (e.g. version 9), try `python3 -m pip install --upgrade pip`. This could also be a sign of your python version being quite low (which occurs, e.g., with a base `conda` environment). Double check with `python3 --version`. It should be at least python 3.7.
+
+### "error: unrecognized arguments: Scope/scope-parasite-data/run-sets"
+
+You need to either quote the entire path, or escape the space in "LFM Scope". For example, try
+
+`".../LFM Scope/scope-parasite-data"` or `.../LFM\ Scope/scope-parasite-data`
+
+They're equivalent, pick your poison.

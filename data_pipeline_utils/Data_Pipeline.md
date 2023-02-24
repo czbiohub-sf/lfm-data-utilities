@@ -1,6 +1,6 @@
 # Data Pipeline
 
-Having a clear, reproducable, and understandable data pipeline is absolutely necessary if we would like to maintain our sanity + scientific rigour. Here is the framework that I am using for our specific scenario (lots of "little" datasets, many various run conditions, e.t.c.).
+Having a clear, reproducible, and understandable data pipeline is absolutely necessary if we would like to maintain our sanity + scientific rigour. Here is the framework that I am using for our specific scenario (lots of "little" datasets, many various run conditions, e.t.c.).
 
 ## Initial Data Formatting and Annotation
 
@@ -8,7 +8,7 @@ Data from the scope is collected to `Annotated Datasets and model training` / `4
 
 - Runs are grouped together in folders, e.g. `2022-12-14-111221-Aditi-parasites`
 - These runs are in folders specifying the chip, e.g. `2022-12-13-122015__chip0562-A4_F`
-- These runs have a [Zarrfile](https://zarr.readthedocs.io/en/stable/) storing the images, along with metadata, and subsample of images from the run. Example
+- These runs have a [Zarrfile](https://zarr.readthedocs.io/en/stable/) storing the images (as a single multidimensional array), along with metadata, and subsample of images (as .pngs) from the run. Example
 
 ``` console
 run-sets
