@@ -37,7 +37,7 @@ python3 -m pip install label-studio
         toName="image"
         canRotate="false"
         strokeWidth="3"
-        opacity=".1"
+        opacity=".0"
     >
         <Label value="healthy" background="rgba(200, 255, 200, 1)" />
         <Label value="ring" background="rgba(250, 100, 150, 1)" />
