@@ -9,6 +9,7 @@ from time import perf_counter
 from utils import (
     get_list_of_per_image_metadata_files,
     get_list_of_experiment_level_metadata_files,
+    multiprocess_load_csv,
     load_csv,
 )
 from constants import (
@@ -28,10 +29,11 @@ def plot_valid_frame_histograms(path, title):
     valid_focus_percs = []
     valid_flowrate_percs = []
 
-    # Get % good frames for each dataset
-    for i in tqdm (range (len(metadata_files)), desc="Loading..."):
+    all_datasets = multiprocess_load_csv(metadata_files)
+
+    for i in tqdm (range (len(metadata_files)), desc="Processing..."):
         file = metadata_files[i]
-        data = load_csv(file)
+        data = all_datasets[i]
 
         if  bool(data) and int(data["im_counter"][-1]) >= IMCOUNT_TARGET:
             valid_focus_perc = count_valid_focus_frames(data["focus_error"])
