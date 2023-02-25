@@ -65,6 +65,8 @@ def load_csv(filepath: str) -> Dict:
     Returns
     -------
     Dict
+        Nested dictionary - filename to dictionary (the inner dictionary maps csv column headers to lists of values, all of which are strings)
+        If the value you are interested in is a float/int, you'll need to loop through the inner dictionary's lists and do the appropriate type casting.
     """
 
     d = {}
@@ -73,7 +75,29 @@ def load_csv(filepath: str) -> Dict:
         for row in reader:
             for key in row.keys():
                 d.setdefault(key, []).append(row[key])
-    return d
+
+    return {"filepath": filepath, "vals": d}
+
+
+def load_log_file(filepath: str) -> Dict:
+    """Get lines, split by newlines, from the log file
+
+    Parameters
+    ----------
+    filepath : str
+        Path of log file
+
+    Returns
+    -------
+    Dict
+        A dictionary mapping filename to a list of lines from the log file
+    """
+    lines = []
+
+    with open(filepath) as f:
+        lines = f.read().splitlines()
+
+    return {"filepath": filepath, "vals": lines}
 
 
 def multiprocess_load_files(filepaths: List[Path], fn: callable) -> List:
@@ -103,13 +127,17 @@ def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
     Returns
     -------
     List[Dict]
-        A list of dictionaries mapping columns to a list of their values
+        A list of dictionaries mapping columns to a list of their values.
+        The dictionary has two keys:
+        (key, val)
+            "filepath": str
+            "vals": Dict - this inner dictionary is what maps column headers to lists
     """
 
     return multiprocess_load_files(filepaths, load_csv)
 
 
-def multiprocess_load_log(filepaths: List[Path]) -> List[List[str]]:
+def multiprocess_load_log(filepaths: List[Path]) -> List[Dict]:
     """Multiprocess load log files
 
     Parameters
@@ -118,33 +146,14 @@ def multiprocess_load_log(filepaths: List[Path]) -> List[List[str]]:
 
     Returns
     -------
-    List[List[str]]
-        For each file, a list of strings (lines) from that file, separated by newline.
+    List[Dict]
+        A list of dictionaries:
+        (key, val)
+            "filepath": str
+            "vals": List[str] - this is where the log file lines are stored (separated by newline)
     """
 
     return multiprocess_load_files(filepaths, load_log_file)
-
-
-def load_log_file(filepath: str) -> List[str]:
-    """Get lines, split by newlines, from the log file
-
-    Parameters
-    ----------
-    filepath : str
-        Path of log file
-
-    Returns
-    -------
-    List[str]
-        List of lines from the log file
-    """
-
-    lines = []
-
-    with open(filepath) as f:
-        lines = f.read().splitlines()
-
-    return lines
 
 
 def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
