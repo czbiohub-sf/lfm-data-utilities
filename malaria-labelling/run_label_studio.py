@@ -10,7 +10,6 @@ from multiprocessing import Process
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from labelling_constants import FLEXO_DATA_DIR, IMAGE_SERVER_PORT
-from generate_labelstudio_tasks import generate_tasks_for_runset
 
 
 try:

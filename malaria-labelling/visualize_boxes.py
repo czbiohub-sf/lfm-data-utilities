@@ -8,8 +8,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Iterable, Tuple, List
 
-from yogo.utils import draw_rects
-from yogo.dataloader import load_labels_from_path, read_grayscale
+try:
+    from yogo.utils import draw_rects
+    from yogo.dataloader import load_labels_from_path, read_grayscale
+except ImportError:
+    print("you need YOGO for box visualization. Install at github.com/czbiohub/yogo")
+    sys.exit(1)
 
 from labelling_constants import CLASSES
 
