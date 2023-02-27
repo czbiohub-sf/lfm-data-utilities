@@ -68,7 +68,7 @@ http://localhost:8080/projects/13/data?tab=9&task=2
                                ^^ "13" is the project id
 ```
 
-Now, depending on the export format, run the following, substituting in the project ID and the auth token.
+Now, depending on the export format, run the following in a *new terminal*, substituting in the project ID and the auth token.
 
 ### Exporting labels for YOGO
 
