@@ -2,9 +2,25 @@
 
 We will use [Label Studio](https://labelstud.io/) for human annotation.
 
+## Preparation
+
+### Python
+
+Use `python3.9`. You can check your specific Python version with
+
+```console
+python3 --version
+```
+
+You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/). 
+
+**Remeber to always invoke the scripts with `python3.9` instead of `python3`**.
+
+You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky.
+
 ### Installation for Annotations
 
-To perform annotations, you will need [Label Studio](https://labelstud.io/). You can install it with
+To perform annotations, you will need [Label Studio](https://labelstud.io/). I suggest using a [virtual environment](https://docs.python.org/3/library/venv.html). You can install it with
 
 ```console
 python3 -m pip install -r requirements.txt
