@@ -12,15 +12,13 @@ Use `python3.9`. You can check your specific Python version with
 python3 --version
 ```
 
-You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/). 
+If you get `Python 3.9.*`, everything is good! Move on to **Installation for Annotations**.
 
-**Remeber to always invoke the scripts with `python3.9` instead of `python3`**.
-
-You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky.
+You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/). **Remeber to always invoke the scripts with `python3.9` instead of `python3`**. You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky.
 
 ### Installation for Annotations
 
-To perform annotations, you will need [Label Studio](https://labelstud.io/). I suggest using a [virtual environment](https://docs.python.org/3/library/venv.html). You can install it with
+To perform annotations, you will need [Label Studio](https://labelstud.io/). I suggest using a [virtual environment](https://docs.python.org/3/library/venv.html). You can install Label Studio with
 
 ```console
 python3 -m pip install -r requirements.txt
@@ -58,7 +56,7 @@ python3 -m pip install label-studio
         <Label value="healthy" background="rgba(200, 255, 200, 1)" />
         <Label value="ring" background="rgba(250, 100, 150, 1)" />
         <Label value="trophozoite" background="rgba(255, 220, 200, 1)" />
-        <Label value="schizont" background="rgba(255, 180, 100, 1)" />
+        <Label value="schizont" background="rgba(100, 180, 255, 1)" />
         <Label value="gametocyte" background="rgba(255, 200, 255, 1)" />
         <Label value="wbc" background="rgba(200, 250, 255, 1)" />
         <Label value="misc" background="rgba(100, 100, 100, 1)" />
