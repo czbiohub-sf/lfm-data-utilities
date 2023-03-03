@@ -26,7 +26,7 @@ python3 -m pip install -r requirements.txt
 
 If you are on an M1 Mac, you then need to run
 
-```
+```console
 brew install heartexlabs/tap/label-studio
 ```
 
