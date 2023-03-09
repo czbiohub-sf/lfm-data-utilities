@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import allantools
+import sys
 
 
-def ewma_allan_dev(data, title):
+def ewma_allan_dev(data, title, output=None):
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))
     ax_allan = ax[0]
     ax_data = ax[1]
@@ -24,7 +25,6 @@ def ewma_allan_dev(data, title):
         ax_allan.loglog(t2, ad, label=f"alpha={alpha}")
         ax_data.plot(ewma_vals, label=f"alpha={alpha}", alpha=0.5)
 
-
     ax_allan.set_ylabel("Allan deviation")
     ax_allan.set_xlabel("Frame(s)")
     ax_allan.legend()
@@ -33,16 +33,29 @@ def ewma_allan_dev(data, title):
     ax_data.set_xlabel("Frame(s)")
     ax_data.legend()
 
-    # plt.legend()
     plt.suptitle(title)
+
+    if output is not None:
+        plt.savefig(output)
+
     plt.show()
 
 
 if __name__ == "__main__":
 
-    filename = "C:\\Users\\michelle.khoo\\Documents\\allan_results\\nomax1"
-    title = "Ohmu: 2023-03-03-130225"
+    num_inputs = len(sys.argv)
 
+    if num_inputs == 1:
+        raise ValueError("Expected a txt target file containing all datapoints delimited by newline.")
+    elif num_inputs > 4:
+        raise ValueError("Too many arguments")
+
+    filename = sys.argv[1]
     data = np.genfromtxt(filename, delimiter='\n')
-    
-    ewma_allan_dev(data, title)
+
+    if num_inputs == 2:
+        ewma_allan_dev(data, filename)
+    elif num_inputs == 3:
+        ewma_allan_dev(data, sys.argv[2])
+    elif num_inputs == 4:
+        ewma_allan_dev(data, sys.argv[2], sys.argv[3])
