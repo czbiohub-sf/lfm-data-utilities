@@ -31,12 +31,12 @@ def ewma_allan_dev(data, title, output=None):
     ax_allan.set_xlabel("Frame(s)")
     ax_allan.legend()
 
-    ax_data.set_ylim(-4, 12)
+    ax_data.set_ylim(-4, 28)
     ax_data.set_ylabel("SSAF error [steps]")
     ax_data.set_xlabel("Frame(s)")
     ax_data.legend()
 
-    plt.suptitle(title)
+    plt.suptitle(title + " [STD = {0:.3f}]".format(np.std(data)))
 
     if output is not None:
         plt.savefig(output)
