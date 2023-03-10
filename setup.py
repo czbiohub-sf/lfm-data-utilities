@@ -7,5 +7,5 @@ setup(
     author="CZ Biohub | Bioengineering",
     author_email="paul.lebel@czbiohub.org",
     packages=[],
-    install_requires=["matplotlib>=3.5.3", "tqdm>=4.64.1"],
+    install_requires=["matplotlib>=3.5.3", "tqdm>=4.64.1", "opencv-python>=4.7.0.72"],
 )
