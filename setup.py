@@ -7,5 +7,12 @@ setup(
     author="CZ Biohub | Bioengineering",
     author_email="paul.lebel@czbiohub.org",
     packages=[],
-    install_requires=["matplotlib>=3.5.3", "tqdm>=4.64.1", "opencv-python>=4.7.0.72"],
+    install_requires=[
+        "matplotlib>=3.5.3",
+        "tqdm>=4.64.1",
+        "AllanTools==2019.9",
+        "numpy==1.24.2",
+        "matplotlib==3.7.0",
+        "opencv-python>=4.7.0.72",
+    ],
 )

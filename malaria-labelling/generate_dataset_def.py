@@ -3,7 +3,7 @@
 import sys
 
 from pathlib import Path
-from typing import List, Dict
+from typing import Tuple, List, Dict
 
 from ruamel import yaml
 
@@ -36,17 +36,37 @@ def gen_labels(path_to_runset_folder: Path):
     folders = [Path(p).parent for p in path_to_runset_folder.glob("./**/images")]
 
     dataset_paths: Dict[str, Dict[str, str]] = dict()
+    all_classes = None
 
     for i, folder_path in enumerate(folders):
         # check classes
         images_path = folder_path / "images"
         label_path = folder_path / "labels"
+        classes_path = folder_path / "classes.txt"
 
-        if (not images_path.exists()) or (not label_path.exists()):
+        if not (images_path.exists() and label_path.exists()):
             print(
                 f"WARNING: image path or label path doesn't exist: {images_path}, {label_path}. Continuing..."
             )
             continue
+
+        classes = (
+            class_names_from_classes_dot_txt(classes_path)
+            if classes_path.exists() else CLASSES
+        )
+
+        if all_classes is None:
+            # arbitrarily take the first `classes.txt`
+            # maybe in the future, we convert the
+            # classes.txt, but for now this is OK
+            all_classes = classes
+        elif all_classes != classes:
+            raise ValueError(
+                "found a runset folder that has a `classes.txt` that doesn't match "
+                f"other runset folders; check {folder_path}\n"
+                f"previously found classes: {all_classes}\n"
+                f"classes for this runset folder: {classes}"
+            )
 
         dataset_paths[folder_path.name] = {
             "image_path": str(images_path),
@@ -54,7 +74,7 @@ def gen_labels(path_to_runset_folder: Path):
         }
 
     dataset_defs = {
-        "class_names": CLASSES,
+        "class_names": all_classes,
         "dataset_split_fractions": {"train": 0.75, "test": 0.20, "val": 0.05},
         "dataset_paths": dataset_paths,
     }

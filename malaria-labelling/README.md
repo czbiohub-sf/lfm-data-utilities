@@ -12,15 +12,15 @@ Use `python3.9`. You can check your specific Python version with
 python3 --version
 ```
 
-You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/). 
+If you get `Python 3.9.*`, everything is good! Move on to **Installation for Annotations**.
 
-**Remeber to always invoke the scripts with `python3.9` instead of `python3`**.
+You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/).  You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky. 
 
-You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky.
+You must either make sure that your `python3` executable is `Python 3.9`, or you must **remeber to always invoke the scripts with `python3.9` instead of `python3`**.
 
 ### Installation for Annotations
 
-To perform annotations, you will need [Label Studio](https://labelstud.io/). I suggest using a [virtual environment](https://docs.python.org/3/library/venv.html). You can install it with
+To perform annotations, you will need [Label Studio](https://labelstud.io/). I suggest using a [virtual environment](https://docs.python.org/3/library/venv.html). You can install Label Studio with
 
 ```console
 python3 -m pip install -r requirements.txt
@@ -28,7 +28,7 @@ python3 -m pip install -r requirements.txt
 
 If you are on an M1 Mac, you then need to run
 
-```
+```console
 brew install heartexlabs/tap/label-studio
 ```
 
