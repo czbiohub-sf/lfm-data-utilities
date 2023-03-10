@@ -20,8 +20,7 @@ def super_plotter(data, title, throttle=60, output=None):
     data_plotter(data, ax_allan, ax_data, 1)
     data_plotter(data, ax_throttled_allan, ax_throttled_data, int(throttle))
 
-    print(np.linspace(0.1, 1, 9))
-    halflife_plotter(np.linspace(0.1, 0.9, 9), ax_halflife)
+    halflife_plotter(np.logspace(-2, -1, 50), ax_halflife)
 
     fig.suptitle(title)
     fig.tight_layout()
