@@ -38,15 +38,15 @@ def data_plotter(raw_data, ax_allan, ax_data, throttle):
 
     if throttle > 1:
         xlabel = "Throttled frame(s)"
-        ax_allan.set_title("Unthrottled [STD = {0:.3f}]".format(np.std(data)))
+        ax_allan.set_title("{0} frame throttle [STD = {1:.3f}]".format(throttle, np.std(data)))
         frames = frames * throttle
     else:
         xlabel = "Frame(s)"
-        ax_allan.set_title("{0} frame throttle [STD = {1:.3f}]".format(throttle, np.std(data)))
+        ax_allan.set_title("Unthrottled [STD = {0:.3f}]".format(np.std(data)))
 
     t = np.logspace(0, 3, 50)  # tau values from 1 to 1000
     t2, ad, _, _ = allantools.tdev(data, taus=t)
-    ax_allan.loglog(t2*throttle, ad, label="Unfiltered")
+    ax_allan.loglog(t2, ad, label="Unfiltered")
     ax_data.plot(frames, data, label="Unfiltered", alpha=0.5)
 
     for alpha in [0.01, 0.03, 0.05, 0.1]:
@@ -56,7 +56,7 @@ def data_plotter(raw_data, ax_allan, ax_data, throttle):
             prev_data = prev_data * (1 - alpha) + alpha * j
             ewma_vals.append(prev_data)
         t2, ad, _, _ = allantools.tdev(ewma_vals, taus=t)
-        ax_allan.loglog(t2*throttle, ad, label=f"alpha={alpha}")
+        ax_allan.loglog(t2, ad, label=f"alpha={alpha}")
         ax_data.plot(frames[1:], ewma_vals, label=f"alpha={alpha}", alpha=0.5)
 
     ax_allan.set_ylabel("Allan deviation")
@@ -65,7 +65,7 @@ def data_plotter(raw_data, ax_allan, ax_data, throttle):
 
     ax_data.set_ylim(-4, 28)
     ax_data.set_ylabel("SSAF error [steps]")
-    ax_data.set_xlabel(xlabel)
+    ax_data.set_xlabel("Frame(s)")
     ax_data.legend()
 
 def halflife_plotter(alphas, ax):
