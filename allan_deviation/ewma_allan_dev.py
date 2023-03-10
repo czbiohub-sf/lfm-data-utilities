@@ -10,10 +10,12 @@ def ewma_allan_dev(data, title, output=None):
     ax_allan = ax[0]
     ax_data = ax[1]
 
+    x_vals = np.arange(1,)
+
     t = np.logspace(0, 3, 50)  # tau values from 1 to 1000
     t2, ad, _, _ = allantools.tdev(data, taus=t)
     ax_allan.loglog(t2, ad, label="Unfiltered")
-    ax_data.plot(data, "o", label="Unfiltered", markersize=0.5) 
+    ax_data.plot(data, label="Unfiltered", alpha=0.5)
 
     for alpha in [0.01, 0.05, 0.1]:
         ewma_vals = []
@@ -29,11 +31,12 @@ def ewma_allan_dev(data, title, output=None):
     ax_allan.set_xlabel("Frame(s)")
     ax_allan.legend()
 
+    ax_data.set_ylim(-4, 28)
     ax_data.set_ylabel("SSAF error [steps]")
     ax_data.set_xlabel("Frame(s)")
     ax_data.legend()
 
-    plt.suptitle(title)
+    plt.suptitle(title + " [STD = {0:.3f}]".format(np.std(data)))
 
     if output is not None:
         plt.savefig(output)
