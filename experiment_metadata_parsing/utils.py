@@ -1,6 +1,7 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from pathlib import Path
 from csv import DictReader
+from datetime import datetime
 from multiprocessing import Pool
 
 from tqdm import tqdm
@@ -36,6 +37,133 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     """
 
     return sorted(Path(top_level_dir).glob("**/*exp*.csv"))
+
+
+def get_list_of_oracle_run_folders(top_level_dir: str) -> List[Path]:
+    """Get a list of all the folders created on each oracle run sorted by date.
+
+    Parameters
+    ----------
+    top_level_dir: str
+
+    Returns
+    -------
+    List[Path]
+    """
+
+    tlds = [
+        x
+        for x in Path(top_level_dir).glob("*/")
+        if "logs" not in x.stem and not "." in x.stem and Path.is_dir(x)
+    ]
+
+    return tlds
+
+
+def get_dates_from_top_level_folders(tld_folders: List[Path]) -> List[str]:
+    return sorted(
+        list({}.fromkeys([x.stem.rsplit("-", 1)[0] for x in tld_folders]))
+    )  # Remove duplicates, ignore the hour/minute/second part of the timestamp
+
+
+def get_all_metadata_files_in_date_range(
+    metadata_filepaths: List[Path], d1: datetime, d2: datetime
+) -> List[Path]:
+    """Get all the metadata files taken within the date range [d1, d2]
+
+    Parameters
+    ----------
+    metadata_filepaths: List[Path]
+    d1: datetime
+        First date
+    d2: datetime
+        Second (later) date
+
+    Returns
+    -------
+    List[Path]
+    """
+
+    return [
+        f
+        for f in metadata_filepaths
+        if d1 <= parse_datetime_string(f.parent.parent.stem) <= d2
+    ]
+
+
+def get_all_metadata_files_from_same_day(
+    metadata_filepaths: List[Path], d1: datetime
+) -> List[Path]:
+    """Get all the metadata files that were taken on a particular day.
+
+    Parameters
+    ----------
+    metadata_filepaths: List[Path]
+    d1: datetime
+
+    Returns
+    -------
+    List[Path]
+    """
+
+    return [
+        f
+        for f in metadata_filepaths
+        if parse_datetime_string(f.parent.parent.stem).date() == d1.date()
+    ]
+
+
+def get_date_range_from_user(
+    date_format: str = "%Y-%m-%d",
+) -> Tuple[datetime, datetime]:
+    """Prompt a user for a date range, parse, and return two datetime objects.
+
+    Parameters
+    ----------
+    date_format: str = "%Y-%m-%d"
+
+    Returns
+    -------
+    Tuple[datetime, datetime]
+
+    Exceptions
+    ----------
+    Will raise an exception if there was an error parsing the user input.
+    """
+
+    print("You will be prompted to enter two dates on separate lines.")
+    print(
+        "You can leave either or both of the inputs empty.\n"
+        "If you leave the first empty, all dates leading up to and including the second will be used.\n"
+        "If you leave the second empty, all dates from the first date to the end will be used.\n"
+        "If both are empty, all datasets will be used."
+    )
+    d1 = input("date 1 (YYYY-MM-DD): ")
+    d2 = input("date 2 (YYYY-MM-DD): ")
+    try:
+        d1 = datetime.min if d1 == "" else datetime.strptime(d1, date_format)
+        d2 = datetime.max if d2 == "" else datetime.strptime(d2, date_format)
+
+        return d1, d2
+    except Exception as e:
+        print(f"There was an error parsing one of the inputs: {e}")
+        raise
+
+
+def parse_datetime_string(filename: str, format: str = "%Y-%m-%d-%H%M%S") -> datetime:
+    """Superfluous, Convenience function to parse a datetime string.
+
+    Parameters
+    ----------
+    filename: str
+    format: str="%Y-%m-%d-%H%M%S"
+
+    Returns
+    -------
+    datetime
+    """
+
+    return datetime.strptime(filename, format)
 
 
 def get_list_of_log_files(top_level_dir: str) -> List[Path]:
