@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="LFM Data Utilities",
+    name="lfm_data_utilities",
     version="1.0",
     description="Tools for processing data related to the lfm-scope (ulc-malaria-scope)",
     author="CZ Biohub | Bioengineering",
