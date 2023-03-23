@@ -14,5 +14,6 @@ setup(
         "numpy>=1.24.2",
         "matplotlib>=3.7.0",
         "opencv-python>=4.7.0.72",
+        "zarr==2.13.3"
     ],
 )
