@@ -1,1 +1,0 @@
-git+https://github.com/Axel-Jacobsen/label-studio-converter.git@master
