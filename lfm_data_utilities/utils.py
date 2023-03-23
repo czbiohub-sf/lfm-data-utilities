@@ -3,6 +3,7 @@ from pathlib import Path
 from csv import DictReader
 from datetime import datetime
 from multiprocessing import Pool
+from zipfile import BadZipFile
 
 import zarr
 from tqdm import tqdm
@@ -200,7 +201,10 @@ def get_list_of_log_files(top_level_dir: str) -> List[Path]:
 
 
 def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
-    return zarr.open(zarr_path, "r")
+    try:
+        return zarr.open(zarr_path, "r")
+    except BadZipFile:
+        print(f"{zarr_path} exception - bad zip file")
 
 
 def load_csv(filepath: str) -> Dict:
