@@ -63,7 +63,7 @@ def get_valid_datasets(datasets: List[Dataset]) -> List[Dataset]:
         if d.zarr_path and d.per_img_csv_path and d.experiment_csv_path and d.subsample_path:
             return d
 
-    return map(is_valid_dataset, datasets)
+    return list(map(is_valid_dataset, datasets))
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
