@@ -69,7 +69,7 @@ def get_valid_datasets(datasets: List[DatasetPaths]) -> List[DatasetPaths]:
             if load_read_only_zarr_if_valid(str(d.zarr_path)) is not None:
                 return d
 
-    return list(map(is_valid_dataset, datasets))
+    return [x for x in map(is_valid_dataset, datasets) if x is not None]
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
