@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple
+from collections import namedtuple
 from pathlib import Path
 from csv import DictReader
 from datetime import datetime
@@ -7,6 +8,54 @@ from zipfile import BadZipFile
 
 import zarr
 from tqdm import tqdm
+
+
+Dataset = namedtuple('Dataset', ['zarr_path', 'per_img_csv_path', 'experiment_csv_path', 'subsample_path'])
+
+def get_full_datasets(top_level_dir: str) -> List[Dataset]:
+    """Get a list of all 'full' datasets, i.e all folders which contain a valid zarr file, per image csv file,
+    and experiment metadata csv file.
+
+    Returns a list of "Dataset" named tuples. Access is as follows (imagine you pick one dataset, d, out of the list):
+        > Zarr file:            d.zarr_path
+        > per image metadata:   d.per_img_csv_path
+        > experiment metadata:  d.experiment_csv_path
+        > subsample directory:  d.subsample_path
+
+    Searches recursively through all subdirectories.
+    IMPORTANT NOTE:
+        This returns only 'full' datasets - that is, paths to folders which contain:
+            1. A valid zarr file
+            2. A per image csv file
+            3. An experiment metadata csv file
+            4. A subsample image directory
+        This means folders without all of the above WILL BE EXCLUDED!
+        Failed runs typically don't have a subsample directory generated.
+        Keep this in mind!
+
+    If you want to exhaustively get all the zarr files, per image metadata files, experiment metadata files,
+    or subsample directories, use one of the more specific functions below.
+
+    This function is here as a convenience. Typically calling 'glob' from scratch (i.e the top level directory)
+    can be slow.
+
+    Parameters
+    ----------
+    top_level_dir: str
+        Top level directory path to search
+    """
+
+    valid_datasets: List[Dataset] = []
+    per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
+    for per_img in per_img_csv_paths:
+        zfp = get_list_of_zarr_files(per_img.parent)
+        efp = get_list_of_experiment_level_metadata_files(per_img.parent)
+        ssp = get_list_of_subsample_dirs(per_img.parent)
+
+        if per_img and zfp and efp and ssp:
+            valid_datasets.append(Dataset(zfp, per_img, efp, ssp))
+
+    return valid_datasets
 
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
@@ -22,7 +71,7 @@ def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).glob("**/*.zip"))
+    return sorted(Path(top_level_dir).rglob("*.zip"))
 
 
 def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
@@ -38,7 +87,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).glob("**/*perimage*.csv"))
+    return sorted(Path(top_level_dir).rglob("*perimage*.csv"))
 
 
 def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
@@ -54,7 +103,22 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).glob("**/*exp*.csv"))
+    return sorted(Path(top_level_dir).rglob("*exp*.csv"))
+
+def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
+    """Get a list of all the sub sample image directories
+
+    Parameters
+    ----------
+    top_level_dir : str
+        Top level directory path
+
+    Returns
+    -------
+    List[Path]
+    """
+
+    return sorted(Path(top_level_dir).rglob("*sub_sample*/"))
 
 
 def get_list_of_oracle_run_folders(top_level_dir: str) -> List[Path]:
@@ -201,10 +265,14 @@ def get_list_of_log_files(top_level_dir: str) -> List[Path]:
 
 
 def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
-    try:
-        return zarr.open(zarr_path, "r")
-    except BadZipFile:
-        print(f"{zarr_path} exception - bad zip file")
+    """Load a zarr file - no protections (i.e exception catching) against bad zip files.
+    
+    Return
+    ------
+    zarr.core.Array
+        Opened zarr file
+    """
+    return zarr.open(zarr_path, "r")
 
 
 def load_csv(filepath: str) -> Dict:
