@@ -46,7 +46,7 @@ def make_video(dataset: Dataset, save_dir: Path):
     duration = end - start
     num_frames = zf.initialized
     framerate = num_frames / duration
-    height, width = zf.[:, :, 0].shape
+    height, width = zf[:, :, 0].shape
 
     save_dir.mkdir(exist_ok=True)
     output_path = save_dir / dataset.dp.zarr_path.stem + ".mp4"
