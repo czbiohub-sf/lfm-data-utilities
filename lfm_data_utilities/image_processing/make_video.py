@@ -8,9 +8,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     path_to_runset = sys.argv[1]
-    valid_datasets = get_valid_datasets(get_all_datasets(path_to_runset))
-    zarr_files = multiprocess_load_zarr([d.zarr_path for d in valid_datasets])
-    per_img_csv_files = multiprocess_load_csv([d.per_img_csv_path for d in valid_datasets])
+    datasets = load_datasets(path_to_runset)
+    valid_datasets = [d for d in datasets if d.successful_load]
 
     for d in valid_datasets:
-        print(d.zarr_path.parent == d.per_img_csv_path.parent)
+        print(d.dp.zarr_path.parent == d.dp.per_img_csv_path.parent)

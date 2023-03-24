@@ -16,6 +16,29 @@ class DatasetPaths:
     experiment_csv_path: Path
     subsample_path: Path
 
+class Dataset:
+    def __init__(self, dp: DatasetPaths):
+        self.dp = dp
+        try:
+            self.zarr_file = load_read_only_zarr(dp.zarr_path)
+        except:
+            self.zarr_file = None
+        try:
+            self.per_img_metadata = load_csv(dp.per_img_csv_path)
+        except:
+            self.per_img_metadata = None
+        try:
+            self.experiment_metadata = load_csv(dp.experiment_csv_path)
+        except:
+            self.experiment_metadata = None
+
+        self.successful_load = not None in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
+
+def load_datasets(top_level_dir: str) -> List[Dataset]:
+    all_dataset_paths = get_all_datasets(top_level_dir)
+    valid_datasets = get_valid_datasets(all_dataset_paths)
+    return [Dataset(dp) for dp in valid_datasets]
+
 def get_all_datasets(top_level_dir: str) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
