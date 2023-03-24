@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple, Optional
+from dataclasses import dataclass
 from collections import namedtuple
 from pathlib import Path
 from csv import DictReader
@@ -8,15 +9,19 @@ from multiprocessing import Pool
 import zarr
 from tqdm import tqdm
 
+@dataclass
+class DatasetPaths:
+    zarr_path: Path
+    per_img_csv_path: Path
+    experiment_csv_path: Path
+    subsample_path: Path
 
-Dataset = namedtuple('Dataset', ['zarr_path', 'per_img_csv_path', 'experiment_csv_path', 'subsample_path'])
-
-def get_all_datasets(top_level_dir: str) -> List[Dataset]:
-    """Get a list of all datasets. This function will find a list of per image metadata csvs, and then attempt to get the
+def get_all_datasets(top_level_dir: str) -> List[DatasetPaths]:
+    """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
 
-    Returns a list of "Dataset" named tuples. Access is as follows (imagine you pick one dataset, d, out of the list):
+    Returns a list of "Dataset" dataclass. Access is as follows (imagine you pick one dataset, d, out of the list):
         > Zarr file:            d.zarr_path (might be None)
         > per image metadata:   d.per_img_csv_path
         > experiment metadata:  d.experiment_csv_path (might be None)
@@ -40,7 +45,7 @@ def get_all_datasets(top_level_dir: str) -> List[Dataset]:
             return None
     
         
-    datasets: List[Dataset] = []
+    datasets: List[DatasetPaths] = []
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
     for per_img in per_img_csv_paths:
         zfp = get_path_or_none(get_list_of_zarr_files(per_img.parent))
@@ -48,20 +53,21 @@ def get_all_datasets(top_level_dir: str) -> List[Dataset]:
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
 
         if per_img and zfp and efp and ssp:
-            datasets.append(Dataset(zfp, per_img, efp, ssp))
+            datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
 
     return datasets
 
-def get_valid_datasets(datasets: List[Dataset]) -> List[Dataset]:
+def get_valid_datasets(datasets: List[DatasetPaths]) -> List[DatasetPaths]:
     """Prunes the given list of datasets and returns only those which are "valid"
 
     Valid meaning a Dataset which has all of its zarr path, per image metadata csv path, experiment
     level metadata csv path, and subsample directory path present.
     """
 
-    def is_valid_dataset(d: Dataset) -> Optional[Dataset]:
+    def is_valid_dataset(d: DatasetPaths) -> Optional[DatasetPaths]:
         if d.zarr_path and d.per_img_csv_path and d.experiment_csv_path and d.subsample_path:
-            return d
+            if load_read_only_zarr_if_valid(d.zarr_path) is not None:
+                return d
 
     return list(map(is_valid_dataset, datasets))
 
@@ -279,8 +285,26 @@ def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
     zarr.core.Array
         Opened zarr file
     """
+
     return zarr.open(zarr_path, "r")
 
+def load_read_only_zarr_if_valid(zarr_path: str) -> Optional[zarr.core.Array]:
+    """Attempts to open a read only Zarr file. If an exception occurs while attempting the read, does not return anything.
+    
+    Parameters
+    ----------
+    zarr_path: str
+
+    Returns
+    -------
+    Optional[zarr.Core.Array]
+        Returns a zarr dataset only if no exceptions were encountered, otherwise None.
+    """
+
+    try:
+        return zarr.open(zarr_path, "r")
+    except:
+        return None
 
 def load_csv(filepath: str) -> Dict:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
