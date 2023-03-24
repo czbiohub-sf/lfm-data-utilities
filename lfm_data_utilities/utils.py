@@ -49,7 +49,7 @@ def make_video(dataset: Dataset, save_dir: Path):
     height, width = zf[:, :, 0].shape
 
     save_dir.mkdir(exist_ok=True)
-    output_path = save_dir / dataset.dp.zarr_path.stem + ".mp4"
+    output_path = save_dir / Path(dataset.dp.zarr_path.stem + ".mp4")
 
     writer = cv2.VideoWriter(
         f"{output_path}",
