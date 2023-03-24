@@ -9,7 +9,4 @@ if __name__ == "__main__":
 
     path_to_runset = sys.argv[1]
     datasets = load_datasets(path_to_runset)
-    valid_datasets = [d for d in datasets if d.successful_load]
-
-    for d in valid_datasets:
-        print(d.dp.zarr_path.parent == d.dp.per_img_csv_path.parent)
+    valid_datasets = [d for d in datasets if d.successfully_loaded]

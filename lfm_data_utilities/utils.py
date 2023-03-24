@@ -32,14 +32,25 @@ class Dataset:
         except:
             self.experiment_metadata = None
 
-        self.successful_load = not None in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
+        self.successfully_loaded = not None in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
+
+
+def make_video(dataset: Dataset):
+    zf = dataset.zarr_file
+    per_img_csv = dataset.per_img_metadata
+    get_duration = float(per_img_csv['timestamp'][-1]) - float(per_img_csv['timestamp'][0])
+    print(get_duration)
+
 
 def load_datasets(top_level_dir: str) -> List[Dataset]:
-    all_dataset_paths = get_all_datasets(top_level_dir)
-    valid_datasets = get_valid_datasets(all_dataset_paths)
-    return [Dataset(dp) for dp in valid_datasets]
+    print("Getting dataset paths (i.e paths to zarr files, per image/experiment level metadata csvs...)")
+    print("NOTE: Traversing ess file tree if you are not on Bruno is excurciatingly slow for some reason.")
+    all_dataset_paths = get_all_dataset_paths(top_level_dir)
 
-def get_all_datasets(top_level_dir: str) -> List[DatasetPaths]:
+    print("Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute...")
+    return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
+
+def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
@@ -77,22 +88,13 @@ def get_all_datasets(top_level_dir: str) -> List[DatasetPaths]:
 
         if per_img and zfp and efp and ssp:
             datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
+        else:
+            print("One or more of the following: invalid zarr / experiment metadata / subsample directory:")
+            print(f"zarr: {zfp} | experiment metadata: {efp} | ssp: {ssp}")
+            print(f"Look at this directory: {per_img.parent}")
 
     return datasets
 
-def get_valid_datasets(datasets: List[DatasetPaths]) -> List[DatasetPaths]:
-    """Prunes the given list of datasets and returns only those which are "valid"
-
-    Valid meaning a Dataset which has all of its zarr path, per image metadata csv path, experiment
-    level metadata csv path, and subsample directory path present.
-    """
-
-    def is_valid_dataset(d: DatasetPaths) -> Optional[DatasetPaths]:
-        if d.zarr_path and d.per_img_csv_path and d.experiment_csv_path and d.subsample_path:
-            if load_read_only_zarr_if_valid(str(d.zarr_path)) is not None:
-                return d
-
-    return [x for x in map(is_valid_dataset, datasets) if x is not None]
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
@@ -140,6 +142,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     """
 
     return sorted(Path(top_level_dir).rglob("*exp*.csv"))
+
 
 def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
     """Get a list of all the sub sample image directories
@@ -311,23 +314,6 @@ def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
 
     return zarr.open(zarr_path, "r")
 
-def load_read_only_zarr_if_valid(zarr_path: str) -> Optional[zarr.core.Array]:
-    """Attempts to open a read only Zarr file. If an exception occurs while attempting the read, does not return anything.
-    
-    Parameters
-    ----------
-    zarr_path: str
-
-    Returns
-    -------
-    Optional[zarr.Core.Array]
-        Returns a zarr dataset only if no exceptions were encountered, otherwise None.
-    """
-
-    try:
-        return zarr.open(zarr_path, "r")
-    except:
-        return None
 
 def load_csv(filepath: str) -> Dict:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
