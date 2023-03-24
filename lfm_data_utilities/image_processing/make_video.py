@@ -10,3 +10,4 @@ if __name__ == "__main__":
     path_to_runset = sys.argv[1]
     datasets = load_datasets(path_to_runset)
     valid_datasets = [d for d in datasets if d.successfully_loaded]
+    make_video(valid_datasets[0], Path("vids"))

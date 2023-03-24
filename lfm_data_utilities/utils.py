@@ -8,6 +8,7 @@ from multiprocessing import Pool
 
 import zarr
 from tqdm import tqdm
+import cv2
 
 @dataclass
 class DatasetPaths:
@@ -18,7 +19,7 @@ class DatasetPaths:
 
 class Dataset:
     def __init__(self, dp: DatasetPaths):
-        self.dp = dp
+        self.dp: DatasetPaths = dp
         try:
             self.zarr_file = load_read_only_zarr(dp.zarr_path)
         except:
@@ -35,11 +36,33 @@ class Dataset:
         self.successfully_loaded = not None in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
 
 
-def make_video(dataset: Dataset):
+def make_video(dataset: Dataset, save_dir: Path):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
-    get_duration = float(per_img_csv['timestamp'][-1]) - float(per_img_csv['timestamp'][0])
-    print(get_duration)
+
+    # Get duration in seconds
+    start = float(per_img_csv['vals']['timestamp'][0])
+    end = float(per_img_csv['vals']['timestamp'][-1])
+    duration = end - start
+    num_frames = zf.initialized
+    framerate = num_frames / duration
+    height, width = zf.[:, :, 0].shape
+
+    save_dir.mkdir(exist_ok=True)
+    output_path = save_dir / dataset.dp.zarr_path.stem + ".mp4"
+
+    writer = cv2.VideoWriter(
+        f"{output_path}",
+        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
+        fps=framerate,
+        frameSize=(width, height),
+        isColor=False,
+    )
+
+    for i, _ in enumerate(tqdm(range(num_frames))):
+        img = zf[:, :, i]
+        writer.write(img)
+    writer.release()
 
 
 def load_datasets(top_level_dir: str) -> List[Dataset]:
@@ -49,6 +72,7 @@ def load_datasets(top_level_dir: str) -> List[Dataset]:
 
     print("Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute...")
     return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
+
 
 def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
@@ -90,7 +114,6 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
             datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
             print("One or more of the following: invalid zarr / experiment metadata / subsample directory:")
-            print(f"zarr: {zfp} | experiment metadata: {efp} | ssp: {ssp}")
             print(f"Look at this directory: {per_img.parent}")
 
     return datasets
