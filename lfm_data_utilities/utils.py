@@ -66,7 +66,7 @@ def get_valid_datasets(datasets: List[DatasetPaths]) -> List[DatasetPaths]:
 
     def is_valid_dataset(d: DatasetPaths) -> Optional[DatasetPaths]:
         if d.zarr_path and d.per_img_csv_path and d.experiment_csv_path and d.subsample_path:
-            if load_read_only_zarr_if_valid(d.zarr_path) is not None:
+            if load_read_only_zarr_if_valid(str(d.zarr_path)) is not None:
                 return d
 
     return list(map(is_valid_dataset, datasets))
