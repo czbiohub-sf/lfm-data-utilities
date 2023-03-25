@@ -14,4 +14,5 @@ if __name__ == "__main__":
 
     print("Generating videos...")
     for dataset in tqdm(valid_datasets):
+        print(f"Working on: {dataset.dp.zarr_path.absolute}")
         make_video(dataset, path_to_save)
