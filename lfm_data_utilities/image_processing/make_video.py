@@ -12,7 +12,7 @@ if __name__ == "__main__":
     datasets = load_datasets(path_to_runset)
     valid_datasets = [d for d in datasets if d.successfully_loaded]
 
-    make_video_with_path = partial(make_video, save_dir=path_to_save)
+    make_video_with_path = partial(make_video, save_dir=Path(path_to_save))
     print("Generating videos...")
     with Pool() as pool:
         tqdm(pool.imap(make_video_with_path, valid_datasets), total=len(valid_datasets))
