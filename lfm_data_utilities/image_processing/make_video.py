@@ -1,5 +1,5 @@
 import sys
-from functools import partial
+from itertools import repeat
 from lfm_data_utilities.utils import *
 
 if __name__ == "__main__":
@@ -13,6 +13,5 @@ if __name__ == "__main__":
     valid_datasets = [d for d in datasets if d.successfully_loaded]
 
     print("Generating videos...")
-    for dataset in tqdm(valid_datasets):
-        print(f"Working on: {dataset.dp.zarr_path.absolute}")
-        make_video(dataset, path_to_save)
+    with Pool() as pool:
+        pool.starmap(make_video, [(x, path_to_save) for x in tqdm(valid_datasets)])
