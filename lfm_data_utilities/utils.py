@@ -67,7 +67,7 @@ def make_video(dataset: Dataset, save_dir: Path):
 
 def load_datasets(top_level_dir: str) -> List[Dataset]:
     print("Getting dataset paths (i.e paths to zarr files, per image/experiment level metadata csvs...)")
-    print("NOTE: Traversing ess file tree if you are not on Bruno is excurciatingly slow for some reason.")
+    print("NOTE: Traversing ess file tree if you are not on Bruno is excruciatingly slow for some reason.")
     all_dataset_paths = get_all_dataset_paths(top_level_dir)
 
     print("Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute...")
