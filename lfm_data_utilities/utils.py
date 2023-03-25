@@ -71,7 +71,9 @@ def load_datasets(top_level_dir: str) -> List[Dataset]:
     all_dataset_paths = get_all_dataset_paths(top_level_dir)
 
     print("Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute...")
-    return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
+    with Pool() as pool:
+        datasets = list(tqdm(pool.imap(Dataset, all_dataset_paths), total=len(all_dataset_paths)))
+    return datasets
 
 
 def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
