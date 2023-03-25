@@ -148,7 +148,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).rglob("*perimage*.csv"))
+    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if not any(part.startswith('.') for part in x.parts)])
 
 
 def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
