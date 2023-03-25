@@ -8,11 +8,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     path_to_runset = sys.argv[1]
-    path_to_save = sys.argv[2]
+    path_to_save = Path(sys.argv[2])
     datasets = load_datasets(path_to_runset)
     valid_datasets = [d for d in datasets if d.successfully_loaded]
 
-    make_video_with_path = partial(make_video, save_dir=Path(path_to_save))
     print("Generating videos...")
-    with Pool() as pool:
-        tqdm(pool.imap(make_video_with_path, valid_datasets), total=len(valid_datasets))
+    for dataset in tqdm(valid_datasets):
+        make_video(dataset, path_to_save)
