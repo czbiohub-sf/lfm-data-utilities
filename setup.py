@@ -1,4 +1,4 @@
-ython from setuptools import setup, find_packages
+python from setuptools import setup, find_packages
 
 setup(
     name="lfm_data_utilities",
