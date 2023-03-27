@@ -67,20 +67,6 @@ def get_outlines(
     return outlines
 
 
-def to_bb_labels(bb_csv_fd, outlines, label):
-    for file_path, image_outlines in outlines:
-        for outline in image_outlines:
-            xmin, xmax, ymin, ymax = (
-                outline[:, 0].min(),
-                outline[:, 0].max(),
-                outline[:, 1].min(),
-                outline[:, 1].max(),
-            )
-            bb_csv_fd.write(
-                f"{str(file_path)},{xmin},{xmax},{ymin},{ymax},{label},0,0\n"
-            )
-
-
 def to_yogo_labels(label_dir_path, outlines, label):
     for file_path, image_outlines in outlines:
         label_file_name = str(label_dir_path / file_path.with_suffix(".txt").name)
@@ -115,16 +101,6 @@ def label_folder_for_yogo(path_to_images: Path, chunksize=32, label=0):
     outlines = get_outlines(path_to_images, chunksize=chunksize)
 
     to_yogo_labels(path_to_label_dir, outlines, label)
-
-
-def label_folder_for_napari(path_to_images: Path, chunksize=32, label=0):
-    "most likely depricated!"
-    outlines = get_outlines(path_to_images, chunksize=chunksize)
-
-    path_to_csv = path_to_images.parent / "labels.csv"
-    with open(str(path_to_csv), "w") as f:
-        f.write("image_id,xmin,xmax,ymin,ymax,label,prob,unique_cell_id\n")
-        to_bb_labels(f, outlines, label)
 
 
 def label_runset(path_to_runset_folder: Path, chunksize=32, label=0):
