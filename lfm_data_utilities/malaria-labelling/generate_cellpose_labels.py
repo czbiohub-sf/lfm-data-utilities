@@ -17,7 +17,7 @@ from cellpose.utils import (
 )
 
 from labelling_constants import CLASSES
-from generate_dataset_def import gen_labels
+from generate_dataset_def import gen_dataset_def
 from generate_labelstudio_tasks import generate_tasks_for_runset
 from utils import convert_coords
 
@@ -70,6 +70,7 @@ def get_outlines(
 def to_yogo_labels(label_dir_path, outlines, label):
     for file_path, image_outlines in outlines:
         label_file_name = str(label_dir_path / file_path.with_suffix(".txt").name)
+
         with open(label_file_name, "w") as f:
             for outline in image_outlines:
                 xmin, xmax, ymin, ymax = (
@@ -103,7 +104,8 @@ def label_folder_for_yogo(path_to_images: Path, chunksize=32, label=0):
     to_yogo_labels(path_to_label_dir, outlines, label)
 
 
-def label_runset(path_to_runset_folder: Path, chunksize=32, label=0):
+def label_runset(path_to_runset_folder: Path, chunksize=32, label=0, skip=True):
+    print(f"starting to label run set; {'skipping' if skip else 'overwritting'} existing labels")
     print("finding directories to label...")
     files = list(path_to_runset_folder.glob("./**/images"))
     print(f"found {len(files)} directories to label")
@@ -114,6 +116,9 @@ def label_runset(path_to_runset_folder: Path, chunksize=32, label=0):
 
         label_dir = f.parent / "labels"
         if label_dir.exists():
+            if skip:
+                continue
+
             print(f"overwriting label directory {label_dir}...")
 
         try:
@@ -127,17 +132,29 @@ def label_runset(path_to_runset_folder: Path, chunksize=32, label=0):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path to runset>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser("label a set of run folders")
+    parser.add_argument("path_to_runset", type=Path, help="path to run folders")
+    parser.add_argument(
+        "--existing-label-action",
+        "-e",
+        choices=["skip", "overwrite"],
+        default="skip",
+        help="skip or overwrite existing labels when encountered, defaults to 'skip'",
+    )
 
-    path_to_runset = Path(sys.argv[1])
+    args = parser.parse_args()
+    path_to_runset = args.path_to_runset
 
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
-    label_runset(path_to_runset, label=CLASSES.index("healthy"))
-    gen_labels(path_to_runset)
+    label_runset(
+        path_to_runset,
+        label=CLASSES.index("healthy"),
+        skip=args.existing_label_action == "skip",
+    )
+    gen_dataset_def(path_to_runset)
     try:
         generate_tasks_for_runset(path_to_runset)
     except ValueError:
