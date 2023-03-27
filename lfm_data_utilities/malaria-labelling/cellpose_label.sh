@@ -11,4 +11,4 @@
 
 env | grep "^SLURM" | sort
 
-conda run python3 generate_cellpose_labels.py "$@"
+conda run python3 generate_cellpose_labels.py "$1" --existing-label-action skip
