@@ -55,13 +55,13 @@ python3 -m pip install label-studio
         strokeWidth="3"
         opacity=".0"
     >
-        <Label value="healthy" background="rgba(200, 255, 200, 1)" />
-        <Label value="ring" background="rgba(250, 100, 150, 1)" />
-        <Label value="trophozoite" background="rgba(255, 220, 200, 1)" />
-        <Label value="schizont" background="rgba(100, 180, 255, 1)" />
-        <Label value="gametocyte" background="rgba(255, 200, 255, 1)" />
-        <Label value="wbc" background="rgba(200, 250, 255, 1)" />
-        <Label value="misc" background="rgba(100, 100, 100, 1)" />
+        <Label value="healthy" background="rgba(200, 255, 200, 1)" category="1" />
+        <Label value="ring" background="rgba(250, 100, 150, 1)"  category="2" />
+        <Label value="trophozoite" background="rgba(255, 220, 200, 1)"  category="3" />
+        <Label value="schizont" background="rgba(100, 180, 255, 1)"  category="4" />
+        <Label value="gametocyte" background="rgba(255, 200, 255, 1)"  category="5" />
+        <Label value="wbc" background="rgba(200, 250, 255, 1)"  category="6" />
+        <Label value="misc" background="rgba(100, 100, 100, 1)"  category="7" />
     </RectangleLabels>
 </View>
 ```
