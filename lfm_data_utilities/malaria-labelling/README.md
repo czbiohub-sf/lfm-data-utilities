@@ -107,11 +107,3 @@ curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=J
 ### "Package Not Found" during installation
 
 If your `pip` version is really low (e.g. version 9), try `python3 -m pip install --upgrade pip`. This could also be a sign of your python version being quite low (which occurs, e.g., with a base `conda` environment). Double check with `python3 --version`. It should be at least python 3.7.
-
-### "error: unrecognized arguments: Scope/scope-parasite-data/run-sets"
-
-You need to either quote the entire path, or escape the space in "LFM Scope". For example, try
-
-`".../LFM Scope/scope-parasite-data"` or `.../LFM\ Scope/scope-parasite-data`
-
-They're equivalent, pick your poison.
