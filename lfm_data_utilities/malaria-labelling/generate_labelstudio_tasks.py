@@ -53,8 +53,8 @@ def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> P
     return path_cls(*parts)
 
 
-def generate_tasks_for_runset(path_to_runset_folder: Path):
-    folders = [Path(p).parent for p in path_to_runset_folder.glob("./**/labels")]
+def generate_tasks_for_runset(path_to_runset_folder: Path, label_dir_name="labels"):
+    folders = [Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")]
 
     if len(folders) == 0:
         raise ValueError(

@@ -34,8 +34,13 @@ def class_names_from_classes_dot_txt(path_to_classes_dot_txt: Path) -> List[str]
         return [s.strip() for s in f.readlines() if s != ""]
 
 
-def convert_labels_folder_class_ordering(run_set_path: Path, from_classes: List[str], to_classes: List[str]) -> Path:
-    """ If we encounter a folder that has a different ordering of classes
+def convert_labels_folder_class_ordering(
+    run_set_path: Path,
+    from_classes: List[str],
+    to_classes: List[str],
+    label_dir_name: str = "labels",
+) -> Path:
+    """If we encounter a folder that has a different ordering of classes
     than our master ordering, we must correct it.
 
     This function will go through every label and swap it for the correct one.
@@ -49,12 +54,12 @@ def convert_labels_folder_class_ordering(run_set_path: Path, from_classes: List[
             f"from_classes = {from_classes}, to_classes = {to_classes}, path = {run_set_path}"
         )
 
-    if not (run_set_path / "labels").exists():
-        raise ValueError(f"director {(run_set_path / 'labels')} doesn't exist")
+    if not (run_set_path / label_dir_name).exists():
+        raise ValueError(f"director {run_set_path / label_dir_name} doesn't exist")
 
     (run_set_path / "converted_labels").mkdir(exist_ok=True)
 
-    for file in (run_set_path / "labels").iterdir():
+    for file in (run_set_path / label_dir_name).iterdir():
         with open(file, "r") as f:
             contents = f.read().strip()
 
@@ -71,7 +76,7 @@ def convert_labels_folder_class_ordering(run_set_path: Path, from_classes: List[
                     class_index = contents[0]
                     to_class = to_classes.index(class_index)
 
-                g.write(" ".join([str(to_class), *contents[1:]]) + '\n')
+                g.write(" ".join([str(to_class), *contents[1:]]) + "\n")
 
     with open("old_classes.txt", "w") as f:
         for class_id in from_classes:
@@ -83,7 +88,10 @@ def convert_labels_folder_class_ordering(run_set_path: Path, from_classes: List[
 
     return run_set_path / "converted_labels"
 
-def gen_dataset_def(path_to_runset_folder: Path, verbose=False):
+
+def gen_dataset_def(
+    path_to_runset_folder: Path, label_dir_name="labels", verbose=False
+):
     folders = [Path(p).parent for p in path_to_runset_folder.glob("./**/images")]
 
     dataset_paths: Dict[str, Dict[str, str]] = dict()
@@ -92,7 +100,7 @@ def gen_dataset_def(path_to_runset_folder: Path, verbose=False):
     for i, folder_path in iterator:
         # check classes
         images_path = folder_path / "images"
-        label_path = folder_path / "labels"
+        label_path = folder_path / label_dir_name
         classes_path = folder_path / "classes.txt"
 
         if not (images_path.exists() and label_path.exists()):
@@ -110,7 +118,9 @@ def gen_dataset_def(path_to_runset_folder: Path, verbose=False):
         if CLASSES != classes:
             print(f"converting {folder_path} from {classes} to {CLASSES}...")
             t0 = time.perf_counter()
-            label_path = convert_labels_folder_class_ordering(folder_path, classes, CLASSES)
+            label_path = convert_labels_folder_class_ordering(
+                folder_path, classes, CLASSES, label_dir_name=label_dir_name
+            )
             print(f"converted ({time.perf_counter() - t0:.3f} s)")
 
         dataset_paths[folder_path.name] = {
