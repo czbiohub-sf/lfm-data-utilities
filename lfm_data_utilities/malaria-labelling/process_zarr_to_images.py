@@ -17,7 +17,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
     image_dir = path_to_zarr_zip.parent / "images"
 
     if image_dir.exists() and skip:
-        print(f'skipping {image_dir} because images already exist!')
+        print(f"skipping {image_dir} because images already exist!")
         return
 
     data_len = data.initialized if hasattr(data, "nchunks") else len(data)
@@ -35,7 +35,10 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser("convert a set of run folders zip files to image folders")
+
+    parser = argparse.ArgumentParser(
+        "convert a set of run folders zip files to image folders"
+    )
     parser.add_argument("path_to_runset", type=Path, help="path to run folders")
     parser.add_argument(
         "--existing-label-action",
