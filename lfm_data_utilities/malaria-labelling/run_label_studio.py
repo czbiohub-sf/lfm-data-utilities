@@ -67,12 +67,11 @@ if __name__ == "__main__":
     if not path_to_run_folder.exists():
         raise ValueError(
             "warning: your path doesn't exist! Double check that you entered the correct "
-            "path, mounted flexo, and have properly escaped the path (e.g. make sure you "
-            f"have `LFM\ Scope`; got path {path_to_run_folder}"
+            f"path and mounted flexo, got path {path_to_run_folder}"
         )
     elif path_to_run_folder.name != "run-sets":
         raise ValueError(
-            "provided path must be to `flexo/MicroscopyData/Bioengineering/LFM Scope/scope-parasite-data/run-sets`.\n"
+            "provided path must be to `flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets`.\n"
             "When running on OnDemand, this should default to the correct location. Otherwise, make sure you've mounted\n"
             "Flexo, and provide the path to `run-sets`.\n"
             f"got path {path_to_run_folder}"
