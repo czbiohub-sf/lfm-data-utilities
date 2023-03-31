@@ -27,7 +27,7 @@ echo "Will send: "$storage_loc""
 
 echo "TO | Scope name (lowercase)?"
 read -p "> [curiosity/insight/phoenix]: " save_loc
-save_loc="/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/Uganda_Subsample/$save_loc"
+save_loc="/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_Scope/Uganda_Subsample/$save_loc"
 echo "Saving to "$save_loc""
 
 echo -e "\nPARAMS"
