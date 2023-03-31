@@ -6,7 +6,7 @@
 > `python3 make_video.py <directory of experiments> <directory to save videos>`
 
 Example:
-> `python3 make_video.py "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/Uganda_full/curiosity" "/hpc/mydata/ilakkiyan.jeyakumar/curiosity_vids"`
+> `python3 make_video.py "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full/curiosity" "/hpc/mydata/ilakkiyan.jeyakumar/curiosity_vids"`
 
 Note:
 1. The script will automatically create the directory where the videos will be stored if it doesn't exist already.
