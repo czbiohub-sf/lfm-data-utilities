@@ -53,8 +53,12 @@ def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> P
     return path_cls(*parts)
 
 
-def generate_tasks_for_runset(path_to_runset_folder: Path, label_dir_name="labels"):
-    folders = [Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")]
+def generate_tasks_for_runset(
+    path_to_runset_folder: Path, label_dir_name="labels", tasks_file_name="tasks"
+):
+    folders = [
+        Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")
+    ]
 
     if len(folders) == 0:
         raise ValueError(
@@ -69,12 +73,13 @@ def generate_tasks_for_runset(path_to_runset_folder: Path, label_dir_name="label
         abbreviated_path = str(path_relative_to(folder_path, path_to_runset_folder))
         root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
 
-        tasks_path = str(folder_path / "tasks.json")
+        tasks_path = str(folder_path / Path(tasks_file_name).with_suffix("json"))
 
         try:
             convert_yolo_to_ls(
                 input_dir=str(folder_path),
                 out_file=tasks_path,
+                label_dir_name=label_dir_name,
                 out_type="predictions",
                 image_root_url=root_url,
                 image_ext=".png",
@@ -99,15 +104,29 @@ def generate_tasks_for_runset(path_to_runset_folder: Path, label_dir_name="label
 
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path to runset>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser("label a set of run folders")
+    parser.add_argument("path_to_runset", type=Path, help="path to run folders")
+    parser.add_argument(
+        "--label-dir-name",
+        default="labels",
+        help="name for label dir for each runset - defaults to 'labels'",
+    )
+    parser.add_argument(
+        "--tasks-file-name",
+        default="tasks",
+        help="name for label dir for each runset - defaults to 'labels'",
+    )
 
-    path_to_runset = Path(sys.argv[1])
+    args = parser.parse_args()
+    path_to_runset = args.path_to_runset
 
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
-    generate_tasks_for_runset(path_to_runset)
+    generate_tasks_for_runset(
+        path_to_runset,
+        label_dir_name=args.label_dir_name,
+        tasks_file_name=args.tasks_file_name,
+    )

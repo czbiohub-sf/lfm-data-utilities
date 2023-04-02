@@ -145,7 +145,9 @@ def label_runset(
     print(f"found {len(paths_to_images)} directories to label")
 
     for i, path_to_images in enumerate(paths_to_images, start=1):
-        print(f"{i} / {len(paths_to_images)} | {path_to_images.parent.name}", end="    ")
+        print(
+            f"{i} / {len(paths_to_images)} | {path_to_images.parent.name}", end="    "
+        )
         t0 = time.perf_counter()
 
         label_dir = path_to_images.parent / label_dir_name
@@ -165,7 +167,10 @@ def label_runset(
             }
         elif model == "yogo":
             label_fn = label_folder_with_yogo
-            args = (path_to_images, path_to_pth,)
+            args = (
+                path_to_images,
+                path_to_pth,
+            )
             kwargs = {
                 "chunksize": chunksize,
                 "label": label,
@@ -180,6 +185,7 @@ def label_runset(
             label_fn(*args, **kwargs)
         except Exception:
             import traceback
+
             traceback.print_exc()
 
         print(f"{time.perf_counter() - t0:.0f}s")
@@ -213,6 +219,11 @@ if __name__ == "__main__":
         default="labels",
         help="name for label dir for each runset - defaults to 'labels'",
     )
+    parser.add_argument(
+        "--tasks-file-name",
+        default="tasks",
+        help="name for label dir for each runset - defaults to 'labels'",
+    )
 
     args = parser.parse_args()
     path_to_runset = args.path_to_runset
@@ -237,6 +248,10 @@ if __name__ == "__main__":
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
 
     try:
-        generate_tasks_for_runset(path_to_runset, label_dir_name=args.label_dir_name)
+        generate_tasks_for_runset(
+            path_to_runset,
+            label_dir_name=args.label_dir_name,
+            tasks_file_name=args.tasks_file_name,
+        )
     except ValueError:
         print(f"no images and labels found; can't generate tasks: {path_to_runset}")
