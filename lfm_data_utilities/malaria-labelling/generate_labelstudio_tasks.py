@@ -65,6 +65,8 @@ def generate_tasks_for_runset(
             "couldn't find labels and images - double check the provided path"
         )
 
+    print(f"{len(folders)} tasks to label")
+
     for folder_path in tqdm(folders):
         if not folder_path.is_dir():
             print(f"warning: {folder_path} is not a directory")
@@ -73,7 +75,7 @@ def generate_tasks_for_runset(
         abbreviated_path = str(path_relative_to(folder_path, path_to_runset_folder))
         root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
 
-        tasks_path = str(folder_path / Path(tasks_file_name).with_suffix("json"))
+        tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
         try:
             convert_yolo_to_ls(
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tasks-file-name",
         default="tasks",
-        help="name for label dir for each runset - defaults to 'labels'",
+        help="name for label studio tasks file - defaults to tasks.json",
     )
 
     args = parser.parse_args()

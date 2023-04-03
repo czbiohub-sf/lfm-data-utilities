@@ -222,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tasks-file-name",
         default="tasks",
-        help="name for label dir for each runset - defaults to 'labels'",
+        help="name for label studio tasks file - defaults to tasks.json",
     )
 
     args = parser.parse_args()
@@ -247,11 +247,8 @@ if __name__ == "__main__":
 
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
 
-    try:
-        generate_tasks_for_runset(
-            path_to_runset,
-            label_dir_name=args.label_dir_name,
-            tasks_file_name=args.tasks_file_name,
-        )
-    except ValueError:
-        print(f"no images and labels found; can't generate tasks: {path_to_runset}")
+    generate_tasks_for_runset(
+        path_to_runset,
+        label_dir_name=args.label_dir_name,
+        tasks_file_name=args.tasks_file_name,
+    )
