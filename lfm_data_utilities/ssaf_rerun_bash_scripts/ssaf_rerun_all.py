@@ -66,8 +66,6 @@ def rerun(scope_dir, model_dir, output_dir):
 
 
 if __name__ == "__main__":
-
-    print(sys.argv)
     try:
         scope_folder = sys.argv[1]
         model_file = sys.argv[2]
@@ -78,5 +76,4 @@ if __name__ == "__main__":
         )
 
     rerun(scope_folder, model_file, output_folder)
-
     print("Finished processing")
