@@ -10,7 +10,8 @@ from tqdm import tqdm
 
     
 def get_files(data_dir):
-    file_format = f'{data_dir}/*-*-*-*/*-*-*-*_/*.zip'
+    """Get all zarr files in directory"""
+    file_format = f'{data_dir}/*-*-*-*_/*.zip'
         
     a = perf_counter()
     files = glob.glob(file_format)
@@ -24,6 +25,7 @@ def get_files(data_dir):
     return(files)
 
 def load_model(model_dir):
+    """Load SSAF model"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device}")
     model = load_model_for_inference(model_dir, device)
@@ -31,6 +33,7 @@ def load_model(model_dir):
     return model
 
 def process_files(files, model, output_dir):
+    """Get SSAF values for every frame in each file. Ignore already processed files and bad zipfiles"""
     for file in files:
         basename = pathlib.Path(file).stem
         
@@ -56,6 +59,7 @@ def process_files(files, model, output_dir):
         print(f"Finished writing {basename} SSAF data in {d-c} s")
 
 def rerun(scope_dir, model_dir, output_dir):
+    """Run all the steps to get SSAF data from all zarr files"""
     model = load_model(model_dir)
     files = get_files(scope_dir)
     process_files(files, model, output_dir)
