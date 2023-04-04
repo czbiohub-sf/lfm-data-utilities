@@ -38,15 +38,24 @@ class Rerunner():
         for file in files:
             images = (self.image_loader.load_zarr_data(file))
             basename = os.path.basename(file)
+            output_file = f"{output_dir}/{basename.removesuffix('.zip')}__ssaf.txt"
 
-            print(f"Started processing {basename}")
+            if output_file.is_file():
+                print(f"Skipping {basename}, already processed")
+            else:
+                print(f"Started processing {basename}")
 
-            c = perf_counter()
-            with open(f"{output_dir}/{basename.removesuffix('.zip')}__ssaf.txt", 'w') as file:
-                for res in tqdm(infer(model, images)):
-                    file.write(f"{res}\n")
-            d = perf_counter()
-            print(f"Finished writing {basename} SSAF data in {d-c} s")
+                c = perf_counter()
+                try:
+                    with open(output_file, 'w') as file:
+                        for res in tqdm(infer(model, images)):
+                            file.write(f"{res}\n")
+                except BadZipFile:
+                    print(f"BadZipFile: {basename}")
+                else:
+                    d = perf_counter()
+                    print(f"Finished writing {basename} SSAF data in {d-c} s")
+                    
 
     def rerun(self, scope_dir, model_dir, output_dir):
         model = load_model(model_dir)
