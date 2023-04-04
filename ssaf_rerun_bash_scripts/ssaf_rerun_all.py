@@ -54,7 +54,6 @@ def process_files(files, model, output_dir):
                 file.write(f"{res}\n")
         d = perf_counter()
         print(f"Finished writing {basename} SSAF data in {d-c} s")
-        return
 
 def rerun(scope_dir, model_dir, output_dir):
     model = load_model(model_dir)

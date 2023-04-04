@@ -14,7 +14,7 @@ env | grep "^SLURM" | sort
 
 if [ $# -lt 1 ];
 then
-  echo "Missing argument, expected syntax: source rerun_ssaf_all_datasets.sh <scope folder>"
+  echo "Missing argument, expected syntax: source submit.sh <command>"
 else
-  eval "python3 ssaf_rerun_all.py $1"
+  eval "$@"
 fi
