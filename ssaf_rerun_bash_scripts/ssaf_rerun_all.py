@@ -32,7 +32,7 @@ def load_model(model_dir):
 
 def process_files(files, model, output_dir):
     for file in files:
-        basename = os.path.basename(file)
+        basename = pathlib.Path(file).stem
         
         try:
             images = (ImageLoader.load_zarr_data(file))

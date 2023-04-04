@@ -14,7 +14,7 @@ env | grep "^SLURM" | sort
 
 if [ $# -lt 1 ];
 then
-  echo "Missing argument, expected syntax: source submit.sh <command>"
+  echo "Missing argument, expected syntax: sbatch submit.sh <command>"
 else
   eval "$@"
 fi
