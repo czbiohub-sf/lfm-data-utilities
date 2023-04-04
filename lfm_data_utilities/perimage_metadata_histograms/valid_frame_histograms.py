@@ -6,7 +6,7 @@ from lfm_data_utilities.utils import (
     get_list_of_per_image_metadata_files,
     multiprocess_load_csv,
 )
-from constants import (
+from histogram_constants import (
     IMCOUNT_TARGET,
     MIN_FOCUS_TARGET,
     MAX_FOCUS_TARGET,
