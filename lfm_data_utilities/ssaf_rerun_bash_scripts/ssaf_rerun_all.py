@@ -58,7 +58,7 @@ def process_files(files, model, output_dir):
         d = perf_counter()
         print(f"Finished writing {basename} SSAF data in {d-c} s")
 
-def rerun(scope_dir, model_dir, output_dir):
+def run(scope_dir, model_dir, output_dir):
     """Run all the steps to get SSAF data from all zarr files"""
     model = load_model(model_dir)
     files = get_files(scope_dir)
@@ -75,5 +75,5 @@ if __name__ == "__main__":
             "Expected format 'python3 ssaf_rerun_all.py <path to scope folder> <path to model .pth file> <path to output folder>'"
         )
 
-    rerun(scope_folder, model_file, output_folder)
+    run(scope_folder, model_file, output_folder)
     print("Finished processing")

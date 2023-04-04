@@ -5,9 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plotter(folder, title, ylabel=None):
-    datasets, names = extractor(folder)
-
+def plotter(fdatasets, names, ylabel):
+    """Plot all datasets on the same graph, with appropriate labels"""
     for dataset, name in zip(datasets, names):
         rms = get_rms(dataset)
         plt.plot(dataset, label="{0}, RMS={1:.3f}]".format(name, rms), alpha=0.4, linewidth=0.5)
@@ -22,6 +21,10 @@ def plotter(folder, title, ylabel=None):
     plt.show()
 
 def extractor(folder):
+    """Find all files in data folder. 
+
+    Returns list of tuples for each file, containing extracted data and dataset name.
+    """
     datasets = []
     files = os.listdir(folder)
 
@@ -38,6 +41,7 @@ def extractor(folder):
     return datasets, files
 
 def get_rms(data):
+    """Compute root mean square (rms)"""
     ms = 0
     N = len(data)
 
@@ -46,6 +50,10 @@ def get_rms(data):
 
     return np.sqrt(ms / N)
 
+def run(folder, title, ylabel=None):
+    """Run all the steps to extract and plot the data"""
+    datasets, names = extractor(folder)
+    plotter(datasets, names, ylabel)
 
 if __name__ == "__main__":
     try:
@@ -62,6 +70,6 @@ if __name__ == "__main__":
 
     try:
         ylabel = sys.argv[2]
-        plotter(folder, title, ylabel=ylabel)
+        run(folder, title, ylabel=ylabel)
     except IndexError:
-        plotter(folder, title)
+        run(folder, title)
