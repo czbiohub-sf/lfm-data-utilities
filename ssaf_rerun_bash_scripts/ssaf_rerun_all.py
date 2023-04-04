@@ -55,7 +55,7 @@ class Rerunner():
                 else:
                     d = perf_counter()
                     print(f"Finished writing {basename} SSAF data in {d-c} s")
-                    
+
 
     def rerun(self, scope_dir, model_dir, output_dir):
         model = load_model(model_dir)
@@ -84,3 +84,5 @@ if __name__ == "__main__":
     
     SSAF_rerunner = Rerunner(load_model_for_inference, infer, ImageLoader)
     SSAF_rerunner.rerun(scope_folder, model_file, output_folder)
+
+    print("Finished processing")
