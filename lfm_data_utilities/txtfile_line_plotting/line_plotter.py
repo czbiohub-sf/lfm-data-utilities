@@ -5,11 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plotter(fdatasets, names, ylabel):
+def plotter(datasets, names, ylabel, legend):
     """Plot all datasets on the same graph, with appropriate labels"""
     for dataset, name in zip(datasets, names):
         rms = get_rms(dataset)
-        plt.plot(dataset, label="{0}, RMS={1:.3f}]".format(name, rms), alpha=0.4, linewidth=0.5)
+        if legend:
+            plt.plot(dataset, label="{0}, RMS={1:.3f}]".format(name, rms), alpha=0.4, linewidth=0.5)
+        else
+            plt.plot(dataset, alpha=0.4, linewidth=0.5)
 
     plt.legend()
     plt.title(title)
@@ -28,6 +31,11 @@ def extractor(folder):
     datasets = []
     files = os.listdir(folder)
 
+    if len(files) > 10:
+        legend = False
+    else:
+        legend = True
+
     for file in files:
         dataset = []
 
@@ -38,7 +46,7 @@ def extractor(folder):
 
         datasets.append(dataset)
 
-    return datasets, files
+    return datasets, files, legend
 
 def get_rms(data):
     """Compute root mean square (rms)"""
@@ -50,10 +58,10 @@ def get_rms(data):
 
     return np.sqrt(ms / N)
 
-def run(folder, title, ylabel=None):
+def run(folder, legend, title, ylabel=None):
     """Run all the steps to extract and plot the data"""
-    datasets, names = extractor(folder)
-    plotter(datasets, names, ylabel)
+    datasets, names, legend = extractor(folder)
+    plotter(datasets, names, ylabel, legend)
 
 if __name__ == "__main__":
     try:
