@@ -1,5 +1,6 @@
 import sys
 import os
+# import argparse
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +22,7 @@ def plotter(datasets, names, ylabel, legend):
         plt.ylabel(ylabel)
     plt.xlabel("Frame")
 
+    plt.savefig('/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SSAF_Uganda_full/curiosity/curiosity_plot.png')
     plt.show()
 
 def extractor(folder):
@@ -64,6 +66,15 @@ def run(folder, legend, title, ylabel=None):
     plotter(datasets, names, ylabel, legend)
 
 if __name__ == "__main__":
+
+    # argparser = argparse.ArgumentParser()
+    # argparser.add_argument("-n", "--name", help="your name")
+
+    # args = argparser.parse_args()
+    # print("args=%s" % args)
+
+    # print("args.name=%s" % args.name)
+
     try:
         folder = sys.argv[1]
     except IndexError:

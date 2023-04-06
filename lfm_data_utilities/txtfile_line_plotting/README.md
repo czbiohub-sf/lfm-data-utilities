@@ -1,7 +1,7 @@
 # .txt file line plotter
 
 ### line_plotter.py
-Tool to get data from a folde of .txt files and plot overlapping line plots
+Tool to get data from a folder of .txt files and plot overlapping line plots
 
 Inputs:
 - Path to folder containing datasets: eg. /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SSAF_Uganda_full/curiosity
