@@ -1,12 +1,12 @@
 import sys
 import os
-# import argparse
+import argparse
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plotter(datasets, names, ylabel, legend):
+def plotter(datasets, names, ylabel, legend, title, output):
     """Plot all datasets on the same graph, with appropriate labels"""
     for dataset, name in zip(datasets, names):
         if legend:
@@ -17,15 +17,14 @@ def plotter(datasets, names, ylabel, legend):
     
     if legend:
         plt.legend()
-    plt.title(title)
 
-    if ylabel:
-        plt.ylabel(ylabel)
+    plt.title(title)
+    plt.ylabel(ylabel)
     plt.xlabel("Frame")
 
-    savefile = '/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SSAF_Uganda_full/curiosity/curiosity_plot.png'
-    plt.savefig(savefile)
-    print(f"saved image to {savefile}") 
+    if output:
+        plt.savefig(output)
+        print(f"saved image to {output}")
     plt.show()
 
 def extractor(folder):
@@ -68,35 +67,27 @@ def get_rms(data):
 
     return np.sqrt(ms / N)
 
-def run(folder, title, ylabel=None):
+def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""
     datasets, names, legend = extractor(folder)
-    plotter(datasets, names, ylabel, legend)
+    plotter(datasets, names, ylabel, legend, output)
 
 if __name__ == "__main__":
 
-    # argparser = argparse.ArgumentParser()
-    # argparser.add_argument("-n", "--name", help="your name")
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("-d", "--dir", help="Directory containing txtfile data folder", required=True)
+    argparser.add_argument("-y", "--ylabel", help="Label for y-axis", required=True)
+    argparser.add_argument("-t", "--title", help="Title for plot")
+    argparser.add_argument("-o", "--output", help="Filename to export plot to")
 
-    # args = argparser.parse_args()
-    # print("args=%s" % args)
+    args = parser.parse_args()
 
-    # print("args.name=%s" % args.name)
-
-    try:
-        folder = sys.argv[1]
-    except IndexError:
-        raise Exception(
-            "Expected format 'python line_plotter.py <dataset folder> [ylabel] [title]'"
-        )
-
-    try:
-        title = sys.argv[3]
-    except IndexError:
+    if args.title:
+        title = args.title
+    else:
         title = folder
 
-    try:
-        ylabel = sys.argv[2]
-        run(folder, title, ylabel=ylabel)
-    except IndexError:
-        run(folder, title)
+    if args.output:
+        run(folder, title, ylabel, args.output)
+    else:
+        run(folder, title, ylabel, args.output)
