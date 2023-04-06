@@ -1,6 +1,5 @@
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
-from collections import namedtuple
 from pathlib import Path
 from csv import DictReader
 from datetime import datetime
