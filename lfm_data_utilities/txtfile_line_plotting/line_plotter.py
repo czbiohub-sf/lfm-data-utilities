@@ -9,20 +9,23 @@ import numpy as np
 def plotter(datasets, names, ylabel, legend):
     """Plot all datasets on the same graph, with appropriate labels"""
     for dataset, name in zip(datasets, names):
-        rms = get_rms(dataset)
         if legend:
+            rms = get_rms(dataset)
             plt.plot(dataset, label="{0}, RMS={1:.3f}]".format(name, rms), alpha=0.4, linewidth=0.5)
-        else
+        else:
             plt.plot(dataset, alpha=0.4, linewidth=0.5)
-
-    plt.legend()
+    
+    if legend:
+        plt.legend()
     plt.title(title)
 
     if ylabel:
         plt.ylabel(ylabel)
     plt.xlabel("Frame")
 
-    plt.savefig('/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SSAF_Uganda_full/curiosity/curiosity_plot.png')
+    savefile = '/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SSAF_Uganda_full/curiosity/curiosity_plot.png'
+    plt.savefig(savefile)
+    print(f"saved image to {savefile}") 
     plt.show()
 
 def extractor(folder):
@@ -42,7 +45,12 @@ def extractor(folder):
         dataset = []
 
         with open(os.path.join(folder, file), 'r') as f:
-            f.readline()
+            print("READ")
+            try:
+                f.readline()
+            except UnicodeDecodeError:
+                print(f"Skipping corrupted file: {file}")
+                
             for line in f:
                 dataset.append(float(line.strip()))
 
@@ -60,7 +68,7 @@ def get_rms(data):
 
     return np.sqrt(ms / N)
 
-def run(folder, legend, title, ylabel=None):
+def run(folder, title, ylabel=None):
     """Run all the steps to extract and plot the data"""
     datasets, names, legend = extractor(folder)
     plotter(datasets, names, ylabel, legend)
