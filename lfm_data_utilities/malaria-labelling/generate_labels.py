@@ -8,13 +8,14 @@ import torch
 
 import numpy as np
 
-from typing import Optional, Sequence, Generator, Literal, List, TypeVar, Tuple
+from tqdm import tqdm
 from pathlib import Path
 from cellpose import models
 from cellpose.utils import (
     fill_holes_and_remove_small_masks,
     outlines_list,
 )
+from typing import Optional, Sequence, Generator, Literal, List, TypeVar, Tuple
 
 from labelling_constants import CLASSES
 from generate_dataset_def import gen_dataset_def
@@ -47,7 +48,7 @@ def get_outlines(
     image_filenames = list(path_to_folder.glob("*.png"))
     filename_iterator = iter_in_chunks(image_filenames, chunksize)
 
-    for img_filename_chunk in filename_iterator:
+    for img_filename_chunk in tqdm(filename_iterator, total=len(image_filenames) // chunksize + 1):
         imgs = []
         for img_path in img_filename_chunk:
             # for some pathological reason, if imread fails it returns None
@@ -125,7 +126,7 @@ def label_folder_with_yogo(
     path_to_label_dir = path_to_images.parent / label_dir_name
     path_to_label_dir.mkdir(exist_ok=True, parents=True)
 
-    predict(path_to_pth, path_to_images, path_to_label_dir, thresh=0.5, visualize=False)
+    predict(path_to_pth, path_to_images=path_to_images, output_dir=path_to_label_dir, thresh=0.5)
 
 
 def label_runset(
