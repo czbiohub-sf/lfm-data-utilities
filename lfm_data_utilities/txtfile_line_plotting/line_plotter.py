@@ -48,7 +48,7 @@ def extractor(folder):
             try:
                 f.readlines()
             except UnicodeDecodeError:
-                print(f"Skipping corrupted file: {file}")
+                print(f"Skipping invalid file: {file}")
                 continue
                 
             for line in f:
@@ -72,7 +72,9 @@ def get_rms(data):
 def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""
     datasets, names, legend = extractor(folder)
-    plotter(datasets, names, ylabel, legend, output)
+    
+    output_file = os.path.join(folder, f'{output}.png') 
+    plotter(datasets, names, ylabel, legend, title, output_file)
 
 if __name__ == "__main__":
 
@@ -82,14 +84,14 @@ if __name__ == "__main__":
     argparser.add_argument("-t", "--title", help="Title for plot")
     argparser.add_argument("-o", "--output", help="Filename to export plot to")
 
-    args = parser.parse_args()
+    args = argparser.parse_args()
 
     if args.title:
         title = args.title
     else:
-        title = folder
+        title = args.dir
 
     if args.output:
-        run(folder, title, ylabel, args.output)
+        run(args.dir, title, args.ylabel, args.output)
     else:
-        run(folder, title, ylabel, args.output)
+        run(args.dir, title, args.ylabel, args.output)
