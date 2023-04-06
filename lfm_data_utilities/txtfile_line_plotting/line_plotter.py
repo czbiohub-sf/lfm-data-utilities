@@ -46,13 +46,15 @@ def extractor(folder):
         with open(os.path.join(folder, file), 'r') as f:
             print("READ")
             try:
-                f.readline()
+                f.readlines()
             except UnicodeDecodeError:
                 print(f"Skipping corrupted file: {file}")
+                continue
                 
             for line in f:
                 dataset.append(float(line.strip()))
 
+        print("UNSKIPPED")
         datasets.append(dataset)
 
     return datasets, files, legend
