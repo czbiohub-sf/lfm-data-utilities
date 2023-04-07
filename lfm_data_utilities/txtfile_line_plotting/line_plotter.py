@@ -92,6 +92,6 @@ if __name__ == "__main__":
         title = args.dir
 
     if args.output:
-        run(args.dir, title, args.ylabel, args.output)
+        run(args.dir, title, args.ylabel, output=args.output)
     else:
-        run(args.dir, title, args.ylabel, args.output)
+        run(args.dir, title, args.ylabel)
