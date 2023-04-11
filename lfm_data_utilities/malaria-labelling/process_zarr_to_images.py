@@ -55,7 +55,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     run_set = args.path_to_runset
-    skip = args.existing_label_action == "skip"
+    skip = args.existing_image_action == "skip"
 
     if not run_set.exists():
         raise FileNotFoundError(f"directory {sys.argv[1]} not found")
