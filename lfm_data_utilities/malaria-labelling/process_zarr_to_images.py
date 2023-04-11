@@ -12,7 +12,7 @@ from utils import multiprocess_directory_work
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
-    data = zarr.open(str(path_to_zarr_zip))
+    data = zarr.open(str(path_to_zarr_zip), "r")
 
     image_dir = path_to_zarr_zip.parent / "images"
 
