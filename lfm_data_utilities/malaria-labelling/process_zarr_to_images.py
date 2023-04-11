@@ -24,8 +24,8 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
         for img_path in image_dir.glob("*.png"):
             img_path.unlink()  # remove file
 
-    # we converted the way we store zarr arrays, so we have two formats for zarr
-    data_len = data.initialized if hasattr(data, "nchunks") else len(data)
+    # we converted storing data as a zarr.Group to a zarr.Array
+    data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
     if data_len == 0:
         return
 
@@ -34,7 +34,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
     N = int(math.log(data_len, 10) + 1)
 
     for i in range(data_len):
-        img = data[:, :, i] if hasattr(data, "nchunks") else data[i][:]
+        img = data[:, :, i] if isinstance(data, zarr.Array) else data[i][:]
         Image.fromarray(img).save(image_dir / f"img_{i:0{N}}.png")
 
 
