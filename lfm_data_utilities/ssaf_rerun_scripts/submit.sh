@@ -2,14 +2,6 @@
 
 # This bash script is intended for submitting jobs to a GPU slurm node.
 # This speeds up running inference, such as when rerunning SSAF on large datasets
-# 
-# For example, to rerun SSAF on curiosity data I would run:
-# 	"sbatch submit.sh python3 ssaf_rerun_all.py ...
-#	/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full/curiosity ...
-#	'/home/michelle.khoo/autofocus/ulc-malaria-autofocus/trained_models/best.pth' ...
-# 	'/home/michelle.khoo/autofocus/curiosity'"
-
-
 
 #SBATCH --job-name=ULCMalariaSSAFreruns
 #SBATCH --time=16:00:00

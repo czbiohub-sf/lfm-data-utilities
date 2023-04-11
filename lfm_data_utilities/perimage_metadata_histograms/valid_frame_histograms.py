@@ -1,9 +1,11 @@
 import sys
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
 from lfm_data_utilities.utils import (
     get_list_of_per_image_metadata_files,
+    get_corresponding_ssaf_file,
     multiprocess_load_csv,
 )
 from histogram_constants import (
@@ -15,9 +17,9 @@ from histogram_constants import (
 )
 
 
-def plot_valid_frame_histograms(path, title):
-    metadata_files = get_list_of_per_image_metadata_files(path)
-    print(f"{len(metadata_files)} per image metadata files found", flush=True)
+def run(metadata_dir, ssaf_dir, title, output=None) -> None:
+
+    metadata_files, ssaf_files = get_all_files(metadata_dir, ssaf_dir)
 
     valid_focus_percs = []
     valid_flowrate_percs = []
@@ -25,27 +27,21 @@ def plot_valid_frame_histograms(path, title):
     # Get % good frames for each dataset
     data_files = multiprocess_load_csv(metadata_files)
     for data in data_files:
+        print(data)
         vals = data["vals"]
         if bool(vals) and int(vals["im_counter"][-1]) >= IMCOUNT_TARGET:
-            valid_focus_perc = count_valid_focus_frames(vals["focus_error"])
-            valid_focus_percs.append(valid_focus_perc)
-
-            valid_flowrate_perc = count_valid_flowrate_frames(
-                vals["flowrate"], data["filepath"]
-            )
-            valid_flowrate_percs.append(valid_flowrate_perc)
+            valid_focus_percs.append(count_valid_focus_frames(vals["focus_error"]))
+            valid_flowrate_percs.append(count_valid_frames(vals["flowrate"], data["filepath"]))
 
     # Filter out nan
-    filtered_valid_focus_percs = [val for val in valid_focus_percs if not np.isnan(val)]
-    filtered_valid_flowrate_percs = [
-        val for val in valid_flowrate_percs if not np.isnan(val)
-    ]
+    filtered_valid_focus_percs = valid_focus_percs[np.isnan()]
+    filtered_valid_flowrate_percs = filter_nonetype(valid_flowrate_percs)
 
     valid_focus_histogram, focus_bin_edges = np.histogram(
         filtered_valid_focus_percs, bins=20
     )
     focus_bin_centers = [
-        (a + b) / 2 for a, b in zip(focus_bin_edges[0:-1], focus_bin_edges[1:])
+        (a + b) / 2 for a, b in zip(focus_bin_edges, focus_bin_edges[1:])
     ]
 
     valid_flowrate_histogram, flowrate_bin_edges = np.histogram(
@@ -74,51 +70,69 @@ def plot_valid_frame_histograms(path, title):
     plt.show()
 
 
-def count_valid_focus_frames(focus_data):
+def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Path]]:
+
+    metadata_files = get_list_of_per_image_metadata_files(metadata_dir)
+
+    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for md_file in metadata_files])
+
+    print(f"{len(metadata_files)} per image metadata files found", flush=True)
+    print(f"{len(ssaf_files)} SSAF files found", flush=True)
+
+    return metadata_files, ssaf_files
+
+def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int]) -> List[Optional[float, int]]:
     ready = True
 
     good = 0
     total = 0
 
-    for focus_val in focus_data:
+    for focus_val in data:
         if focus_val:
             if ready:
                 ready = False
                 total += 1
-                if MIN_FOCUS_TARGET < float(focus_val) < MAX_FOCUS_TARGET:
+                if min_target < float(focus_val) < max_target:
                     good += 1
         else:
             ready = True
 
     return good / total * 100
 
-
-def count_valid_flowrate_frames(data, file):
+def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int], file: str) -> List[Optional[float, int]]:
     good = sum(
         1
         for val in data
-        if val != "" and MIN_FLOWRATE_TARGET < float(val) < MAX_FLOWRATE_TARGET
+        if val != "" and min_target < float(val) < max_target
     )
     total = sum(1 for val in data if val != "")
 
     if total == 0:
-        print(f"No flowrate measurements for {file}")
+        print(f"No measurements for {file}")
         return np.nan
 
     return good / total * 100
 
+def filter_nonetype(data: List[Optional[float, int]]) -> List[Optional[float, int]]:
+    return list(filter(lambda val: val != None, data))
+
 
 if __name__ == "__main__":
-    try:
-        path = sys.argv[1]
-    except IndexError as e:
-        raise Exception(
-            "Expected format 'python valid_frame_histograms <filepath> [title]'"
-        )
 
-    try:
-        title = sys.argv[2]
-    except IndexError:
-        title = path
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("-m", "--metadata", help="Directory containing metadata .csv files", required=True)
+    argparser.add_argument("-s", "--ssaf", help="Directory containing SSAF .txt files", required=True)
+    argparser.add_argument("-t", "--title", help="Title for plot")
+    argparser.add_argument("-o", "--output", help="Filename to export plot to")
 
-    plot_valid_frame_histograms(path, title)
+    args = argparser.parse_args()
+
+    if args.title:
+        title = args.title
+    else:
+        title = args.metadata
+
+    if args.output:
+        run(args.metadata, args.ssaf, title, output=args.output)
+    else:
+        run(args.metadata, args.ssaf, title)   
