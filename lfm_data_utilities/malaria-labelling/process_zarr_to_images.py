@@ -19,6 +19,10 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
     if image_dir.exists() and skip:
         print(f"skipping {image_dir} because images already exist!")
         return
+    elif image_dir.exists() and not skip:
+        # being explicit w/ condition above because it would be bad to make a mistake here
+        for img_path in image_dir.glob("*.png"):
+            img_path.unlink()  # remove file
 
     # we converted the way we store zarr arrays, so we have two formats for zarr
     data_len = data.initialized if hasattr(data, "nchunks") else len(data)
@@ -42,11 +46,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("path_to_runset", type=Path, help="path to run folders")
     parser.add_argument(
-        "--existing-label-action",
+        "--existing-image-action",
         "-e",
         choices=["skip", "overwrite"],
         default="skip",
-        help="skip or overwrite existing labels when encountered, defaults to 'skip'",
+        help="skip or overwrite existing images when encountered, defaults to 'skip'",
     )
     args = parser.parse_args()
 
