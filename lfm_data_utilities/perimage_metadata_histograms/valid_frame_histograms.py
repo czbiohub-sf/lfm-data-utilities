@@ -27,27 +27,21 @@ def run(metadata_dir, ssaf_dir, title, output=None) -> None:
     # Get % good frames for each dataset
     data_files = multiprocess_load_csv(metadata_files)
     for data in data_files:
+        print(data)
         vals = data["vals"]
         if bool(vals) and int(vals["im_counter"][-1]) >= IMCOUNT_TARGET:
-            valid_focus_perc = count_valid_focus_frames(vals["focus_error"])
-            valid_focus_percs.append(valid_focus_perc)
-
-            valid_flowrate_perc = count_valid_frames(
-                vals["flowrate"], data["filepath"]
-            )
-            valid_flowrate_percs.append(valid_flowrate_perc)
+            valid_focus_percs.append(count_valid_focus_frames(vals["focus_error"]))
+            valid_flowrate_percs.append(count_valid_frames(vals["flowrate"], data["filepath"]))
 
     # Filter out nan
-    filtered_valid_focus_percs = [val for val in valid_focus_percs if not np.isnan(val)]
-    filtered_valid_flowrate_percs = [
-        val for val in valid_flowrate_percs if not np.isnan(val)
-    ]
+    filtered_valid_focus_percs = valid_focus_percs[np.isnan()]
+    filtered_valid_flowrate_percs = filter_nonetype(valid_flowrate_percs)
 
     valid_focus_histogram, focus_bin_edges = np.histogram(
         filtered_valid_focus_percs, bins=20
     )
     focus_bin_centers = [
-        (a + b) / 2 for a, b in zip(focus_bin_edges[0:-1], focus_bin_edges[1:])
+        (a + b) / 2 for a, b in zip(focus_bin_edges, focus_bin_edges[1:])
     ]
 
     valid_flowrate_histogram, flowrate_bin_edges = np.histogram(
@@ -77,19 +71,17 @@ def run(metadata_dir, ssaf_dir, title, output=None) -> None:
 
 
 def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Path]]:
-    metadata_files = get_list_of_per_image_metadata_files(metadata_dir)
-    print(f"{len(metadata_files)} per image metadata files found", flush=True)
 
-    ssaf_files = []
-    for metadata_file in metadata_files:
-        ssaf_file = get_corresponding_ssaf_file(metadata_file, ssaf_dir)
-        if ssaf_file.exists():
-            ssaf_files.append(ssaf_file)
+    metadata_files = get_list_of_per_image_metadata_files(metadata_dir)
+
+    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for md_file in metadata_files])
+
+    print(f"{len(metadata_files)} per image metadata files found", flush=True)
     print(f"{len(ssaf_files)} SSAF files found", flush=True)
 
     return metadata_files, ssaf_files
 
-def count_valid_focus_frames(data):
+def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int]) -> List[Optional[float, int]]:
     ready = True
 
     good = 0
@@ -100,18 +92,18 @@ def count_valid_focus_frames(data):
             if ready:
                 ready = False
                 total += 1
-                if MIN_FOCUS_TARGET < float(focus_val) < MAX_FOCUS_TARGET:
+                if min_target < float(focus_val) < max_target:
                     good += 1
         else:
             ready = True
 
     return good / total * 100
 
-def count_valid_frames(data, file):
+def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int], file: str) -> List[Optional[float, int]]:
     good = sum(
         1
         for val in data
-        if val != "" and MIN_FLOWRATE_TARGET < float(val) < MAX_FLOWRATE_TARGET
+        if val != "" and min_target < float(val) < max_target
     )
     total = sum(1 for val in data if val != "")
 
@@ -120,6 +112,9 @@ def count_valid_frames(data, file):
         return np.nan
 
     return good / total * 100
+
+def filter_nonetype(data: List[Optional[float, int]]) -> List[Optional[float, int]]:
+    return list(filter(lambda val: val != None, data))
 
 
 if __name__ == "__main__":
