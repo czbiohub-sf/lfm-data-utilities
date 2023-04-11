@@ -20,6 +20,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
         print(f"skipping {image_dir} because images already exist!")
         return
 
+    # we converted the way we store zarr arrays, so we have two formats for zarr
     data_len = data.initialized if hasattr(data, "nchunks") else len(data)
     if data_len == 0:
         return
