@@ -118,11 +118,14 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 
     return datasets
 
-def get_corresponding_ssaf_file(metadata_file: str, top_level_ssaf_dir: str) -> Path:
+def get_corresponding_ssaf_file(metadata_file: str, top_level_ssaf_dir: str) -> Optional[Path]:
     """Get the path to the corresponding SSAF .txt file for a given metadata file"""
-    
+
     basename = pathlib.Path(matadata_file).stem
-    return Path(top_level_ssaf_dir) / f"{basename}_ssaf.txt"
+    ssaf_file = Path(top_level_ssaf_dir) / f"{basename}_ssaf.txt"
+
+    if ssaf_file.exists()
+        return ssaf_file
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
