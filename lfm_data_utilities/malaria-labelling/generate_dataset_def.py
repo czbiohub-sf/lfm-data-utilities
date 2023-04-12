@@ -45,7 +45,6 @@ def gen_dataset_def(
         # check classes
         images_path = folder_path / "images"
         label_path = folder_path / label_dir_name
-        classes_path = folder_path / "classes.txt"
 
         if not (images_path.exists() and label_path.exists()):
             print(
