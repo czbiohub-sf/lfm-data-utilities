@@ -237,6 +237,8 @@ if __name__ == "__main__":
             "yogo is the selected model - see --path-to-yogo-pth option"
         )
 
+    print(f"labelling runset...")
+    t0 = time.perf_counter()
     label_runset(
         path_to_runset,
         model=args.model,
@@ -245,11 +247,20 @@ if __name__ == "__main__":
         label_dir_name=args.label_dir_name,
         skip=args.existing_label_action == "skip",
     )
+    print(f"runset labelled: {time.perf_counter() - t0}")
 
+    print(f"generating dataset defs...")
+    t0 = time.perf_counter()
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
+    print(f"dataset defs generated: {time.perf_counter() - t0}")
 
+
+    print(f"generating tasks files for Label Studio...")
+    t0 = time.perf_counter()
     generate_tasks_for_runset(
         path_to_runset,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
+    print(f"tasks files generated: {time.perf_counter() - t0}")
+    print("all done!")
