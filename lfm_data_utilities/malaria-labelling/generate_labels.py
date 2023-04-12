@@ -47,7 +47,9 @@ def get_outlines(
     image_filenames = list(path_to_folder.glob("*.png"))
     filename_iterator = iter_in_chunks(image_filenames, chunksize)
 
-    for img_filename_chunk in tqdm(filename_iterator, total=len(image_filenames) // chunksize + 1):
+    for img_filename_chunk in tqdm(
+        filename_iterator, total=len(image_filenames) // chunksize + 1
+    ):
         imgs = []
         for img_path in img_filename_chunk:
             # for some pathological reason, if imread fails it returns None
@@ -125,7 +127,12 @@ def label_folder_with_yogo(
     path_to_label_dir = path_to_images.parent / label_dir_name
     path_to_label_dir.mkdir(exist_ok=True, parents=True)
 
-    predict(path_to_pth, path_to_images=path_to_images, output_dir=path_to_label_dir, thresh=0.5)
+    predict(
+        path_to_pth,
+        path_to_images=path_to_images,
+        output_dir=path_to_label_dir,
+        thresh=0.5,
+    )
 
 
 def label_runset(
@@ -252,7 +259,6 @@ if __name__ == "__main__":
     t0 = time.perf_counter()
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
     print(f"dataset defs generated: {time.perf_counter() - t0}")
-
 
     print("generating tasks files for Label Studio...")
     t0 = time.perf_counter()
