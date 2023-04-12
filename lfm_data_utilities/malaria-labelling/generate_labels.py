@@ -152,10 +152,10 @@ def label_runset(
         t0 = time.perf_counter()
 
         label_dir = path_to_images.parent / label_dir_name
-        if label_dir.exists():
+        if label_dir.exists() and len(list(label_dir.iterdir())) > 0:
             if skip:
                 continue
-
+            # we are overwriting the labels
             print(f"overwriting label directory {label_dir}...")
 
         if model == "cellpose":

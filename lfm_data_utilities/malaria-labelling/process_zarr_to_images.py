@@ -16,7 +16,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
 
     image_dir = path_to_zarr_zip.parent / "images"
 
-    if image_dir.exists() and skip:
+    if image_dir.exists() and len(list(image_dir.iterdir())) > 0 and skip:
         print(f"skipping {image_dir} because images already exist!")
         return
     elif image_dir.exists() and not skip:
