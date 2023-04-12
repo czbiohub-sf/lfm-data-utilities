@@ -12,16 +12,20 @@ from utils import multiprocess_directory_work
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
-    data = zarr.open(str(path_to_zarr_zip))
+    data = zarr.open(str(path_to_zarr_zip), "r")
 
     image_dir = path_to_zarr_zip.parent / "images"
 
-    if image_dir.exists() and skip:
+    if image_dir.exists() and len(list(image_dir.iterdir())) > 0 and skip:
         print(f"skipping {image_dir} because images already exist!")
         return
+    elif image_dir.exists() and not skip:
+        # being explicit w/ condition above because it would be bad to make a mistake here
+        for img_path in image_dir.glob("*.png"):
+            img_path.unlink()  # remove file
 
-    # we converted the way we store zarr arrays, so we have two formats for zarr
-    data_len = data.initialized if hasattr(data, "nchunks") else len(data)
+    # we converted storing data as a zarr.Group to a zarr.Array
+    data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
     if data_len == 0:
         return
 
@@ -30,7 +34,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
     N = int(math.log(data_len, 10) + 1)
 
     for i in range(data_len):
-        img = data[:, :, i] if hasattr(data, "nchunks") else data[i][:]
+        img = data[:, :, i] if isinstance(data, zarr.Array) else data[i][:]
         Image.fromarray(img).save(image_dir / f"img_{i:0{N}}.png")
 
 
@@ -42,16 +46,16 @@ if __name__ == "__main__":
     )
     parser.add_argument("path_to_runset", type=Path, help="path to run folders")
     parser.add_argument(
-        "--existing-label-action",
+        "--existing-image-action",
         "-e",
         choices=["skip", "overwrite"],
         default="skip",
-        help="skip or overwrite existing labels when encountered, defaults to 'skip'",
+        help="skip or overwrite existing images when encountered, defaults to 'skip'",
     )
     args = parser.parse_args()
 
     run_set = args.path_to_runset
-    skip = args.existing_label_action == "skip"
+    skip = args.existing_image_action == "skip"
 
     if not run_set.exists():
         raise FileNotFoundError(f"directory {sys.argv[1]} not found")
