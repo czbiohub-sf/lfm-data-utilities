@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import cv2
-import sys
 import time
 import torch
 
@@ -237,7 +236,7 @@ if __name__ == "__main__":
             "yogo is the selected model - see --path-to-yogo-pth option"
         )
 
-    print(f"labelling runset...")
+    print("labelling runset...")
     t0 = time.perf_counter()
     label_runset(
         path_to_runset,
@@ -249,13 +248,13 @@ if __name__ == "__main__":
     )
     print(f"runset labelled: {time.perf_counter() - t0}")
 
-    print(f"generating dataset defs...")
+    print("generating dataset defs...")
     t0 = time.perf_counter()
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
     print(f"dataset defs generated: {time.perf_counter() - t0}")
 
 
-    print(f"generating tasks files for Label Studio...")
+    print("generating tasks files for Label Studio...")
     t0 = time.perf_counter()
     generate_tasks_for_runset(
         path_to_runset,

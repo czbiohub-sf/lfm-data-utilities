@@ -1,11 +1,10 @@
 #! /usr/bin/env python3
 
 import sys
-import time
 
 from tqdm import tqdm
 from pathlib import Path
-from typing import Tuple, List, Dict
+from typing import List, Dict
 
 from ruamel import yaml
 
@@ -53,12 +52,6 @@ def gen_dataset_def(
                 f"WARNING: image path or label path doesn't exist: {images_path}, {label_path}. Continuing..."
             )
             continue
-
-        classes = (
-            class_names_from_classes_dot_txt(classes_path)
-            if classes_path.exists()
-            else CLASSES  # if no classes.txt exists, assume that it has been default-labelled healthy
-        )
 
         dataset_paths[folder_path.name] = {
             "image_path": str(images_path),
