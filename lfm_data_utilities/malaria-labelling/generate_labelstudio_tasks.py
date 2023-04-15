@@ -1,24 +1,14 @@
 #! /usr/bin/env python3
 
 
+from tqdm import tqdm
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 from urllib.request import pathname2url
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
 from label_studio_converter.imports.yolo import convert_yolo_to_ls
-
-
-def tqdm(v):
-    return v
-
-
-if __name__ == "__main__":
-    try:
-        from tqdm import tqdm  # type: ignore
-    except ImportError:
-        pass
 
 
 def path_is_relative_to(path_a: Path, path_b: Union[str, Path]) -> bool:
@@ -53,18 +43,24 @@ def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> P
     return path_cls(*parts)
 
 
-def generate_tasks_for_runset(
+def generate_tasks_for_runset_by_parent_folder(
     path_to_runset_folder: Path, label_dir_name="labels", tasks_file_name="tasks"
 ):
     folders = [
         Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")
     ]
-
     if len(folders) == 0:
         raise ValueError(
             "couldn't find labels and images - double check the provided path"
         )
+    return generate_tasks_for_runset(
+        folders, path_to_runset_folder, label_dir_name="labels", tasks_file_name="tasks"
+    )
 
+
+def generate_tasks_for_runset(
+        folders: List[Path], relative_parent: Path, label_dir_name="labels", tasks_file_name="tasks"
+):
     print(f"{len(folders)} tasks to label")
 
     for folder_path in tqdm(folders):
@@ -72,7 +68,7 @@ def generate_tasks_for_runset(
             print(f"warning: {folder_path} is not a directory")
             continue
 
-        abbreviated_path = str(path_relative_to(folder_path, path_to_runset_folder))
+        abbreviated_path = str(path_relative_to(folder_path, relative_parent))
         root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
 
         tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
@@ -127,7 +123,7 @@ if __name__ == "__main__":
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
-    generate_tasks_for_runset(
+    generate_tasks_for_runset_by_parent_folder(
         path_to_runset,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,

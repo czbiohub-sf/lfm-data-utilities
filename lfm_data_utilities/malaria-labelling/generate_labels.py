@@ -143,7 +143,7 @@ def label_runset(
     chunksize=32,
     label=0,
     skip=True,
-):
+) -> List[Path]:
     print(
         f"starting to label run set; {'skipping' if skip else 'overwritting'} existing labels"
     )
@@ -151,6 +151,7 @@ def label_runset(
     paths_to_images = list(path_to_runset_folder.glob("./**/images"))
     print(f"found {len(paths_to_images)} directories to label")
 
+    good_paths = []
     for i, path_to_images in enumerate(paths_to_images, start=1):
         print(
             f"{i} / {len(paths_to_images)} | {path_to_images.parent.name}", end="    "
@@ -163,6 +164,8 @@ def label_runset(
                 continue
             # we are overwriting the labels
             print(f"overwriting label directory {label_dir}...")
+
+        good_paths.append(path_to_images)
 
         if model == "cellpose":
             label_fn = label_folder_with_cellpose
@@ -196,6 +199,8 @@ def label_runset(
             traceback.print_exc()
 
         print(f"{time.perf_counter() - t0:.0f}s")
+
+    return good_paths
 
 
 if __name__ == "__main__":
@@ -245,7 +250,7 @@ if __name__ == "__main__":
 
     print("labelling runset...")
     t0 = time.perf_counter()
-    label_runset(
+    labelled_run_paths = label_runset(
         path_to_runset,
         model=args.model,
         path_to_pth=args.path_to_yogo_pth,
@@ -263,6 +268,7 @@ if __name__ == "__main__":
     print("generating tasks files for Label Studio...")
     t0 = time.perf_counter()
     generate_tasks_for_runset(
+        labelled_run_paths,
         path_to_runset,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
