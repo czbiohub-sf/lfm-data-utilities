@@ -123,7 +123,7 @@ def get_corresponding_ssaf_file(metadata_file: str, top_level_ssaf_dir: str) -> 
     basename = pathlib.Path(matadata_file).stem
     ssaf_file = Path(top_level_ssaf_dir) / f"{basename}_ssaf.txt"
 
-    if ssaf_file.exists()
+    if ssaf_file.exists():
         return ssaf_file
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
