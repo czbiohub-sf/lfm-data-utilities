@@ -38,8 +38,8 @@ while read images_dir; do
     echo "$(tput setaf 1)$(realpath $labels_dir) $num_images $num_labels$(tput sgr0)"
   elif [ "$num_images" -gt "$num_labels" ]; then
     count=$((count + 1))
-    # make this green instead of red
-    echo "$(tput setaf 2)$(realpath $labels_dir) $num_images $num_labels$(tput sgr0)"
+    # make this orange instead of red
+    echo "$(tput setaf 3)$(realpath $labels_dir) $num_images $num_labels$(tput sgr0)"
   fi
 done < /tmp/img_dirs.txt
 
