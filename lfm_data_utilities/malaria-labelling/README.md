@@ -1,4 +1,4 @@
-# Labelling: Cosa Nostra
+# Labelling: An adventure in book keeping
 
 Labelling data at a high quality without inducing tremendous costs (of work-hours or otherwise) is challenging, but we are attempting to make it as easy and accurate as possible. There are several pages of documentation for the data pipeline alone (and this is one of them!). Here is a short map of the documentation:
 
