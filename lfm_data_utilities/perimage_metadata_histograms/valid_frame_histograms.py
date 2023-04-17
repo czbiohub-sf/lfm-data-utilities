@@ -3,6 +3,9 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
+from typing import List, Optional, Union, Tuple
+from pathlib import Path
+
 from lfm_data_utilities.utils import (
     get_list_of_per_image_metadata_files,
     get_corresponding_ssaf_file,
@@ -84,7 +87,7 @@ def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Pa
 
     return metadata_files, ssaf_files
 
-def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int]) -> List[Optional[float, int]]:
+def count_valid_focus_frames(data: List[Optional[Union[float, int]]], min_target: Optional[Union[float, int]], max_target: Optional[Union[float, int]]) -> List[Optional[Union[float, int]]]:
     ready = True
 
     good = 0
@@ -102,7 +105,7 @@ def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optio
 
     return good / total * 100
 
-def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int], file: str) -> List[Optional[float, int]]:
+def count_valid_frames(data: List[Optional[Union[float, int]]], min_target: Optional[Union[float, int]], max_target: Optional[Union[float, int]], file: str) -> List[Optional[Union[float, int]]]:
     good = sum(
         1
         for val in data
@@ -116,7 +119,7 @@ def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[fl
 
     return good / total * 100
 
-def filter_nonetype(data: List[Optional[float, int]]) -> List[Optional[float, int]]:
+def filter_nonetype(data: List[Optional[Union[float, int]]]) -> List[Optional[Union[float, int]]]:
     return list(filter(lambda val: val != None, data))
 
 

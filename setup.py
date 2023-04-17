@@ -1,11 +1,11 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="lfm_data_utilities",
     description="Tools for processing data related to the lfm-scope (ulc-malaria-scope)",
     author="CZ Biohub | Bioengineering",
     author_email="paul.lebel@czbiohub.org",
-    packages=[],
+    packages=find_packages("lfm-data-utilities"),
     install_requires=[
         "matplotlib>=3.5.3",
         "tqdm>=4.64.1",
