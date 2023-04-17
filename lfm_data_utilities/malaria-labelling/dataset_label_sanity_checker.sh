@@ -43,4 +43,4 @@ while read images_dir; do
   fi
 done < /tmp/img_dirs.txt
 
-echo $count
+echo "$count total directories with a mismatched number of images compared to labels"
