@@ -1,3 +1,13 @@
+# Labelling: Cosa Nostra
+
+Labelling data at a high quality without inducing tremendous costs (of work-hours or otherwise) is challenging, but we are attempting to make it as easy and accurate as possible. There are several pages of documentation for the data pipeline alone (and this is one of them!). Here is a short map of the documentation:
+
+- [this document](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/README.md#human-annotation) includes instruction for setting up and using LabelStudio
+- [strategy.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/strategy.md) includes the high-level strategy for training YOGO and improving data labels.
+- [scripts.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/scripts.md) includes instructions for running scripts over our data (primarily labelling)
+
+Where you should start depends entirely on what you need to do. If you are just labelling data, you probably just need this document. If you are handling data or performing training, you should look at the other documents above. Now, let's get into it!
+
 # Human Annotation
 
 We will use [Label Studio](https://labelstud.io/) for human annotation.
@@ -14,7 +24,7 @@ python3 --version
 
 If you get `Python 3.9.*`, everything is good! Move on to **Installation for Annotations**.
 
-You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/).  You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky. 
+You can install Python3.9 with your favourite package manager (like Homebrew on Mac), or from [Python's website](https://www.python.org/downloads/release/python-3913/).  You could also use [`pyenv`](https://github.com/pyenv/pyenv), but be warned that `pyenv` can be quite finicky.
 
 You must either make sure that your `python3` executable is `Python 3.9`, or you must **remeber to always invoke the scripts with `python3.9` instead of `python3`**.
 
@@ -38,7 +48,7 @@ else, if you can run
 python3 -m pip install label-studio
 ```
 
-## Annotating
+## Annotation
 
 1. Start Label Studio by running: `python3 run_label_studio.py`. This assumes running on `OnDemand`. To run locally, mount `flexo` to your computer and run `python3 run_label_studio.py <path to run-set folder>`
 2. In LabelStudio, click `Create Project`
