@@ -33,9 +33,13 @@ while read images_dir; do
   num_labels=$(ls -1 "$labels_dir" | wc -l)
 
   # Compare the counts and print the run folder name if they are not equal
-  if [ "$num_images" -ne "$num_labels" ]; then
+  if [ "$num_images" -lt "$num_labels" ]; then
     count=$((count + 1))
-    echo $(realpath $labels_dir) $num_images $num_labels
+    echo "$(tput setaf 1)$(realpath $labels_dir) $num_images $num_labels$(tput sgr0)"
+  elif [ "$num_images" -gt "$num_labels" ]; then
+    count=$((count + 1))
+    # make this green instead of red
+    echo "$(tput setaf 2)$(realpath $labels_dir) $num_images $num_labels$(tput sgr0)"
   fi
 done < /tmp/img_dirs.txt
 
