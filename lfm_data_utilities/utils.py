@@ -120,7 +120,7 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 def get_corresponding_ssaf_file(metadata_file: str, top_level_ssaf_dir: str) -> Optional[Path]:
     """Get the path to the corresponding SSAF .txt file for a given metadata file"""
 
-    basename = pathlib.Path(matadata_file).stem
+    basename = Path(metadata_file).stem
     ssaf_file = Path(top_level_ssaf_dir) / f"{basename}_ssaf.txt"
 
     if ssaf_file.exists():
