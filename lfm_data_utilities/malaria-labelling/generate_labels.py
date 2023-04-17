@@ -32,6 +32,21 @@ def iter_in_chunks(s: Sequence[T], n: int = 1) -> Generator[Sequence[T], None, N
         yield s[i : i + n]
 
 
+def empty_dir(path: Path):
+    """
+    recursively removes all files and directories in path, assumed to be a dir
+    """
+    if not path.is_dir():
+        raise ValueError(f"{path} is not a directory")
+
+    for child in path.iterdir():
+        if child.is_file():
+            child.unlink()
+        else:
+            empty_dir(child)
+            child.rmdir()
+
+
 def get_outlines(
     path_to_folder: Path, chunksize: int = 32
 ) -> List[Tuple[Path, List[np.ndarray]]]:
@@ -151,7 +166,7 @@ def label_runset(
     paths_to_images = list(path_to_runset_folder.glob("./**/images"))
     print(f"found {len(paths_to_images)} directories to label")
 
-    good_paths = []
+    good_run_folders = []
     for i, path_to_images in enumerate(paths_to_images, start=1):
         print(
             f"{i} / {len(paths_to_images)} | {path_to_images.parent.name}", end="    "
@@ -162,10 +177,12 @@ def label_runset(
         if label_dir.exists() and len(list(label_dir.iterdir())) > 0:
             if skip:
                 continue
+
             # we are overwriting the labels
             print(f"overwriting label directory {label_dir}...")
+            empty_dir(label_dir)
 
-        good_paths.append(path_to_images)
+        good_run_folders.append(path_to_images.parent)
 
         if model == "cellpose":
             label_fn = label_folder_with_cellpose
@@ -200,7 +217,7 @@ def label_runset(
 
         print(f"{time.perf_counter() - t0:.0f}s")
 
-    return good_paths
+    return good_run_folders
 
 
 if __name__ == "__main__":

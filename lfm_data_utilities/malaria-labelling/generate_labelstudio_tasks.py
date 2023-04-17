@@ -59,11 +59,11 @@ def generate_tasks_for_runset_by_parent_folder(
 
 
 def generate_tasks_for_runset(
-        folders: List[Path], relative_parent: Path, label_dir_name="labels", tasks_file_name="tasks"
+        run_folders: List[Path], relative_parent: Path, label_dir_name="labels", tasks_file_name="tasks"
 ):
-    print(f"{len(folders)} tasks to label")
+    print(f"{len(run_folders)} tasks to label")
 
-    for folder_path in tqdm(folders):
+    for folder_path in tqdm(run_folders):
         if not folder_path.is_dir():
             print(f"warning: {folder_path} is not a directory")
             continue
