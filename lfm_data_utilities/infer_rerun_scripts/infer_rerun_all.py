@@ -4,7 +4,8 @@ import torch
 import sys
 
 from autofocus.infer import load_model_for_inference, infer, ImageLoader
-from utils import get_corresponding_txt_file
+from lfm_data_utilities.utils import get_corresponding_txt_file
+from typing import List, Optional
 from zipfile import BadZipFile
 from time import perf_counter
 from tqdm import tqdm
@@ -63,7 +64,7 @@ def process_files(files: List[str], model: str, output_dir: str, model_type: str
                 if model_type == 'ssaf':
                     file.write(f"{res}\n")
                 elif model_type == 'yogo':
-
+                    print(res)
         d = perf_counter()
         print(f"Finished writing {basename} data in {d-c} s")
 
