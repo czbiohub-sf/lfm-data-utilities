@@ -80,7 +80,7 @@ def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Pa
 
     metadata_files = get_list_of_per_image_metadata_files(metadata_dir)
 
-    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for md_file in metadata_files])
+    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for metadata_file in metadata_files])
 
     print(f"{len(metadata_files)} per image metadata files found", flush=True)
     print(f"{len(ssaf_files)} SSAF files found", flush=True)
