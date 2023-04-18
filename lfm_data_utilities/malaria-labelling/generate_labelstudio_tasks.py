@@ -59,7 +59,10 @@ def generate_tasks_for_runset_by_parent_folder(
 
 
 def generate_tasks_for_runset(
-        run_folders: List[Path], relative_parent: Path, label_dir_name="labels", tasks_file_name="tasks"
+    run_folders: List[Path],
+    relative_parent: Path,
+    label_dir_name="labels",
+    tasks_file_name="tasks",
 ):
     print(f"{len(run_folders)} tasks to label")
 
