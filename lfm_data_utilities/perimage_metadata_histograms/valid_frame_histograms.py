@@ -30,14 +30,13 @@ def run(metadata_dir, ssaf_dir, title, output=None) -> None:
     # Get % good frames for each dataset
     data_files = multiprocess_load_csv(metadata_files)
     for data in data_files:
-        print(data)
         vals = data["vals"]
         if bool(vals) and int(vals["im_counter"][-1]) >= IMCOUNT_TARGET:
             valid_focus_percs.append(count_valid_focus_frames(vals["focus_error"]))
             valid_flowrate_percs.append(count_valid_frames(vals["flowrate"], data["filepath"]))
 
-    print(valid_focus_percs)
-    print(valid_flowrate_percs)
+#    print(valid_focus_percs)
+#    print(valid_flowrate_percs)
 
     # # Filter out nan
     # filtered_valid_focus_percs = valid_focus_percs[np.isnan()]
