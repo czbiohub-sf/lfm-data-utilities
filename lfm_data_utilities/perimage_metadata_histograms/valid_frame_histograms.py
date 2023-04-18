@@ -118,9 +118,6 @@ def count_valid_frames(data: List[Optional[Union[float, int]]], min_target: Opti
 
     return good / total * 100
 
-def filter_nonetype(data: List[Optional[Union[float, int]]]) -> List[Optional[Union[float, int]]]:
-    return list(filter(lambda val: val != None, data))
-
 
 if __name__ == "__main__":
 
