@@ -176,10 +176,11 @@ def label_runset(
         label_dir = path_to_images.parent / label_dir_name
         if label_dir.exists() and len(list(label_dir.iterdir())) > 0:
             if skip:
+                print(f"skipping label directory {label_dir.name}...")
                 continue
 
             # we are overwriting the labels
-            print(f"overwriting label directory {label_dir}...")
+            print(f"overwriting label directory {label_dir.name}...")
             empty_dir(label_dir)
 
         good_run_folders.append(path_to_images.parent)
@@ -275,12 +276,12 @@ if __name__ == "__main__":
         label_dir_name=args.label_dir_name,
         skip=args.existing_label_action == "skip",
     )
-    print(f"runset labelled: {time.perf_counter() - t0}")
+    print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
 
     print("generating dataset defs...")
     t0 = time.perf_counter()
     gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
-    print(f"dataset defs generated: {time.perf_counter() - t0}")
+    print(f"dataset defs generated: {time.perf_counter() - t0:.3f} s")
 
     print("generating tasks files for Label Studio...")
     t0 = time.perf_counter()
@@ -290,5 +291,5 @@ if __name__ == "__main__":
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
-    print(f"tasks files generated: {time.perf_counter() - t0}")
+    print(f"tasks files generated: {time.perf_counter() - t0:.3f} s")
     print("all done!")
