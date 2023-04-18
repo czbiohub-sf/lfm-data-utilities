@@ -4,7 +4,7 @@ Having a clear, reproducible, and understandable data pipeline is absolutely nec
 
 ## Initial Data Processing
 
-Data from the scope is collected to `/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/`
+Data from the scope is collected to `/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/` (or `/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-healthy-data/run-sets/`)
 
 - Runs are grouped together in folders, e.g. `.../run-sets/2022-12-14-111221-Aditi-parasites`
 - These runs are in folders specifying the chip, e.g. `.../run-sets/2022-12-14-111221-Aditi-parasites/2022-12-13-122015__chip0562-A4_F`
