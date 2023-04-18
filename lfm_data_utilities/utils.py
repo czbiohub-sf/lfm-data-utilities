@@ -117,20 +117,19 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 
     return datasets
 
-def get_list of_txt_files (metadata_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
-    """Get a list of paths to the corresponding .txt files for a given list of metadata files"""
+def get_list of_txt_files (zarr_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
+    """Get a list of paths to the corresponding .txt files for a given list of zarr files"""
 
-    txt_files = [get_corresponding_txt_file(metadata_file, top_level_txt_dir, suffix) for metadata_file in metadata_files]
-    return filter_nonetype(txt_files)
+    txt_files = [get_corresponding_txt_file(zarr_file, top_level_txt_dir, suffix) for zarr_file in zarr_files]
+    return [txt_file for txt_file in txt_files if txt_file.exists()]
 
-def get_corresponding_txt_file(metadata_file: Path, top_level_txt_dir: Path, suffix: str) -> Optional[Path]:
-    """Get the path to the corresponding .txt file for a given metadata file"""
+def get_corresponding_txt_file(zarr_file: Path, top_level_txt_dir: Path, suffix: str) -> Optional[Path]:
+    """Get the path to the corresponding .txt file for a given zarr file"""
 
-    basename = metadata_file.stem
-    txt_file = top_level_ssaf_dir / f"{basename}_{suffix}.txt"
-
-    if txt_file.exists():
-        return txt_file
+    basename = zarr_file.stem
+    txt_file = top_level_txt_dir / f"{basename}__{suffix}.txt"
+    
+    return txt_file
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
@@ -491,9 +490,3 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
-
-def filter_nonetype(data: List[Optional]) -> List[]:
-    """Parse through a list and remove all Nonetype values"""
-
-    return list(filter(lambda val: val != None, data))
-
