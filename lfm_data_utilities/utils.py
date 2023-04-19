@@ -117,7 +117,7 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 
     return datasets
 
-def get_list of_txt_files (zarr_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
+def get_list_of_txt_files(zarr_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
     """Get a list of paths to the corresponding .txt files for a given list of zarr files"""
 
     txt_files = [get_corresponding_txt_file(zarr_file, top_level_txt_dir, suffix) for zarr_file in zarr_files]
