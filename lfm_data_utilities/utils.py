@@ -20,7 +20,7 @@ class Dataset:
     def __init__(self, dp: DatasetPaths):
         self.dp: DatasetPaths = dp
         try:
-            self.zarr_file = load_read_only_zarr(dp.zarr_path)
+            self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
         except:
             self.zarr_file = None
         try:

@@ -44,7 +44,10 @@ def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> P
 
 
 def generate_tasks_for_runset_by_parent_folder(
-    path_to_runset_folder: Path, label_dir_name="labels", tasks_file_name="tasks"
+    path_to_runset_folder: Path,
+    path_to_parent_for_image_server: Path,
+    label_dir_name="labels",
+    tasks_file_name="tasks",
 ):
     folders = [
         Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")
@@ -54,12 +57,18 @@ def generate_tasks_for_runset_by_parent_folder(
             "couldn't find labels and images - double check the provided path"
         )
     return generate_tasks_for_runset(
-        folders, path_to_runset_folder, label_dir_name="labels", tasks_file_name="tasks"
+        folders,
+        path_to_parent_for_image_server,
+        label_dir_name="labels",
+        tasks_file_name="tasks",
     )
 
 
 def generate_tasks_for_runset(
-        run_folders: List[Path], relative_parent: Path, label_dir_name="labels", tasks_file_name="tasks"
+    run_folders: List[Path],
+    relative_parent: Path,
+    label_dir_name="labels",
+    tasks_file_name="tasks",
 ):
     print(f"{len(run_folders)} tasks to label")
 
@@ -123,8 +132,13 @@ if __name__ == "__main__":
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
+    # TODO maybe this path_to_runset folder should just be flexo?
+    parasite_data_runset_path = Path(
+        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/"
+    )
     generate_tasks_for_runset_by_parent_folder(
         path_to_runset,
+        parasite_data_runset_path,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )

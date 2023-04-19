@@ -1,1 +1,3 @@
 git+https://github.com/Axel-Jacobsen/label-studio-converter.git@master
+opencv-python
+cellpose==2.2
