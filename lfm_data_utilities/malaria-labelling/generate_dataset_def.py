@@ -81,7 +81,7 @@ if __name__ == "__main__":
     verify_subparser = subparsers.add_parser("verify")
 
     generate_subparser.add_argument("path_to_runset", type=Path, help="Path to runset folder")
-    verify_subparser.add_argument("path_to_dataset_defn_file", type=Path, help="Path to dataset definition file")
+    verify_subparser.add_argument("path_to_dataset_defn_file", type=Path, help="Path to dataset definition file, or folder of the same")
 
     args = parser.parse_args()
 
@@ -98,9 +98,18 @@ if __name__ == "__main__":
             sys.exit(1)
 
         # if InvalidDatasetDescriptionFile is raised, then the file is invalid
-        try:
-            load_dataset_description(args.path_to_dataset_defn_file)
-            print(f"{args.path_to_dataset_defn_file.name} is valid")
-        except InvalidDatasetDescriptionFile as e:
-            print(f"Invalid dataset description file: {e}")
-            sys.exit(1)
+        # if path_to_dataset_defn_file is a directory, iterate over yml files and check all of them
+        if args.path_to_dataset_defn_file.is_dir():
+            for path in args.path_to_dataset_defn_file.glob("*.yml"):
+                try:
+                    load_dataset_description(path)
+                except InvalidDatasetDescriptionFile as e:
+                    print(f"{path} is invalid: {e}")
+                    sys.exit(1)
+        else:
+            try:
+                load_dataset_description(args.path_to_dataset_defn_file)
+                print(f"{args.path_to_dataset_defn_file.name} is valid")
+            except InvalidDatasetDescriptionFile as e:
+                print(f"{args.path_to_dataset_defn_file} is invalid: {e}")
+                sys.exit(1)
