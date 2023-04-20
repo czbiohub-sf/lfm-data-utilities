@@ -43,20 +43,24 @@ def run(folder, display_keys=DEFAULT_KEYS):
     df_list = []
 
     for file in exp_files:
+        # Get file location
+        fileparts = file.parts
+        directory = f"{fileparts[-3]}\\{fileparts[-2]}"
+        filename = file.name
+        
         try:
             # Get data from exp metadata file
             single_df = pd.read_csv(file)
 
-            # Add file location to dataframe
-            fileparts = file.parts
-            single_df[DIR_KEY] = f"{fileparts[-2]}\\{fileparts[-1]}"
+            # Store file location
+            single_df[DIR_KEY] = directory
             single_df[FILE_KEY] = filename
 
             df_list.append(single_df)
         except UnicodeDecodeError:
-            print(f"Corrupted file: {path.join(exp_dir, run_dir, filename)}")
+            print(f"Corrupted file: {directory}\\{filename}")
         except pd.errors.EmptyDataError:
-            print(f"Empty file: {path.join(exp_dir, run_dir, filename)}")
+            print(f"Empty file: {directory}\\{filename}")
 
     master_df = pd.concat(df_list, ignore_index=True)
     master_df = master_df.sort_values(by="directory", ignore_index=True)
