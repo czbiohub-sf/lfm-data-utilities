@@ -27,7 +27,7 @@ def get_parser():
         nargs="?",
         type=Path,
         help=(
-            "path to run set folder (`<some path>/scope-parasite-data/run-sets` on flexo), "
+            "path to run set folder (`<some path>/LFM_scope` on flexo), "
             "defaults to running on OnDemand if no argument is provided."
         ),
         default=FLEXO_DATA_DIR,
@@ -69,9 +69,9 @@ if __name__ == "__main__":
             "warning: your path doesn't exist! Double check that you entered the correct "
             f"path and mounted flexo, got path {path_to_run_folder}"
         )
-    elif path_to_run_folder.name != "run-sets":
+    elif path_to_run_folder.name != "LFM_scope":
         raise ValueError(
-            "provided path must be to `flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets`.\n"
+            "provided path must be to `flexo/MicroscopyData/Bioengineering/LFM_scope`.\n"
             "When running on OnDemand, this should default to the correct location. Otherwise, make sure you've mounted\n"
             "Flexo, and provide the path to `run-sets`.\n"
             f"got path {path_to_run_folder}"
