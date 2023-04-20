@@ -85,10 +85,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not path_to_runset.exists():
-        raise ValueError(f"{str(path_to_runset)} doesn't exist")
-
     if args.subparser == "generate":
+        if not args.path_to_runset.exists():
+            raise ValueError(f"{str(path_to_runset)} doesn't exist")
+
         gen_dataset_def(path_to_runset, verbose=True)
     elif args.subparser == "verify":
         try:
@@ -100,6 +100,7 @@ if __name__ == "__main__":
         # if InvalidDatasetDescriptionFile is raised, then the file is invalid
         try:
             load_dataset_description(args.path_to_dataset_defn_file)
+            print(f"{args.path_to_dataset_defn_file.name} is valid")
         except InvalidDatasetDescriptionFile as e:
             print(f"Invalid dataset description file: {e}")
             sys.exit(1)
