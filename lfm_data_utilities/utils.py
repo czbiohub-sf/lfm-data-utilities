@@ -143,9 +143,8 @@ def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     -------
     List[Path]
     """
-
-    return sorted(Path(top_level_dir).rglob("*.zip"))
-
+    return sorted([file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)])
+    
 
 def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
@@ -160,7 +159,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if not any(part.startswith('.') for part in x.parts)])
+    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)])
 
 
 def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
@@ -176,7 +175,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).rglob("*exp*.csv"))
+    return sorted([file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)])
 
 
 def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
@@ -490,3 +489,6 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
+
+def is_valid_file(path: str) -> bool:
+    return not Path(path).name.startswith(".")
