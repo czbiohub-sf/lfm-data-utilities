@@ -11,6 +11,7 @@ setup(
         "tqdm>=4.64.1",
         "AllanTools==2019.9",
         "numpy==1.24.2",
+        "pandas>=1.5.3",
         "matplotlib==3.7.0",
         "opencv-python>=4.7.0.72",
         # "autofocus @ git+https://github.com/czbiohub/ulc-malaria-autofocus@main",
