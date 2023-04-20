@@ -22,14 +22,7 @@ from generate_labelstudio_tasks import generate_tasks_for_runset
 from utils import convert_coords
 
 from yogo.infer import predict
-
-
-T = TypeVar("T")
-
-
-def iter_in_chunks(s: Sequence[T], n: int = 1) -> Generator[Sequence[T], None, None]:
-    for i in range(0, len(s), n):
-        yield s[i : i + n]
+from yogo.utils import iter_in_chunks
 
 
 def empty_dir(path: Path):
