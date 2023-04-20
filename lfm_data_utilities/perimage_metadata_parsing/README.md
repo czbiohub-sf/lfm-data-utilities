@@ -38,7 +38,7 @@ Tool to plot SSAF results for a single run showing:
 Takes one parameter in:
 - -f / --file: Path to per image metadata file
 
-#### Example Usage
+Example:
 `python3 plot_ssaf.py -f <per image metadata file>`
 
 

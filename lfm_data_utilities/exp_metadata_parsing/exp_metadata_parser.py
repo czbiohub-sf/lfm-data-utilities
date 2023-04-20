@@ -113,6 +113,7 @@ if __name__ == "__main__":
         run(args.folder, display_keys=VALID_KEYS)
     elif args.key is not None:
         custom_keys = DEFAULT_KEYS + [args.key]
+        print(custom_keys)
         run(args.folder, display_keys=custom_keys)
     else:
         run(args.folder)
