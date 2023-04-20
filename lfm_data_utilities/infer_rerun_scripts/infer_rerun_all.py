@@ -4,28 +4,16 @@ import torch
 import sys
 
 from autofocus.infer import load_model_for_inference, infer, ImageLoader
-from lfm_data_utilities.utils import get_corresponding_txt_file
+from lfm_data_utilities.utils import (
+    get_corresponding_txt_file,
+    get_list_of_zarr_files,
+)
 from typing import List, Optional
 from zipfile import BadZipFile
 from time import perf_counter
 from tqdm import tqdm
 
-    
-def get_files(data_dir: str) -> List[str]:
-    """Get all zarr files in directory"""
 
-    file_format = f'{data_dir}/*-*-*-*_/*.zip'
-        
-    a = perf_counter()
-    files = glob.glob(file_format)
-        
-    print(files)
-    print(f"Number of files: {len(files)}")
-        
-    b = perf_counter()
-    print(f"Get files: {b-a} s")
-
-    return(files)
 
 def load_model(model_dir: str) -> List[str]:
     """Load SSAF or YOGO model"""
@@ -72,7 +60,7 @@ def run(scope_dir: str, model_dir: str, output_dir: str, model_type: str) -> Non
     """Run all the steps to get SSAF data from all zarr files"""
 
     model = load_model(model_dir)
-    files = get_files(scope_dir)
+    files = get_list_of_zarr_files(scope_dir)
     process_files(files, model, output_dir, model_type)
 
 

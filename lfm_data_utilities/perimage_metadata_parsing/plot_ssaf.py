@@ -44,11 +44,9 @@ def run(file_dir):
 
 
 if __name__ == "__main__":
-    # argparser = argparse.ArgumentParser()
-    # argparser.add_argument("-f", "--file", help="Path to per image metadata file", required=True)
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("-f", "--file", help="Path to per image metadata file", required=True)
 
-    # args = argparser.parse_args()
+    args = argparser.parse_args()
 
-    # run(args.file)
-
-    run('~/Desktop/TEMP/2023-04-11-170350perimage__metadata.csv')
+    run(args.file)
