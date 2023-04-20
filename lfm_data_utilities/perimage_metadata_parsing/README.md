@@ -28,3 +28,17 @@ Plotting a single data:
 > Enter folder path: {yadayada...}/curiosity/2023-03-04-042543/2023-03-04-045258_
 > Enter the scope name: Curiosity
 > {plotting now}
+
+### plot_ssaf.py
+Tool to plot SSAF results for a single run showing:
+- Raw SSAF values
+- Exponentially filtered SSAF values
+- Points at which motor adjustment is made based on filtered SSAF value
+
+Takes one parameter in:
+- -f / --file: Path to per image metadata file
+
+Example:
+`python3 plot_ssaf.py -f <per image metadata file>`
+
+

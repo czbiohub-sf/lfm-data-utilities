@@ -117,14 +117,19 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 
     return datasets
 
-def get_corresponding_ssaf_file(metadata_file: str, top_level_ssaf_dir: str) -> Optional[Path]:
-    """Get the path to the corresponding SSAF .txt file for a given metadata file"""
+def get_list_of_txt_files(zarr_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
+    """Get a list of paths to the corresponding .txt files for a given list of zarr files"""
 
-    basename = Path(metadata_file).stem
-    ssaf_file = Path(top_level_ssaf_dir) / f"{basename}_ssaf.txt"
+    txt_files = [get_corresponding_txt_file(zarr_file, top_level_txt_dir, suffix) for zarr_file in zarr_files]
+    return [txt_file for txt_file in txt_files if txt_file.exists()]
 
-    if ssaf_file.exists():
-        return ssaf_file
+def get_corresponding_txt_file(zarr_file: Path, top_level_txt_dir: Path, suffix: str) -> Optional[Path]:
+    """Get the path to the corresponding .txt file for a given zarr file"""
+
+    basename = zarr_file.stem
+    txt_file = top_level_txt_dir / f"{basename}__{suffix}.txt"
+    
+    return txt_file
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
@@ -138,9 +143,8 @@ def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     -------
     List[Path]
     """
-
-    return sorted(Path(top_level_dir).rglob("*.zip"))
-
+    return sorted([file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)])
+    
 
 def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
@@ -155,7 +159,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if not any(part.startswith('.') for part in x.parts)])
+    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)])
 
 
 def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
@@ -171,7 +175,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     List[Path]
     """
 
-    return sorted(Path(top_level_dir).rglob("*exp*.csv"))
+    return sorted([file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)])
 
 
 def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
@@ -485,3 +489,6 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
+
+def is_valid_file(path: str) -> bool:
+    return not Path(path).name.startswith(".")

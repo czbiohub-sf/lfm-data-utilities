@@ -3,6 +3,9 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
+from typing import List, Optional, Union, Tuple
+from pathlib import Path
+
 from lfm_data_utilities.utils import (
     get_list_of_per_image_metadata_files,
     get_corresponding_ssaf_file,
@@ -27,61 +30,63 @@ def run(metadata_dir, ssaf_dir, title, output=None) -> None:
     # Get % good frames for each dataset
     data_files = multiprocess_load_csv(metadata_files)
     for data in data_files:
-        print(data)
         vals = data["vals"]
         if bool(vals) and int(vals["im_counter"][-1]) >= IMCOUNT_TARGET:
             valid_focus_percs.append(count_valid_focus_frames(vals["focus_error"]))
             valid_flowrate_percs.append(count_valid_frames(vals["flowrate"], data["filepath"]))
 
-    # Filter out nan
-    filtered_valid_focus_percs = valid_focus_percs[np.isnan()]
-    filtered_valid_flowrate_percs = filter_nonetype(valid_flowrate_percs)
+#    print(valid_focus_percs)
+#    print(valid_flowrate_percs)
 
-    valid_focus_histogram, focus_bin_edges = np.histogram(
-        filtered_valid_focus_percs, bins=20
-    )
-    focus_bin_centers = [
-        (a + b) / 2 for a, b in zip(focus_bin_edges, focus_bin_edges[1:])
-    ]
+    # # Filter out nan
+    # filtered_valid_focus_percs = valid_focus_percs[np.isnan()]
+    # filtered_valid_flowrate_percs = filter_nonetype(valid_flowrate_percs)
 
-    valid_flowrate_histogram, flowrate_bin_edges = np.histogram(
-        filtered_valid_flowrate_percs, bins=20
-    )
-    flowrate_bin_centers = [
-        (a + b) / 2 for a, b in zip(flowrate_bin_edges[0:-1], flowrate_bin_edges[1:])
-    ]
+    # valid_focus_histogram, focus_bin_edges = np.histogram(
+    #     filtered_valid_focus_percs, bins=20
+    # )
+    # focus_bin_centers = [
+    #     (a + b) / 2 for a, b in zip(focus_bin_edges, focus_bin_edges[1:])
+    # ]
 
-    fig, axs = plt.subplots(ncols=2, nrows=1, figsize=(10, 7))
+    # valid_flowrate_histogram, flowrate_bin_edges = np.histogram(
+    #     filtered_valid_flowrate_percs, bins=20
+    # )
+    # flowrate_bin_centers = [
+    #     (a + b) / 2 for a, b in zip(flowrate_bin_edges[0:-1], flowrate_bin_edges[1:])
+    # ]
 
-    axs[0].bar(focus_bin_centers, valid_focus_histogram)
-    axs[1].bar(flowrate_bin_centers, valid_flowrate_histogram)
+    # fig, axs = plt.subplots(ncols=2, nrows=1, figsize=(10, 7))
 
-    fig.suptitle(title)
-    axs[0].set_title(f"Focus within range {MIN_FOCUS_TARGET, MAX_FOCUS_TARGET} steps")
-    axs[0].set_xlabel("% valid frames out of all focus measurements")
-    axs[0].set_ylabel("Number of datasets")
+    # axs[0].bar(focus_bin_centers, valid_focus_histogram)
+    # axs[1].bar(flowrate_bin_centers, valid_flowrate_histogram)
 
-    axs[1].set_title(
-        f"Flowrate within range {MIN_FLOWRATE_TARGET, MAX_FLOWRATE_TARGET} FoVs / sec"
-    )
-    axs[1].set_xlabel("% valid frames out of all flowrate measurements")
-    axs[1].set_ylabel("Number of datasets")
+    # fig.suptitle(title)
+    # axs[0].set_title(f"Focus within range {MIN_FOCUS_TARGET, MAX_FOCUS_TARGET} steps")
+    # axs[0].set_xlabel("% valid frames out of all focus measurements")
+    # axs[0].set_ylabel("Number of datasets")
 
-    plt.show()
+    # axs[1].set_title(
+    #     f"Flowrate within range {MIN_FLOWRATE_TARGET, MAX_FLOWRATE_TARGET} FoVs / sec"
+    # )
+    # axs[1].set_xlabel("% valid frames out of all flowrate measurements")
+    # axs[1].set_ylabel("Number of datasets")
+
+    # plt.show()
 
 
 def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Path]]:
 
     metadata_files = get_list_of_per_image_metadata_files(metadata_dir)
 
-    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for md_file in metadata_files])
+    ssaf_files = filter_nonetype([get_corresponding_ssaf_file(metadata_file, ssaf_dir) for metadata_file in metadata_files])
 
     print(f"{len(metadata_files)} per image metadata files found", flush=True)
     print(f"{len(ssaf_files)} SSAF files found", flush=True)
 
     return metadata_files, ssaf_files
 
-def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int]) -> List[Optional[float, int]]:
+def count_valid_focus_frames(data: List[Optional[Union[float, int]]], min_target: Optional[Union[float, int]], max_target: Optional[Union[float, int]]) -> List[Optional[Union[float, int]]]:
     ready = True
 
     good = 0
@@ -99,7 +104,7 @@ def count_valid_focus_frames(data: List[Optional[float, int]], min_target: Optio
 
     return good / total * 100
 
-def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[float, int], max_target: Optional[float, int], file: str) -> List[Optional[float, int]]:
+def count_valid_frames(data: List[Optional[Union[float, int]]], min_target: Optional[Union[float, int]], max_target: Optional[Union[float, int]], file: str) -> List[Optional[Union[float, int]]]:
     good = sum(
         1
         for val in data
@@ -112,9 +117,6 @@ def count_valid_frames(data: List[Optional[float, int]], min_target: Optional[fl
         return np.nan
 
     return good / total * 100
-
-def filter_nonetype(data: List[Optional[float, int]]) -> List[Optional[float, int]]:
-    return list(filter(lambda val: val != None, data))
 
 
 if __name__ == "__main__":
