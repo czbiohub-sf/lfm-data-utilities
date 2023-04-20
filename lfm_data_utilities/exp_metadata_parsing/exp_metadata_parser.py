@@ -37,47 +37,26 @@ def run(folder, display_keys=DEFAULT_KEYS):
                 f"Valid columns are {VALID_KEYS}"
             )
 
-    a = get_list_of_experiment_level_metadata_files(folder)
-    print(a)
-    # Get all experiment directories
-    child_dirs = listdir(parent_dir)
-    exp_dirs = re.findall("\d{4}-\d{2}-\d{2}-\d{6}", " ".join(child_dirs))
-    # exp_dirs = [
-    #     child_dir for child_dir in child_dirs if child_dir in filtered_child_dirs
-    # ]
+    exp_files = get_list_of_experiment_level_metadata_files(folder)
 
-    # Track dataframes from all run metadata file
+    # Track dataframes from all exp metadata file
     df_list = []
 
-    # Get all run directories
-    for exp_dir in exp_dirs:
-        grandchild_dirs = listdir(path.join(parent_dir, exp_dir))
-        run_dirs = re.findall(
-            "\d{4}-\d{2}-\d{2}-\d{6}_", " ".join(grandchild_dirs)
-        )
+    for file in exp_files:
+        try:
+            # Get data from exp metadata file
+            single_df = pd.read_csv(file)
 
-        # Get run metadata file
-        for run_dir in run_dirs:
-            run_files = listdir(path.join(parent_dir, exp_dir, run_dir))
-            exp_files = [run_file for run_file in run_files if "exp" in run_file]
+            # Add file location to dataframe
+            fileparts = file.parts
+            single_df[DIR_KEY] = f"{fileparts[-2]}\\{fileparts[-1]}"
+            single_df[FILE_KEY] = filename
 
-            if True:
-            # for filename in [file in exp_files if not file.startswith('.')]:
-                try:
-                    # Get data from run metadata file
-                    single_df = pd.read_csv(
-                        path.join(parent_dir, exp_dir, run_dir, filename)
-                    )
-
-                    # Add file location to dataframe
-                    single_df[DIR_KEY] = path.join(exp_dir, run_dir)
-                    single_df[FILE_KEY] = filename
-
-                    df_list.append(single_df)
-                except UnicodeDecodeError:
-                    print(f"Corrupted file: {path.join(exp_dir, run_dir, filename)}")
-                except pd.errors.EmptyDataError:
-                    print(f"Empty file: {path.join(exp_dir, run_dir, filename)}")
+            df_list.append(single_df)
+        except UnicodeDecodeError:
+            print(f"Corrupted file: {path.join(exp_dir, run_dir, filename)}")
+        except pd.errors.EmptyDataError:
+            print(f"Empty file: {path.join(exp_dir, run_dir, filename)}")
 
     master_df = pd.concat(df_list, ignore_index=True)
     master_df = master_df.sort_values(by="directory", ignore_index=True)
