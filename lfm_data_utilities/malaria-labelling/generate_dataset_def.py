@@ -75,8 +75,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser("Dataset Definition Tool")
 
-    generate_subparser = parser.add_subparser("generate")
-    verify_subparser = parser.add_subparser("verify")
+    generate_subparser = parser.add_subparsers("generate")
+    verify_subparser = parser.add_subparsers("verify")
 
     generate_subparser.add_argument("path_to_runset", type=Path, help="Path to runset folder")
     verify_subparser.add_argument("path_to_dataset_defn_file", type=Path, help="Path to dataset definition file")
