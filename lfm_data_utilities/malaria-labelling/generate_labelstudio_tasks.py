@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # TODO maybe this path_to_runset folder should just be flexo?
     parasite_data_runset_path = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/"
+        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
     )
     generate_tasks_for_runset_by_parent_folder(
         path_to_runset,

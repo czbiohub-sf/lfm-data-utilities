@@ -279,7 +279,7 @@ if __name__ == "__main__":
     print("generating tasks files for Label Studio...")
 
     parasite_data_runset_path = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/"
+        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
     )
 
     t0 = time.perf_counter()
