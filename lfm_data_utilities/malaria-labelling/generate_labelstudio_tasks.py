@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Union, List
 from urllib.request import pathname2url
 
+from utils import multiprocess_directory_work
+from yogo.utils import iter_in_chunks
+
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
 from label_studio_converter.imports.yolo import convert_yolo_to_ls
@@ -56,11 +59,14 @@ def generate_tasks_for_runset_by_parent_folder(
         raise ValueError(
             "couldn't find labels and images - double check the provided path"
         )
-    return generate_tasks_for_runset(
-        folders,
-        path_to_parent_for_image_server,
-        label_dir_name="labels",
-        tasks_file_name="tasks",
+    mutliproc(
+        iter_in_chunks(folders, 4),
+        partial(
+            generate_tasks_for_runset,
+            path_to_parent_for_image_server=path_to_parent_for_image_server,
+            label_dir_name="labels",
+            tasks_file_name="tasks",
+        ),
     )
 
 
