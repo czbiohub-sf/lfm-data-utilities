@@ -121,7 +121,6 @@ if __name__ == "__main__":
         else:
             try:
                 load_dataset_description(args.path_to_dataset_defn_file)
-                print(f"{args.path_to_dataset_defn_file.name} is valid")
             except InvalidDatasetDescriptionFile as e:
                 print(f"{args.path_to_dataset_defn_file} is invalid: {e}")
                 sys.exit(1)
