@@ -53,8 +53,8 @@ def run(folder, display_keys=DEFAULT_KEYS):
             single_df = pd.read_csv(file)
 
             # Store file location
-            single_df[DIR_KEY] = directory
-            single_df[FILE_KEY] = filename
+            single_df["directory"] = directory
+            single_df["filename"] = filename
 
             df_list.append(single_df)
         except UnicodeDecodeError:
