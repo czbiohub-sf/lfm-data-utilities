@@ -60,10 +60,7 @@ if __name__ == "__main__":
     if not run_set.exists():
         raise FileNotFoundError(f"directory {sys.argv[1]} not found")
 
-    files = [
-        f for f in run_set.glob("./**/*.zip")
-        if not Path(f).name.startswith(".")
-    ]
+    files = [f for f in run_set.glob("./**/*.zip") if not Path(f).name.startswith(".")]
 
     if len(files) == 0:
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")

@@ -73,6 +73,7 @@ def gen_dataset_def(
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser("Dataset Definition Tool")
 
     # one subparser for generating dataset definition file, one for verifying them
@@ -80,8 +81,14 @@ if __name__ == "__main__":
     generate_subparser = subparsers.add_parser("generate")
     verify_subparser = subparsers.add_parser("verify")
 
-    generate_subparser.add_argument("path_to_runset", type=Path, help="Path to runset folder")
-    verify_subparser.add_argument("path_to_dataset_defn_file", type=Path, help="Path to dataset definition file, or folder of the same")
+    generate_subparser.add_argument(
+        "path_to_runset", type=Path, help="Path to runset folder"
+    )
+    verify_subparser.add_argument(
+        "path_to_dataset_defn_file",
+        type=Path,
+        help="Path to dataset definition file, or folder of the same",
+    )
 
     args = parser.parse_args()
 
@@ -92,9 +99,14 @@ if __name__ == "__main__":
         gen_dataset_def(path_to_runset, verbose=True)
     elif args.subparser == "verify":
         try:
-            from yogo.data.dataloader import load_dataset_description, InvalidDatasetDescriptionFile
+            from yogo.data.dataloader import (
+                load_dataset_description,
+                InvalidDatasetDescriptionFile,
+            )
         except ImportError:
-            print("yogo is not installed. Please install yogo to verify dataset description file")
+            print(
+                "yogo is not installed. Please install yogo to verify dataset description file"
+            )
             sys.exit(1)
 
         # if InvalidDatasetDescriptionFile is raised, then the file is invalid
