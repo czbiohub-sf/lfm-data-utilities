@@ -72,13 +72,32 @@ def gen_dataset_def(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <path to runset>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser("Dataset Definition Tool")
 
-    path_to_runset = Path(sys.argv[1])
+    generate_subparser = parser.add_subparser("generate")
+    verify_subparser = parser.add_subparser("verify")
+
+    generate_subparser.add_argument("path_to_runset", type=Path, help="Path to runset folder")
+    verify_subparser.add_argument("path_to_dataset_defn_file", type=Path, help="Path to dataset definition file")
+
+    args = parser.parse_args()
 
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
-    gen_dataset_def(path_to_runset, verbose=True)
+    if args.subparser == "generate":
+        gen_dataset_def(path_to_runset, verbose=True)
+    elif args.subparser == "verify":
+        try:
+            from yogo.data.dataloader import load_dataset_description, InvalidDatasetDescriptionFile
+        except ImportError:
+            print("yogo is not installed. Please install yogo to verify dataset description file")
+            sys.exit(1)
+
+        # if InvalidDatasetDescriptionFile is raised, then the file is invalid
+        try:
+            load_dataset_description(args.path_to_dataset_defn_file)
+        except InvalidDatasetDescriptionFile as e:
+            print(f"Invalid dataset description file: {e}")
+            sys.exit(1)
