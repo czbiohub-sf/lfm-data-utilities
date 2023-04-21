@@ -84,17 +84,15 @@ def generate_tasks_for_runset(
     else:
         tqdm_ = lambda v: v
 
-    for folder_path in tqdm_(run_folders):
-        if not folder_path.is_dir():
-            print(f"warning: {folder_path} is not a directory")
-            continue
-
-        gen_task(
-            folder_path,
+    multiprocess_directory_work(
+        run_folders,
+        partial(
+            gen_task,
             relative_parent=relative_parent,
-            label_dir_name="labels",
-            tasks_file_name="tasks",
-        )
+            label_dir_name=label_dir_name,
+            tasks_file_name=tasks_file_name,
+        ),
+    )
 
 
 def gen_task(
