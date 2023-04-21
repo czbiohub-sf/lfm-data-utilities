@@ -5,6 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import Union, List
 from urllib.request import pathname2url
+from functools import partial
 
 from utils import multiprocess_directory_work
 from yogo.utils import iter_in_chunks
@@ -55,17 +56,18 @@ def generate_tasks_for_runset_by_parent_folder(
     folders = [
         Path(p).parent for p in path_to_runset_folder.glob(f"./**/{label_dir_name}")
     ]
+
     if len(folders) == 0:
         raise ValueError(
             "couldn't find labels and images - double check the provided path"
         )
-    mutliproc(
-        iter_in_chunks(folders, 4),
+    multiprocess_directory_work(
+        folders,
         partial(
-            generate_tasks_for_runset,
-            path_to_parent_for_image_server=path_to_parent_for_image_server,
-            label_dir_name="labels",
-            tasks_file_name="tasks",
+            gen_task,
+            relative_parent=path_to_parent_for_image_server,
+            label_dir_name=label_dir_name,
+            tasks_file_name=tasks_file_name,
         ),
     )
 
@@ -75,45 +77,65 @@ def generate_tasks_for_runset(
     relative_parent: Path,
     label_dir_name="labels",
     tasks_file_name="tasks",
+    use_tqdm=False,
 ):
-    print(f"{len(run_folders)} tasks to label")
+    if use_tqdm:
+        tqdm_ = tqdm
+    else:
+        tqdm_ = lambda v: v
 
-    for folder_path in tqdm(run_folders):
+    for folder_path in tqdm_(run_folders):
         if not folder_path.is_dir():
             print(f"warning: {folder_path} is not a directory")
             continue
 
-        abbreviated_path = str(path_relative_to(folder_path, relative_parent))
-        root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
+        gen_task(
+            folder_path,
+            relative_parent=relative_parent,
+            label_dir_name="labels",
+            tasks_file_name="tasks",
+        )
 
-        tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
-        try:
-            convert_yolo_to_ls(
-                input_dir=str(folder_path),
-                out_file=tasks_path,
-                label_dir_name=label_dir_name,
-                out_type="predictions",
-                image_root_url=root_url,
-                image_ext=".png",
-                image_dims=(IMG_WIDTH, IMG_HEIGHT),
-            )
-        except TypeError:
-            # we aren't using our custom version, so try default
-            print(
-                "warning: couldn't give convert_yolo_to_ls image dims, so defaulting "
-                "to slow version"
-            )
-            convert_yolo_to_ls(
-                input_dir=str(folder_path),
-                out_file=tasks_path,
-                out_type="predictions",
-                image_root_url=root_url,
-                image_ext=".png",
-            )
-        except Exception as e:
-            print(f"exception found for file {folder_path}: {e}. continuing...")
-            continue
+def gen_task(
+    folder_path: Path,
+    relative_parent: Path,
+    label_dir_name="labels",
+    tasks_file_name="tasks",
+):
+    abbreviated_path = str(path_relative_to(folder_path, relative_parent))
+    print(f"ABBREV {abbreviated_path}")
+    root_url = (
+        f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
+    )
+
+    tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
+
+    try:
+        convert_yolo_to_ls(
+            input_dir=str(folder_path),
+            out_file=tasks_path,
+            label_dir_name=label_dir_name,
+            out_type="predictions",
+            image_root_url=root_url,
+            image_ext=".png",
+            image_dims=(IMG_WIDTH, IMG_HEIGHT),
+        )
+    except TypeError:
+        # we aren't using our custom version, so try default
+        print(
+            "warning: couldn't give convert_yolo_to_ls image dims, so defaulting "
+            "to slow version"
+        )
+        convert_yolo_to_ls(
+            input_dir=str(folder_path),
+            out_file=tasks_path,
+            out_type="predictions",
+            image_root_url=root_url,
+            image_ext=".png",
+        )
+    except Exception as e:
+        print(f"exception found for file {folder_path}: {e}. continuing...")
 
 
 if __name__ == "__main__":
