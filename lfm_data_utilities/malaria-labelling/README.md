@@ -3,8 +3,8 @@
 Labelling data at a high quality without inducing tremendous costs (of work-hours or otherwise) is challenging, but we are attempting to make it as easy and accurate as possible. There are several pages of documentation for the data pipeline alone (and this is one of them!). Here is a short map of the documentation:
 
 - [this document](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/README.md#human-annotation) includes instruction for setting up and using LabelStudio
-- [strategy.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/strategy.md) includes the high-level strategy for training YOGO and improving data labels.
-- [scripts.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/scripts.md) includes instructions for running scripts over our data (primarily labelling)
+- [strategy.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/scripts/strategy.md) includes the high-level strategy for training YOGO and improving data labels.
+- [scripts.md](https://github.com/czbiohub/lfm-data-utilities/blob/main/lfm_data_utilities/malaria-labelling/scripts/scripts.md) includes instructions for running scripts over our data (primarily labelling)
 
 Where you should start depends entirely on what you need to do. If you are just labelling data, you probably just need this document. If you are handling data or performing training, you should look at the other documents above. Now, let's get into it!
 
