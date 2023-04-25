@@ -50,6 +50,7 @@ Output:
 0    2023-03-06-153848\2023-03-06-154334_                  gametocytes!!    develop  lfm-ohmu
 1    2023-03-06-153848\2023-03-06-154640_                    gametocytes    develop  lfm-ohmu
 2    2023-03-06-153848\2023-03-06-155058_                    gametocytes    develop  lfm-ohmu
+...
 ```
 
 To compile metadata with all columns displayed:
