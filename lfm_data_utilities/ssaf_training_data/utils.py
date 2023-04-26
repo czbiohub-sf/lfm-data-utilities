@@ -8,9 +8,7 @@ from typing import List, Union
 from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
-
-
-PathLike = Union[str, Path]
+from lfm_data_utilities.utils import PathLike
 
 
 def get_list_of_zstack_folders(top_level_dir: PathLike) -> List[Path]:

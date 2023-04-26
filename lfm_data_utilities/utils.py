@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional, Any, Callable
 
 
+PathLike = Union[str, Path]
+
+
 @dataclass
 class DatasetPaths:
     zarr_path: Path
@@ -43,7 +46,7 @@ class Dataset:
         ]
 
 
-def make_video(dataset: Dataset, save_dir: Path):
+def make_video(dataset: Dataset, save_dir: PathLike):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
@@ -56,7 +59,7 @@ def make_video(dataset: Dataset, save_dir: Path):
     height, width = zf[:, :, 0].shape
 
     save_dir.mkdir(exist_ok=True)
-    output_path = save_dir / Path(dataset.dp.zarr_path.stem + ".mp4")
+    output_path = Path(save_dir) / Path(dataset.dp.zarr_path.stem + ".mp4")
 
     writer = cv2.VideoWriter(
         f"{output_path}",
@@ -72,7 +75,21 @@ def make_video(dataset: Dataset, save_dir: Path):
     writer.release()
 
 
-def load_datasets(top_level_dir: str) -> List[Dataset]:
+def is_valid_file(path: PathLike) -> bool:
+    """Check if file is valid or if it's an unreadable temporary file. (Apple saves temporary files as '._<filename>'.)"""
+
+    return not Path(path).name.startswith(".")
+
+
+def is_valid_file(path: PathLike) -> bool:
+    """Extract date in format <####-##-##-######> from filename"""
+
+    return not Path(path).name.startswith(".")
+
+
+def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
+    """Load all zarr and metadata files. Returns all data in a list of Dataset objects."""
+
     print(
         "Getting dataset paths (i.e paths to zarr files, per image/experiment level metadata csvs...)"
     )
@@ -87,7 +104,7 @@ def load_datasets(top_level_dir: str) -> List[Dataset]:
     return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
 
 
-def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
+def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
@@ -109,7 +126,7 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
         Top level directory path to search
     """
 
-    def get_path_or_none(paths: List[Path]) -> Optional[Path]:
+    def get_path_or_none(paths: ]) -> Optional[Path]:
         if len(paths) == 1:
             return paths[0]
         else:
@@ -136,7 +153,7 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
 
 
 def get_list_of_txt_files(
-    zarr_files: List[Path], top_level_txt_dir: Path, suffix: str
+    zarr_files: List[PathLike], top_level_txt_dir: PathLike, suffix: str
 ) -> List[Optional[Path]]:
     """Get a list of paths to the corresponding .txt files for a given list of zarr files"""
 
@@ -148,39 +165,40 @@ def get_list_of_txt_files(
 
 
 def get_corresponding_txt_file(
-    zarr_file: Path, top_level_txt_dir: Path, suffix: str
+    zarr_file: Path, top_level_txt_dir: PathLike, suffix: str
 ) -> Optional[Path]:
     """Get the path to the corresponding .txt file for a given zarr file"""
 
     basename = zarr_file.stem
-    txt_file = top_level_txt_dir / f"{basename}__{suffix}.txt"
+    txt_file = Path(top_level_txt_dir) / f"{basename}__{suffix}.txt"
 
     return txt_file
 
 
-def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
+def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
 
     Parameters
     ----------
-    top_level_dir : str
+    top_level_dir : PathLike
         Top level directory path
 
     Returns
     -------
     List[Path]
     """
+
     return sorted(
         [file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)]
     )
 
 
-def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
+def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
 
     Parameters
     ----------
-    top_level_dir : str
+    top_level_dir : PathLike
         Top level directory path
 
     Returns
@@ -193,7 +211,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     )
 
 
-def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
+def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the experiment-levels metadata in this folder and all its subfolders
 
     Parameters
@@ -211,12 +229,12 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     )
 
 
-def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
+def get_list_of_subsample_dirs(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the sub sample image directories
 
     Parameters
     ----------
-    top_level_dir : str
+    top_level_dir : PathLike
         Top level directory path
 
     Returns
@@ -227,12 +245,12 @@ def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
     return sorted(Path(top_level_dir).rglob("*sub_sample*/"))
 
 
-def get_list_of_oracle_run_folders(top_level_dir: str) -> List[Path]:
+def get_list_of_oracle_run_folders(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the folders created on each oracle run sorted by date.
 
     Parameters
     ----------
-    top_level_dir: str
+    top_level_dir: PathLike
 
     Returns
     -------
@@ -248,20 +266,20 @@ def get_list_of_oracle_run_folders(top_level_dir: str) -> List[Path]:
     return tlds
 
 
-def get_dates_from_top_level_folders(tld_folders: List[Path]) -> List[str]:
+def get_dates_from_top_level_folders(tld_folders: List[PathLike]) -> List[str]:
     return sorted(
         list({}.fromkeys([x.stem.rsplit("-", 1)[0] for x in tld_folders]))
     )  # Remove duplicates, ignore the hour/minute/second part of the timestamp
 
 
 def get_all_metadata_files_in_date_range(
-    metadata_filepaths: List[Path], d1: datetime, d2: datetime
+    metadata_filepaths: List[PathLike], d1: datetime, d2: datetime
 ) -> List[Path]:
     """Get all the metadata files taken within the date range [d1, d2]
 
     Parameters
     ----------
-    metadata_filepaths: List[Path]
+    metadata_filepaths: List[PathLike]
     d1: datetime
         First date
     d2: datetime
@@ -275,18 +293,18 @@ def get_all_metadata_files_in_date_range(
     return [
         f
         for f in metadata_filepaths
-        if d1 <= parse_datetime_string(f.parent.parent.stem) <= d2
+        if d1 <= parse_datetime_string(Path(f).parent.parent.stem) <= d2
     ]
 
 
 def get_all_metadata_files_from_same_day(
-    metadata_filepaths: List[Path], d1: datetime
+    metadata_filepaths: List[PathLike], d1: datetime
 ) -> List[Path]:
     """Get all the metadata files that were taken on a particular day.
 
     Parameters
     ----------
-    metadata_filepaths: List[Path]
+    metadata_filepaths: List[PathLike]
     d1: datetime
 
     Returns
@@ -297,7 +315,7 @@ def get_all_metadata_files_from_same_day(
     return [
         f
         for f in metadata_filepaths
-        if parse_datetime_string(f.parent.parent.stem).date() == d1.date()
+        if parse_datetime_string(Path(f).parent.parent.stem).date() == d1.date()
     ]
 
 
@@ -354,12 +372,12 @@ def parse_datetime_string(filename: str, format: str = "%Y-%m-%d-%H%M%S") -> dat
     return datetime.strptime(filename, format)
 
 
-def get_list_of_log_files(top_level_dir: str) -> List[Path]:
+def get_list_of_log_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the logs in this folder
 
     Parameters
     ----------
-    top_level_dir : str
+    top_level_dir : PathLike
         Top level directory path
 
     Returns
@@ -370,7 +388,7 @@ def get_list_of_log_files(top_level_dir: str) -> List[Path]:
     return sorted(Path(top_level_dir).glob("**/*.log"))
 
 
-def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
+def load_read_only_zarr(zarr_path: PathLike) -> zarr.core.Array:
     """Load a zarr file - no protections (i.e exception catching) against bad zip files.
 
     Return
@@ -382,12 +400,12 @@ def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
     return zarr.open(zarr_path, "r")
 
 
-def load_csv(filepath: str) -> Dict:
+def load_csv(filepath: PathLike) -> Dict:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
 
     Parameters
     ----------
-    filepath : str
+    filepath : PathLike
         Path of csv file
 
     Returns
@@ -407,12 +425,12 @@ def load_csv(filepath: str) -> Dict:
     return {"filepath": filepath, "vals": d}
 
 
-def load_log_file(filepath: str) -> Dict:
+def load_log_file(filepath: PathLike) -> Dict:
     """Get lines, split by newlines, from the log file
 
     Parameters
     ----------
-    filepath : str
+    filepath : PathLike
         Path of log file
 
     Returns
@@ -481,12 +499,12 @@ def multiprocess_fn_with_tqdm(
         )
 
 
-def multiprocess_load_zarr(filepaths: List[Path]) -> List[zarr.core.Array]:
+def multiprocess_load_zarr(filepaths: List[PathLike]) -> List[zarr.core.Array]:
     """Multiprocess load zarr files
 
     Parameters
     ----------
-    filepaths: List[str]
+    filepaths: List[PathLike]
 
     Returns
     -------
@@ -496,12 +514,12 @@ def multiprocess_load_zarr(filepaths: List[Path]) -> List[zarr.core.Array]:
     return multiprocess_fn_with_tqdm(filepaths, load_read_only_zarr)
 
 
-def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
+def multiprocess_load_csv(filepaths: List[PathLike]) -> List[Dict]:
     """Multiprocess load csv files
 
     Parameters
     ----------
-    filepaths: List[str]
+    filepaths: List[PathLike]
 
     Returns
     -------
@@ -516,12 +534,12 @@ def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
     return multiprocess_fn_with_tqdm(filepaths, load_csv)
 
 
-def multiprocess_load_log(filepaths: List[Path]) -> List[Dict]:
+def multiprocess_load_log(filepaths: List[PathLike]) -> List[Dict]:
     """Multiprocess load log files
 
     Parameters
     ----------
-    filepaths: List[str]
+    filepaths: List[PathLike]
 
     Returns
     -------
@@ -556,7 +574,3 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
-
-
-def is_valid_file(path: str) -> bool:
-    return not Path(path).name.startswith(".")
