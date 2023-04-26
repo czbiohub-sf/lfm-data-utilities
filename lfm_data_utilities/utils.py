@@ -120,7 +120,7 @@ def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
         Top level directory path to search
     """
 
-    def get_path_or_none(paths: ]) -> Optional[Path]:
+    def get_path_or_none(paths: List[PathLike]) -> Optional[PathLike]:
         if len(paths) == 1:
             return paths[0]
         else:
