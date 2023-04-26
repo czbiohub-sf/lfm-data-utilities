@@ -1,16 +1,20 @@
-from typing import List
+import cv2
+import numpy as np
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 from os import listdir
+from typing import List, Union
 from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
 
-from tqdm import tqdm
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 
 
-def get_list_of_zstack_folders(top_level_dir: str) -> List[Path]:
+PathLike = Union[str, Path]
+
+
+def get_list_of_zstack_folders(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all "local_zstack" subfolders
 
     Parameters
@@ -66,7 +70,7 @@ def get_valid_folders(
     return valid_folders
 
 
-def get_list_of_img_paths_in_folder(folder_path: str) -> List[Path]:
+def get_list_of_img_paths_in_folder(folder_path: PathLike) -> List[Path]:
     """Get a list of the filepaths of the tiffs or pngs in this folder.
 
     The only reason we accommodate tiffs is cause the original SSAF data was collected using tiffs, we have
