@@ -260,8 +260,17 @@ def get_list_of_oracle_run_folders(top_level_dir: PathLike) -> List[Path]:
     return tlds
 
 
-def get_dates_from_top_level_folders(tld_folders: List[PathLike]) -> List[str]:
+def get_dates_from_low_level_folders(tld_folders: List[PathLike]) -> List[str]:
+    """Extract list of dates from low level folders"""
     return sorted(
+        list({}.fromkeys([x.stem.rsplit("-", 1)[0] for x in tld_folders]))
+    )  # Remove duplicates, ignore the hour/minute/second part of the timestamp
+
+
+def get_dates_from_top_level_folders(tld_folders: List[PathLike]) -> List[str]:
+    """Extract list of dates from top level folders"""
+    return sorted(
+        # parse_datetime_string() for x in tld_folders
         list({}.fromkeys([x.stem.rsplit("-", 1)[0] for x in tld_folders]))
     )  # Remove duplicates, ignore the hour/minute/second part of the timestamp
 
