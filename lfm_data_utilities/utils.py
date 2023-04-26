@@ -81,12 +81,6 @@ def is_valid_file(path: PathLike) -> bool:
     return not Path(path).name.startswith(".")
 
 
-def is_valid_file(path: PathLike) -> bool:
-    """Extract date in format <####-##-##-######> from filename"""
-
-    return not Path(path).name.startswith(".")
-
-
 def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
     """Load all zarr and metadata files. Returns all data in a list of Dataset objects."""
 
