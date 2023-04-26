@@ -14,8 +14,11 @@ def super_plotter(data, title, throttle=60, output=None):
     ax_throttled_data = fig.add_subplot(gs[1, 1])
     ax_halflife = fig.add_subplot(gs[:, 2])
 
-    alphas = [0.01, 0.03, 0.05, 0.1]
-    throttled_data = data[:: int(throttle)]
+    # these are not used anywhere and ruff dislikes them. I guess that
+    # they were used in `halflife_plotter`. Commenting these out for the
+    # original author to make a decision on deletion or substitution
+    # alphas = [0.01, 0.03, 0.05, 0.1]
+    # throttled_data = data[:: int(throttle)]
 
     data_plotter(data, ax_allan, ax_data, 1)
     data_plotter(data, ax_throttled_allan, ax_throttled_data, int(throttle))
