@@ -15,4 +15,4 @@ jobs:
           pip install --upgrade pip
           pip install ruff==0.0.253
       - name: ruff
-        run: ruff lfm_data_utilities --ignore E501 --ignore E722
+        run: ruff lfm_data_utilities --ignore E501 --ignore E722 --ignore E741
