@@ -8,9 +8,7 @@ from functools import partial
 from lfm_data_utilities.ssaf_training_data import utils
 
 
-def process_folder(
-    folder_path: Path, save_loc: Path, focus_graph_loc: Path
-) -> None:
+def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
     """Run the analysis + sorting on a given folder
 
     Parameters

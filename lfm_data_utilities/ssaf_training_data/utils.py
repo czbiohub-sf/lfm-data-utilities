@@ -10,7 +10,6 @@ from pathlib import Path
 from multiprocessing import Pool
 
 
-
 PathLike = Union[str, Path]
 
 

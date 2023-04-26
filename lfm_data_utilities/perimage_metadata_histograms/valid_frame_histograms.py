@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Sequence, Any
 from pathlib import Path
 
 from lfm_data_utilities.utils import (
@@ -69,6 +69,10 @@ def run(metadata_dir, ssaf_dir, title, output=None) -> None:
 # axs[1].set_ylabel("Number of datasets")
 
 # plt.show()
+
+
+def filter_nonetype(arr: Sequence[Any]) -> Sequence[Any]:
+    return [val for val in arr if val is not None]
 
 
 def get_all_files(metadata_dir: str, ssaf_dir: str) -> Tuple[List[Path], List[Path]]:

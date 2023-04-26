@@ -7,10 +7,11 @@ from lfm_data_utilities.utils import (
     get_corresponding_txt_file,
     get_list_of_zarr_files,
 )
-from typing import List
-from zipfile import BadZipFile
-from time import perf_counter
 from tqdm import tqdm
+from typing import List
+from pathlib import Path
+from time import perf_counter
+from zipfile import BadZipFile
 
 
 def load_model(model_dir: str) -> List[str]:
@@ -29,7 +30,7 @@ def process_files(
     """Get inference values for every frame in each file. Ignore already processed files and bad zipfiles"""
 
     for file in files:
-        basename = pathlib.Path(file).stem
+        basename = Path(file).stem
 
         try:
             images = ImageLoader.load_zarr_data(file)

@@ -34,7 +34,11 @@ class Dataset:
         except:
             self.experiment_metadata = None
 
-        self.successfully_loaded = None not in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
+        self.successfully_loaded = None not in [
+            self.zarr_file,
+            self.per_img_metadata,
+            self.experiment_metadata,
+        ]
 
 
 def make_video(dataset: Dataset, save_dir: Path):
