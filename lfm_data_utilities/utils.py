@@ -9,7 +9,7 @@ from csv import DictReader
 from datetime import datetime
 from functools import partial
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional, Any, Callable
+from typing import List, Dict, Tuple, Optional, Any, Callable, Union
 
 
 PathLike = Union[str, Path]

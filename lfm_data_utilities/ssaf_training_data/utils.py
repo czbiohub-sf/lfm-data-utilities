@@ -4,7 +4,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 from os import listdir
-from typing import List, Union
+from typing import List
 from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
