@@ -1,8 +1,6 @@
-import re
 import argparse
 import pandas as pd
 
-from os import path, listdir
 from lfm_data_utilities.utils import get_list_of_experiment_level_metadata_files
 
 VALID_KEYS = [
@@ -47,7 +45,7 @@ def run(folder, display_keys=DEFAULT_KEYS):
         fileparts = file.parts
         directory = f"{fileparts[-3]}\\{fileparts[-2]}"
         filename = file.name
-        
+
         try:
             # Get data from exp metadata file
             single_df = pd.read_csv(file)

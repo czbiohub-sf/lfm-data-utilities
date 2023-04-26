@@ -2,11 +2,13 @@
 Plot parameters of "per_image" metadata files.
 """
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import numpy as np
 
-from lfm_data_utilities.utils import *
+from typing import List, Dict
+
+from lfm_data_utilities import utils
 
 
 # for reference
@@ -78,26 +80,26 @@ def plot_many_sorted_by_day():
 
     # Get metadata files
     tld = input("Enter top level directory: ")
-    top_level_folders = get_list_of_oracle_run_folders(tld)
-    csv_filepaths = get_list_of_per_image_metadata_files(tld)
+    top_level_folders = utils.get_list_of_oracle_run_folders(tld)
+    csv_filepaths = utils.get_list_of_per_image_metadata_files(tld)
 
     # Get and display dates
     print("Data was collected on the following days: ")
-    dates = get_dates_from_top_level_folders(top_level_folders)
+    dates = utils.get_dates_from_top_level_folders(top_level_folders)
     [print(d) for d in dates]
 
-    d1, d2 = get_date_range_from_user()
-    dates = [d for d in dates if d1 <= parse_datetime_string(d, "%Y-%m-%d") <= d2]
+    d1, d2 = utils.get_date_range_from_user()
+    dates = [d for d in dates if d1 <= utils.parse_datetime_string(d, "%Y-%m-%d") <= d2]
 
     scope_name = input("Enter the scope name: ")
     for date in dates:
-        csvs_from_same_day = get_all_metadata_files_from_same_day(
-            csv_filepaths, parse_datetime_string(date, "%Y-%m-%d")
+        csvs_from_same_day = utils.get_all_metadata_files_from_same_day(
+            csv_filepaths, utils.parse_datetime_string(date, "%Y-%m-%d")
         )
 
         print(f"Loading {len(csvs_from_same_day)} datasets from {date}...")
         data: List[Dict] = []
-        data = multiprocess_load_csv(csvs_from_same_day)
+        data = utils.multiprocess_load_csv(csvs_from_same_day)
 
         data = [d["vals"] for d in data if len(d["vals"].keys()) > 0]
         print(f"Plotting {len(data)} valid datasets...")
@@ -110,11 +112,11 @@ def plot_single_folder():
     """Plots all the experiments in a single folder."""
     # Get metadata files
     tld = input("Enter folder path: ")
-    csv_filepaths = get_list_of_per_image_metadata_files(tld)
+    csv_filepaths = utils.get_list_of_per_image_metadata_files(tld)
     scope_name = input("Enter the scope name: ")
 
     print(f"Loading {len(csv_filepaths)} datasets...")
-    data = multiprocess_load_csv(csv_filepaths)
+    data = utils.multiprocess_load_csv(csv_filepaths)
     data = [d["vals"] for d in data if len(d["vals"].keys()) > 0]
 
     print(f"Plotting {len(data)} valid datasets...")

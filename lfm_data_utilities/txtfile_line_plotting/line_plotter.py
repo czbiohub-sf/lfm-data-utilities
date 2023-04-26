@@ -1,4 +1,3 @@
-import sys
 import os
 import argparse
 
@@ -11,10 +10,15 @@ def plotter(datasets, names, ylabel, legend, title, output):
     for dataset, name in zip(datasets, names):
         if legend:
             rms = get_rms(dataset)
-            plt.plot(dataset, label="{0}, RMS={1:.3f}]".format(name, rms), alpha=0.4, linewidth=0.5)
+            plt.plot(
+                dataset,
+                label="{0}, RMS={1:.3f}]".format(name, rms),
+                alpha=0.4,
+                linewidth=0.5,
+            )
         else:
             plt.plot(dataset, alpha=0.4, linewidth=0.5)
-    
+
     if legend:
         plt.legend()
 
@@ -27,8 +31,9 @@ def plotter(datasets, names, ylabel, legend, title, output):
         print(f"saved image to {output}")
     plt.show()
 
+
 def extractor(folder):
-    """Find all files in data folder. 
+    """Find all files in data folder.
 
     Returns list of tuples for each file, containing extracted data and dataset name.
     """
@@ -43,14 +48,14 @@ def extractor(folder):
     for file in files:
         dataset = []
 
-        with open(os.path.join(folder, file), 'r') as f:
+        with open(os.path.join(folder, file), "r") as f:
             print("READ")
             try:
                 f.readlines()
             except UnicodeDecodeError:
                 print(f"Skipping invalid file: {file}")
                 continue
-                
+
             for line in f:
                 dataset.append(float(line.strip()))
 
@@ -58,6 +63,7 @@ def extractor(folder):
         datasets.append(dataset)
 
     return datasets, files, legend
+
 
 def get_rms(data):
     """Compute root mean square (rms)"""
@@ -69,17 +75,20 @@ def get_rms(data):
 
     return np.sqrt(ms / N)
 
+
 def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""
     datasets, names, legend = extractor(folder)
-    
-    output_file = os.path.join(folder, f'{output}.png') 
+
+    output_file = os.path.join(folder, f"{output}.png")
     plotter(datasets, names, ylabel, legend, title, output_file)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("-d", "--dir", help="Directory containing txtfile data folder", required=True)
+    argparser.add_argument(
+        "-d", "--dir", help="Directory containing txtfile data folder", required=True
+    )
     argparser.add_argument("-y", "--ylabel", help="Label for y-axis", required=True)
     argparser.add_argument("-t", "--title", help="Title for plot")
     argparser.add_argument("-o", "--output", help="Filename to export plot to")

@@ -14,7 +14,7 @@ from cellpose.utils import (
     fill_holes_and_remove_small_masks,
     outlines_list,
 )
-from typing import Optional, Sequence, Generator, Literal, List, TypeVar, Tuple
+from typing import Optional, Literal, List, Tuple
 
 from labelling_constants import CLASSES
 from generate_dataset_def import gen_dataset_def

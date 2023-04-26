@@ -7,15 +7,12 @@ import sys
 
 def super_plotter(data, title, throttle=60, output=None):
     fig = plt.figure(figsize=(13, 7))
-    gs = fig.add_gridspec(2,3)
+    gs = fig.add_gridspec(2, 3)
     ax_allan = fig.add_subplot(gs[0, 0])
     ax_data = fig.add_subplot(gs[1, 0])
     ax_throttled_allan = fig.add_subplot(gs[0, 1])
     ax_throttled_data = fig.add_subplot(gs[1, 1])
     ax_halflife = fig.add_subplot(gs[:, 2])
-
-    alphas = [0.01, 0.03, 0.05, 0.1]
-    throttled_data = data[::int(throttle)]
 
     data_plotter(data, ax_allan, ax_data, 1)
     data_plotter(data, ax_throttled_allan, ax_throttled_data, int(throttle))
@@ -32,13 +29,14 @@ def super_plotter(data, title, throttle=60, output=None):
 
 
 def data_plotter(raw_data, ax_allan, ax_data, throttle):
-
     data = raw_data[::throttle]
     frames = np.arange(0, len(data))
 
     if throttle > 1:
         xlabel = "Throttled frame(s)"
-        ax_allan.set_title("{0} frame throttle [STD = {1:.3f}]".format(throttle, np.std(data)))
+        ax_allan.set_title(
+            "{0} frame throttle [STD = {1:.3f}]".format(throttle, np.std(data))
+        )
         frames = frames * throttle
     else:
         xlabel = "Frame(s)"
@@ -68,6 +66,7 @@ def data_plotter(raw_data, ax_allan, ax_data, throttle):
     ax_data.set_xlabel("Frame(s)")
     ax_data.legend()
 
+
 def halflife_plotter(alphas, ax):
     adjustment_periods = []
 
@@ -81,24 +80,22 @@ def halflife_plotter(alphas, ax):
     ax.set_title("Adjustment period vs. alpha")
 
 
-
 if __name__ == "__main__":
-
     num_inputs = len(sys.argv)
 
     if num_inputs == 1:
         raise ValueError(
             "Expected a txt target file containing all datapoints delimited by newline.\n"
             "Command format: <txt data file> [throttle number] [title] [output file]"
-            )
+        )
     elif num_inputs > 5:
         raise ValueError(
             "Too many arguments"
             "Command format: <txt data file> [throttle number] [title] [output file]"
-            )
-    
+        )
+
     filename = sys.argv[1]
-    data = np.genfromtxt(filename, delimiter='\n')
+    data = np.genfromtxt(filename, delimiter="\n")
 
     if num_inputs == 2:
         super_plotter(data, filename)

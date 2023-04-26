@@ -94,9 +94,9 @@ if __name__ == "__main__":
 
     if args.subparser == "generate":
         if not args.path_to_runset.exists():
-            raise ValueError(f"{str(path_to_runset)} doesn't exist")
+            raise ValueError(f"{str(args.path_to_runset)} doesn't exist")
 
-        gen_dataset_def(path_to_runset, verbose=True)
+        gen_dataset_def(args.path_to_runset, verbose=True)
     elif args.subparser == "verify":
         try:
             from yogo.data.dataloader import (
