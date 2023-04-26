@@ -8,7 +8,7 @@ from PIL import Image
 from pathlib import Path
 from functools import partial
 
-from lfm_data_utilities.utils import multiprocess_fn_with_tqdm
+from lfm_data_utilities.utils import multiprocess_fn_with_tqdm, get_list_of_zarr_files
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     if not run_set.exists():
         raise FileNotFoundError(f"directory {sys.argv[1]} not found")
 
-    files = [f for f in run_set.glob("./**/*.zip") if not Path(f).name.startswith(".")]
+    files = get_list_of_zarr_files(run_set)
 
     if len(files) == 0:
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")
