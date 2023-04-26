@@ -7,7 +7,7 @@ from typing import Union, List
 from urllib.request import pathname2url
 from functools import partial
 
-from utils import multiprocess_directory_work
+from lfm_data_utilities.utils import multiprocess_fn_with_tqdm
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
@@ -60,7 +60,7 @@ def generate_tasks_for_runset_by_parent_folder(
         raise ValueError(
             "couldn't find labels and images - double check the provided path"
         )
-    multiprocess_directory_work(
+    multiprocess_fn_with_tqdm(
         folders,
         partial(
             gen_task,
@@ -68,6 +68,7 @@ def generate_tasks_for_runset_by_parent_folder(
             label_dir_name=label_dir_name,
             tasks_file_name=tasks_file_name,
         ),
+        ordered=False,
     )
 
 
@@ -85,7 +86,7 @@ def generate_tasks_for_runset(
         def tqdm_(v):
             return v
 
-    multiprocess_directory_work(
+    multiprocess_fn_with_tqdm(
         run_folders,
         partial(
             gen_task,
@@ -93,6 +94,7 @@ def generate_tasks_for_runset(
             label_dir_name=label_dir_name,
             tasks_file_name=tasks_file_name,
         ),
+        ordered=False,
     )
 
 

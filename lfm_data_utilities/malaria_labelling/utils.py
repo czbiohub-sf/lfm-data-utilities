@@ -1,11 +1,3 @@
-import traceback
-import multiprocessing as mp
-
-from tqdm import tqdm
-from typing import Any, Sequence, Callable
-from functools import partial
-
-
 def normalize(x, y):
     height = 772
     width = 1032
@@ -34,34 +26,3 @@ def convert_coords(xmin, xmax, ymin, ymax):
     ), f"{[xcenter, ycenter, width, height]}"
 
     return xcenter, ycenter, width, height
-
-
-print_lock = mp.Lock()
-
-
-def protected_fcn(f, *args):
-    try:
-        f(*args)
-    except:
-        with print_lock:
-            print(f"exception occurred processing {args}")
-            print(traceback.format_exc())
-
-
-def multiprocess_directory_work(
-    files: Sequence[Any],
-    work_fcn: Callable[
-        [
-            Any,
-        ],
-        None,
-    ],
-):
-    fcn = partial(protected_fcn, work_fcn)
-
-    with mp.Pool() as P:
-        # iterate so we get tqdm output, thats it!
-        vs = []
-        for v in tqdm(P.imap_unordered(fcn, files, chunksize=1), total=len(files)):
-            vs.append(v)
-        return vs

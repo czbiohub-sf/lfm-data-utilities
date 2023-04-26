@@ -1,13 +1,15 @@
-from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
+import cv2
+import zarr
+import traceback
+import multiprocessing as mp
+
+from tqdm import tqdm
 from pathlib import Path
 from csv import DictReader
 from datetime import datetime
-from multiprocessing import Pool
-
-import zarr
-from tqdm import tqdm
-import cv2
+from functools import partial
+from dataclasses import dataclass
+from typing import List, Dict, Tuple, Optional, Any, Callable
 
 
 @dataclass
@@ -426,23 +428,44 @@ def load_log_file(filepath: str) -> Dict:
     return {"filepath": filepath, "vals": lines}
 
 
-def multiprocess_load_files(filepaths: List[Path], fn: callable) -> List:
-    """Wraps parse_csv with multiprocessing. Takes a list of filepaths to load.
+print_lock = mp.Lock()
+
+
+def protected_fcn(f, *args):
+    try:
+        f(*args)
+    except:
+        with print_lock:
+            print(f"exception occurred processing {args}")
+            print(traceback.format_exc())
+
+
+def multiprocess_fn_with_tqdm(argument_list: List[Any], fn: Callable[[Any,], Any], ordered: bool=True) -> List[Any]:
+    """Wraps any function invocation in multiprocessing, with TQDM for progress.
+
+    Takes a list of arguments for fn, which takes one input. Note that you can use
+    functools.partial to fill in any other arguments.
 
     Parameters
     ----------
-    filepaths: List[str]
-    fn: Callable
+    argument_list: List[Any]
+    fn: Callable[[Any,], Any]
         TODO: Extend to take an arbitrary amount of parameters
+    ordered: bool=True
+        return results ordered if true. If false, use imap_unordered which may give a performance boost
 
     Returns
     -------
     List[Interior type depends on output of callable]
     """
+    protected_fcn_partial = partial(protected_fcn, fn)
 
-    with Pool() as pool:
-        data = list(tqdm(pool.imap(fn, filepaths), total=len(filepaths)))
-    return data
+    with mp.Pool() as pool:
+        if ordered:
+            mp_func = pool.imap
+        else:
+            mp_func = pool.imap_unordered
+        return list(tqdm(mp_func(protected_fcn_partial, argument_list), total=len(argument_list)))
 
 
 def multiprocess_load_zarr(filepaths: List[Path]) -> List[zarr.core.Array]:
@@ -457,7 +480,7 @@ def multiprocess_load_zarr(filepaths: List[Path]) -> List[zarr.core.Array]:
     List[zarr.core.Array]
     """
 
-    return multiprocess_load_files(filepaths, load_read_only_zarr)
+    return multiprocess_fn_with_tqdm(filepaths, load_read_only_zarr)
 
 
 def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
@@ -477,7 +500,7 @@ def multiprocess_load_csv(filepaths: List[Path]) -> List[Dict]:
             "vals": Dict - this inner dictionary is what maps column headers to lists
     """
 
-    return multiprocess_load_files(filepaths, load_csv)
+    return multiprocess_fn_with_tqdm(filepaths, load_csv)
 
 
 def multiprocess_load_log(filepaths: List[Path]) -> List[Dict]:
@@ -496,7 +519,7 @@ def multiprocess_load_log(filepaths: List[Path]) -> List[Dict]:
             "vals": List[str] - this is where the log file lines are stored (separated by newline)
     """
 
-    return multiprocess_load_files(filepaths, load_log_file)
+    return multiprocess_fn_with_tqdm(filepaths, load_log_file)
 
 
 def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:

@@ -8,7 +8,7 @@ from PIL import Image
 from pathlib import Path
 from functools import partial
 
-from utils import multiprocess_directory_work
+from lfm_data_utilities.utils import multiprocess_fn_with_tqdm
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
@@ -65,4 +65,6 @@ if __name__ == "__main__":
     if len(files) == 0:
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")
 
-    multiprocess_directory_work(files, partial(convert_zarr_to_image_folder, skip=skip))
+    multiprocess_fn_with_tqdm(
+        files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False
+    )
