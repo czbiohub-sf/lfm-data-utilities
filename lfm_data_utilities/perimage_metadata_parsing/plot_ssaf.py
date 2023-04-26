@@ -22,7 +22,7 @@ def run(file_dir):
     filtered = filtered_w_nan[non_nan]
 
     # Get throttle
-    throttle = np.diff(np.where(non_nan == True))[0][0]
+    throttle = np.diff(np.where(non_nan is True))[0][0]
 
     # Get adjustments
     adjusted = data["focus_adjustment"].to_numpy(na_value=0).astype(bool)[non_nan]

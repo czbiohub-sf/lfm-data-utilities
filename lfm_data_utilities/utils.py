@@ -34,11 +34,7 @@ class Dataset:
         except:
             self.experiment_metadata = None
 
-        self.successfully_loaded = not None in [
-            self.zarr_file,
-            self.per_img_metadata,
-            self.experiment_metadata,
-        ]
+        self.successfully_loaded = None not in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
 
 
 def make_video(dataset: Dataset, save_dir: Path):
@@ -240,7 +236,7 @@ def get_list_of_oracle_run_folders(top_level_dir: str) -> List[Path]:
     tlds = [
         x
         for x in Path(top_level_dir).glob("*/")
-        if "logs" not in x.stem and not "." in x.stem and Path.is_dir(x)
+        if "logs" not in x.stem and "." not in x.stem and Path.is_dir(x)
     ]
 
     return tlds

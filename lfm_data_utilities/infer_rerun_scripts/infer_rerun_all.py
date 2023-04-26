@@ -1,4 +1,3 @@
-import glob
 import os
 import torch
 import sys
@@ -8,7 +7,7 @@ from lfm_data_utilities.utils import (
     get_corresponding_txt_file,
     get_list_of_zarr_files,
 )
-from typing import List, Optional
+from typing import List
 from zipfile import BadZipFile
 from time import perf_counter
 from tqdm import tqdm
@@ -79,7 +78,7 @@ if __name__ == "__main__":
         )
 
     valid_types = ["yogo", "ssaf"]
-    if not model_type in valid_types:
+    if model_type not in valid_types:
         raise ValueError(
             "Invalid model type provided. Allowed model types: {valid_types}"
         )

@@ -1,12 +1,11 @@
 #! /usr/bin/env python3
 
-import sys
 import signal
 
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-from typing import Generator, Iterable, Tuple, List, Optional, Dict, Any
+from typing import Generator, Iterable, Tuple, Optional, Dict, Any
 
 from yogo.utils import draw_rects
 from yogo.data.dataset import read_grayscale, load_labels

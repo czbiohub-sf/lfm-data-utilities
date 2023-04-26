@@ -8,7 +8,6 @@ from urllib.request import pathname2url
 from functools import partial
 
 from utils import multiprocess_directory_work
-from yogo.utils import iter_in_chunks
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
@@ -82,7 +81,8 @@ def generate_tasks_for_runset(
     if use_tqdm:
         tqdm_ = tqdm
     else:
-        tqdm_ = lambda v: v
+        def tqdm_(v):
+            return v
 
     multiprocess_directory_work(
         run_folders,

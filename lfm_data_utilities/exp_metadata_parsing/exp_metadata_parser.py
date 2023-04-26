@@ -1,8 +1,6 @@
-import re
 import argparse
 import pandas as pd
 
-from os import path, listdir
 from lfm_data_utilities.utils import get_list_of_experiment_level_metadata_files
 
 VALID_KEYS = [

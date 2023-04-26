@@ -1,7 +1,5 @@
-import sys
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 
 from typing import List, Optional, Union, Tuple
 from pathlib import Path
@@ -13,10 +11,6 @@ from lfm_data_utilities.utils import (
 )
 from histogram_constants import (
     IMCOUNT_TARGET,
-    MIN_FOCUS_TARGET,
-    MAX_FOCUS_TARGET,
-    MIN_FLOWRATE_TARGET,
-    MAX_FLOWRATE_TARGET,
 )
 
 
