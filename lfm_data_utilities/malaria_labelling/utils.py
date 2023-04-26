@@ -57,14 +57,11 @@ def multiprocess_directory_work(
         None,
     ],
 ):
-    cpu_count = mp.cpu_count()
-
-    print(f"processing {len(files)} files")
-    print(f"num cpus: {cpu_count}")
-
     fcn = partial(protected_fcn, work_fcn)
 
-    with mp.Pool(cpu_count) as P:
+    with mp.Pool() as P:
         # iterate so we get tqdm output, thats it!
-        for _ in tqdm(P.imap_unordered(fcn, files, chunksize=1), total=len(files)):
-            pass
+        vs = []
+        for v in tqdm(P.imap_unordered(fcn, files, chunksize=1), total=len(files)):
+            vs.append(v)
+        return vs
