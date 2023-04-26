@@ -3,7 +3,9 @@ from lfm_data_utilities.utils import *
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print(f"usage: {sys.argv[0]} <path folders> <path to save videos (note: folder will be created if it doesn't exist already)>")
+        print(
+            f"usage: {sys.argv[0]} <path folders> <path to save videos (note: folder will be created if it doesn't exist already)>"
+        )
         sys.exit(1)
 
     path_to_runset = sys.argv[1]

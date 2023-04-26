@@ -47,7 +47,7 @@ def run(folder, display_keys=DEFAULT_KEYS):
         fileparts = file.parts
         directory = f"{fileparts[-3]}\\{fileparts[-2]}"
         filename = file.name
-        
+
         try:
             # Get data from exp metadata file
             single_df = pd.read_csv(file)

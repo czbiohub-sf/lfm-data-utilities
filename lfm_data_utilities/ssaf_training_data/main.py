@@ -60,7 +60,6 @@ def multiproc_folders(folders: List[Path], save_loc: Path, focus_graph_loc: Path
 
 
 if __name__ == "__main__":
-
     tld = Path(input("Folder path of zstacks to be sorted: "))
     save_loc = Path(
         input(

@@ -192,7 +192,7 @@ def get_all_flowrates_from_experiment(
 
     h, w, _ = zf.shape
     num_images: int = zf.initialized
-    time_diffs = np.diff([float(x) for x in per_img_csv['vals']["timestamp"]])
+    time_diffs = np.diff([float(x) for x in per_img_csv["vals"]["timestamp"]])
     scale_factor = 10
 
     dx_vals = []

@@ -14,7 +14,6 @@ from time import perf_counter
 from tqdm import tqdm
 
 
-
 def load_model(model_dir: str) -> List[str]:
     """Load SSAF or YOGO model"""
 
@@ -24,37 +23,41 @@ def load_model(model_dir: str) -> List[str]:
 
     return model
 
-def process_files(files: List[str], model: str, output_dir: str, model_type: str) -> None:
+
+def process_files(
+    files: List[str], model: str, output_dir: str, model_type: str
+) -> None:
     """Get inference values for every frame in each file. Ignore already processed files and bad zipfiles"""
 
     for file in files:
         basename = pathlib.Path(file).stem
-        
+
         try:
-            images = (ImageLoader.load_zarr_data(file))
+            images = ImageLoader.load_zarr_data(file)
         except BadZipFile:
             print(f"Skipping {basename}: BadZipFile")
             continue
 
         output_file = get_corresponding_txt_file(file, output_dir, model_type)
         print(output_file)
-        #f"{output_dir}/{basename.removesuffix('.zip')}__{model_type}.txt"
+        # f"{output_dir}/{basename.removesuffix('.zip')}__{model_type}.txt"
 
         if os.path.exists(output_file):
             print(f"Skipping {basename}: Already processed")
             continue
-            
+
         print(f"Started processing {basename}")
 
         c = perf_counter()
-        with open(output_file, 'w') as file:
+        with open(output_file, "w") as file:
             for res in tqdm(infer(model, images)):
-                if model_type == 'ssaf':
+                if model_type == "ssaf":
                     file.write(f"{res}\n")
-                elif model_type == 'yogo':
+                elif model_type == "yogo":
                     print(res)
         d = perf_counter()
         print(f"Finished writing {basename} data in {d-c} s")
+
 
 def run(scope_dir: str, model_dir: str, output_dir: str, model_type: str) -> None:
     """Run all the steps to get SSAF data from all zarr files"""
@@ -75,7 +78,7 @@ if __name__ == "__main__":
             "Expected format 'python3 infer_rerun_all.py <path to scope folder> <path to model .pth file> <model type> <path to output folder>'"
         )
 
-    valid_types = ['yogo', 'ssaf']
+    valid_types = ["yogo", "ssaf"]
     if not model_type in valid_types:
         raise ValueError(
             "Invalid model type provided. Allowed model types: {valid_types}"

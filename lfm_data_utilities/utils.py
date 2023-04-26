@@ -9,12 +9,14 @@ import zarr
 from tqdm import tqdm
 import cv2
 
+
 @dataclass
 class DatasetPaths:
     zarr_path: Path
     per_img_csv_path: Path
     experiment_csv_path: Path
     subsample_path: Path
+
 
 class Dataset:
     def __init__(self, dp: DatasetPaths):
@@ -32,7 +34,11 @@ class Dataset:
         except:
             self.experiment_metadata = None
 
-        self.successfully_loaded = not None in [self.zarr_file, self.per_img_metadata, self.experiment_metadata]
+        self.successfully_loaded = not None in [
+            self.zarr_file,
+            self.per_img_metadata,
+            self.experiment_metadata,
+        ]
 
 
 def make_video(dataset: Dataset, save_dir: Path):
@@ -40,8 +46,8 @@ def make_video(dataset: Dataset, save_dir: Path):
     per_img_csv = dataset.per_img_metadata
 
     # Get duration in seconds
-    start = float(per_img_csv['vals']['timestamp'][0])
-    end = float(per_img_csv['vals']['timestamp'][-1])
+    start = float(per_img_csv["vals"]["timestamp"][0])
+    end = float(per_img_csv["vals"]["timestamp"][-1])
     duration = end - start
     num_frames = zf.initialized
     framerate = num_frames / duration
@@ -65,11 +71,17 @@ def make_video(dataset: Dataset, save_dir: Path):
 
 
 def load_datasets(top_level_dir: str) -> List[Dataset]:
-    print("Getting dataset paths (i.e paths to zarr files, per image/experiment level metadata csvs...)")
-    print("NOTE: Traversing ess file tree if you are not on Bruno is excruciatingly slow for some reason.")
+    print(
+        "Getting dataset paths (i.e paths to zarr files, per image/experiment level metadata csvs...)"
+    )
+    print(
+        "NOTE: Traversing ess file tree if you are not on Bruno is excruciatingly slow for some reason."
+    )
     all_dataset_paths = get_all_dataset_paths(top_level_dir)
 
-    print("Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute...")
+    print(
+        "Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute..."
+    )
     return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
 
 
@@ -100,36 +112,49 @@ def get_all_dataset_paths(top_level_dir: str) -> List[DatasetPaths]:
             return paths[0]
         else:
             return None
-    
-        
+
     datasets: List[DatasetPaths] = []
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
     for per_img in per_img_csv_paths:
         zfp = get_path_or_none(get_list_of_zarr_files(per_img.parent))
-        efp = get_path_or_none(get_list_of_experiment_level_metadata_files(per_img.parent))
+        efp = get_path_or_none(
+            get_list_of_experiment_level_metadata_files(per_img.parent)
+        )
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
 
         if per_img and zfp and efp and ssp:
             datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
-            print("One or more of the following: invalid zarr / experiment metadata / subsample directory:")
+            print(
+                "One or more of the following: invalid zarr / experiment metadata / subsample directory:"
+            )
             print(f"Look at this directory: {per_img.parent}")
 
     return datasets
 
-def get_list_of_txt_files(zarr_files: List[Path], top_level_txt_dir: Path, suffix: str) -> List[Optional[Path]]:
+
+def get_list_of_txt_files(
+    zarr_files: List[Path], top_level_txt_dir: Path, suffix: str
+) -> List[Optional[Path]]:
     """Get a list of paths to the corresponding .txt files for a given list of zarr files"""
 
-    txt_files = [get_corresponding_txt_file(zarr_file, top_level_txt_dir, suffix) for zarr_file in zarr_files]
+    txt_files = [
+        get_corresponding_txt_file(zarr_file, top_level_txt_dir, suffix)
+        for zarr_file in zarr_files
+    ]
     return [txt_file for txt_file in txt_files if txt_file.exists()]
 
-def get_corresponding_txt_file(zarr_file: Path, top_level_txt_dir: Path, suffix: str) -> Optional[Path]:
+
+def get_corresponding_txt_file(
+    zarr_file: Path, top_level_txt_dir: Path, suffix: str
+) -> Optional[Path]:
     """Get the path to the corresponding .txt file for a given zarr file"""
 
     basename = zarr_file.stem
     txt_file = top_level_txt_dir / f"{basename}__{suffix}.txt"
-    
+
     return txt_file
+
 
 def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the zarr (saved as .zip) files in this folder and all its subfolders
@@ -143,8 +168,10 @@ def get_list_of_zarr_files(top_level_dir: str) -> List[Path]:
     -------
     List[Path]
     """
-    return sorted([file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)])
-    
+    return sorted(
+        [file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)]
+    )
+
 
 def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
@@ -159,7 +186,9 @@ def get_list_of_per_image_metadata_files(top_level_dir: str) -> List[Path]:
     List[Path]
     """
 
-    return sorted([x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)])
+    return sorted(
+        [x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)]
+    )
 
 
 def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path]:
@@ -175,7 +204,9 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: str) -> List[Path
     List[Path]
     """
 
-    return sorted([file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)])
+    return sorted(
+        [file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)]
+    )
 
 
 def get_list_of_subsample_dirs(top_level_dir: str) -> List[Path]:
@@ -339,7 +370,7 @@ def get_list_of_log_files(top_level_dir: str) -> List[Path]:
 
 def load_read_only_zarr(zarr_path: str) -> zarr.core.Array:
     """Load a zarr file - no protections (i.e exception catching) against bad zip files.
-    
+
     Return
     ------
     zarr.core.Array
@@ -489,6 +520,7 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
+
 
 def is_valid_file(path: str) -> bool:
     return not Path(path).name.startswith(".")
