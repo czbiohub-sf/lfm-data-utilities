@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 
-from lfm_data_utilities.utils import *
+from typing import List
 
 
 # for reference
