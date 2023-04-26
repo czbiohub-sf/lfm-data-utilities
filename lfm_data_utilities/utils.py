@@ -440,7 +440,16 @@ def protected_fcn(f, *args):
             print(traceback.format_exc())
 
 
-def multiprocess_fn_with_tqdm(argument_list: List[Any], fn: Callable[[Any,], Any], ordered: bool=True) -> List[Any]:
+def multiprocess_fn_with_tqdm(
+    argument_list: List[Any],
+    fn: Callable[
+        [
+            Any,
+        ],
+        Any,
+    ],
+    ordered: bool = True,
+) -> List[Any]:
     """Wraps any function invocation in multiprocessing, with TQDM for progress.
 
     Takes a list of arguments for fn, which takes one input. Note that you can use
@@ -465,7 +474,11 @@ def multiprocess_fn_with_tqdm(argument_list: List[Any], fn: Callable[[Any,], Any
             mp_func = pool.imap
         else:
             mp_func = pool.imap_unordered
-        return list(tqdm(mp_func(protected_fcn_partial, argument_list), total=len(argument_list)))
+        return list(
+            tqdm(
+                mp_func(protected_fcn_partial, argument_list), total=len(argument_list)
+            )
+        )
 
 
 def multiprocess_load_zarr(filepaths: List[Path]) -> List[zarr.core.Array]:
