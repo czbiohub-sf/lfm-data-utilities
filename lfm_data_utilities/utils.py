@@ -1,4 +1,5 @@
 import cv2
+import time
 import zarr
 import traceback
 import multiprocessing as mp
@@ -9,6 +10,7 @@ from csv import DictReader
 from datetime import datetime
 from functools import partial
 from dataclasses import dataclass
+from contextlib import contextmanager
 from typing import List, Dict, Tuple, Optional, Any, Callable, Union
 
 
@@ -21,6 +23,13 @@ class DatasetPaths:
     per_img_csv_path: Path
     experiment_csv_path: Path
     subsample_path: Path
+
+    def root_dir(self) -> Path:
+        if not self.zarr_path.parent == self.per_img_csv_path.parent == self.experiment_csv_path.parent:
+            raise ValueError(
+                f"invalid results for dataset paths - data are from different dirs for {self.zarr_path}"
+            )
+        return self.zarr_path.parent
 
 
 class Dataset:
@@ -44,6 +53,23 @@ class Dataset:
             self.per_img_metadata,
             self.experiment_metadata,
         ]
+
+
+@contextmanager
+def timing_context_manager(description: str, precision: int = 5):
+    """Context manager for timing code execution.
+
+    Args:
+        description (str): description of code to be timed
+    """
+    # TODO 'quiet' environment variable?
+    try:
+        start_time = time.perf_counter()
+        print(f"{description}...", end=" ", flush=True)
+        yield
+    finally:
+        end_time = time.perf_counter()
+        print(f"{end_time - start_time:.{precision}f} s")
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
@@ -126,7 +152,7 @@ def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> Lis
         else:
             return None
 
-    datasets: List[DatasetPaths] = []
+    dataset_paths: List[DatasetPaths] = []
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
     for per_img in per_img_csv_paths:
         zfp = get_path_or_none(get_list_of_zarr_files(per_img.parent))
@@ -136,7 +162,7 @@ def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> Lis
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
         verbose_names = [("zarr file", zfp), ("experiment metadata", efp), ("subsample directory", ssp)]
         if zfp and efp and ssp:
-            datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
+            dataset_paths.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
             if verbose:
                 print(
@@ -144,7 +170,7 @@ def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> Lis
                     f"{', '.join(v[0] for v in verbose_names if v[1] is None)}"
                 )
 
-    return datasets
+    return dataset_paths
 
 
 def get_list_of_txt_files(
