@@ -144,8 +144,6 @@ def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> Lis
                     f"{', '.join(v[0] for v in verbose_names if v[1] is None)}"
                 )
 
-    print("HI")
-    print(datasets)
     return datasets
 
 
