@@ -7,6 +7,7 @@
 3 save results in a csv file
 4 save metadata in a yml file
 """
+
 import types
 import argparse
 from concurrent.futures import ProcessPoolExecutor, wait, ALL_COMPLETED
@@ -20,10 +21,13 @@ import yogo
 import torch
 import autofocus
 
+from tqdm import tqdm
 from ruamel.yaml import YAML
 
 from lfm_data_utilities import utils
-from lfm_data_utilities.image_processing.flowrate_utils import get_all_flowrates_from_experiment
+from lfm_data_utilities.image_processing.flowrate_utils import (
+    get_all_flowrates_from_experiment,
+)
 
 
 def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
@@ -32,7 +36,7 @@ def try_get_package_version_identifier(package: types.ModuleType) -> Optional[st
     If it doesn't, return the __version__. If that doesnt exist, return None.
     """
     try:
-        repo = get.Repo(package.__path__[0], search_parent_directories=True)
+        repo = git.Repo(package.__path__[0], search_parent_directories=True)
         return repo.head.commit.hexsha
     except AttributeError:
         try:
@@ -42,14 +46,14 @@ def try_get_package_version_identifier(package: types.ModuleType) -> Optional[st
 
 
 def write_metadata_for_dataset_path(
-        output_parent_dir: Path,
-        autofocus_pth_path: Path,
-        yogo_pth_path: Path,
-    ):
+    output_parent_dir: Path,
+    autofocus_pth_path: Path,
+    yogo_pth_path: Path,
+):
     autofocus_package_id = try_get_package_version_identifier(autofocus)
     yogo_package_id = try_get_package_version_identifier(yogo)
     # write all the above to meta.yml in output_parent_dir
-    yaml = YAML(typ='safe')
+    yaml = YAML(typ="safe")
     meta = {
         "autofocus_package_id": autofocus_package_id,
         "yogo_package_id": yogo_package_id,
@@ -60,14 +64,24 @@ def write_metadata_for_dataset_path(
         yaml.dump(meta, f)
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("create dense data from runs for vetting")
     parser.add_argument("path_to_runset", type=Path, help="path to run folders")
-    parser.add_argument("output_dir", type=Path, default=None, help="path to output directory - defaults to path_to_runset/../output")
-    parser.add_argument("path_to_yogo_pth", type=Path, default=None, help="path to yogo pth file")
-    parser.add_argument("path_to_autofocus_pth", type=Path, default=None, help="path to autofocus pth file")
+    parser.add_argument(
+        "output_dir",
+        type=Path,
+        default=None,
+        help="path to output directory - defaults to path_to_runset/../output",
+    )
+    parser.add_argument(
+        "path_to_yogo_pth", type=Path, default=None, help="path to yogo pth file"
+    )
+    parser.add_argument(
+        "path_to_autofocus_pth",
+        type=Path,
+        default=None,
+        help="path to autofocus pth file",
+    )
 
     args = parser.parse_args()
 
@@ -115,7 +129,9 @@ if __name__ == "__main__":
         autofocus_future = pool.submit(autofocus_job)
         yogo_future = pool.submit(yogo_job)
 
-        wait([flowrate_future, autofocus_future, yogo_future], return_when=ALL_COMPLETED)
+        wait(
+            [flowrate_future, autofocus_future, yogo_future], return_when=ALL_COMPLETED
+        )
 
         print(
             f"flowrate: {flowrate_future.result()}\n"

@@ -25,7 +25,11 @@ class DatasetPaths:
     subsample_path: Path
 
     def root_dir(self) -> Path:
-        if not self.zarr_path.parent == self.per_img_csv_path.parent == self.experiment_csv_path.parent:
+        if (
+            not self.zarr_path.parent
+            == self.per_img_csv_path.parent
+            == self.experiment_csv_path.parent
+        ):
             raise ValueError(
                 f"invalid results for dataset paths - data are from different dirs for {self.zarr_path}"
             )
@@ -124,7 +128,9 @@ def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
     return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
 
 
-def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> List[DatasetPaths]:
+def get_all_dataset_paths(
+    top_level_dir: PathLike, verbose: bool = False
+) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
@@ -160,7 +166,11 @@ def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> Lis
             get_list_of_experiment_level_metadata_files(per_img.parent)
         )
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
-        verbose_names = [("zarr file", zfp), ("experiment metadata", efp), ("subsample directory", ssp)]
+        verbose_names = [
+            ("zarr file", zfp),
+            ("experiment metadata", efp),
+            ("subsample directory", ssp),
+        ]
         if zfp and efp and ssp:
             dataset_paths.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
@@ -210,7 +220,11 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*.zip") if is_not_hidden_path(file)]
+        [
+            file
+            for file in Path(top_level_dir).rglob("*.zip")
+            if is_not_hidden_path(file)
+        ]
     )
 
 
@@ -228,7 +242,11 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_not_hidden_path(x)]
+        [
+            x
+            for x in Path(top_level_dir).rglob("*perimage*.csv")
+            if is_not_hidden_path(x)
+        ]
     )
 
 
@@ -246,7 +264,11 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*exp*.csv") if is_not_hidden_path(file)]
+        [
+            file
+            for file in Path(top_level_dir).rglob("*exp*.csv")
+            if is_not_hidden_path(file)
+        ]
     )
 
 
@@ -263,8 +285,7 @@ def get_list_of_subsample_dirs(top_level_dir: PathLike) -> List[Path]:
     List[Path]
     """
     return sorted(
-        p for p in Path(top_level_dir).rglob("*sub_sample*/")
-        if is_not_hidden_path(p)
+        p for p in Path(top_level_dir).rglob("*sub_sample*/") if is_not_hidden_path(p)
     )
 
 

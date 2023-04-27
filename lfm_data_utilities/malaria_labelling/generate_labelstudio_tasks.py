@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 
-from tqdm import tqdm
 from pathlib import Path
 from typing import Union, List
 from urllib.request import pathname2url
