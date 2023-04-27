@@ -75,7 +75,7 @@ def make_video(dataset: Dataset, save_dir: PathLike):
     writer.release()
 
 
-def is_valid_file(path: PathLike) -> bool:
+def is_not_hidden_path(path: PathLike) -> bool:
     """Check if file is valid or if it's an unreadable temporary file. (Apple saves temporary files as '._<filename>'.)"""
 
     return not Path(path).name.startswith(".")
@@ -98,7 +98,7 @@ def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
     return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
 
 
-def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
+def get_all_dataset_paths(top_level_dir: PathLike, verbose: bool = False) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
@@ -134,15 +134,18 @@ def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
             get_list_of_experiment_level_metadata_files(per_img.parent)
         )
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
-
-        if per_img and zfp and efp and ssp:
+        verbose_names = [("zarr file", zfp), ("experiment metadata", efp), ("subsample directory", ssp)]
+        if zfp and efp and ssp:
             datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
-            print(
-                "One or more of the following: invalid zarr / experiment metadata / subsample directory:"
-            )
-            print(f"Look at this directory: {per_img.parent}")
+            if verbose:
+                print(
+                    f"missing files in {per_img.parent}: "
+                    f"{', '.join(v[0] for v in verbose_names if v[1] is None)}"
+                )
 
+    print("HI")
+    print(datasets)
     return datasets
 
 
@@ -183,7 +186,7 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)]
+        [file for file in Path(top_level_dir).rglob("*.zip") if is_not_hidden_path(file)]
     )
 
 
@@ -201,7 +204,7 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)]
+        [x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_not_hidden_path(x)]
     )
 
 
@@ -219,7 +222,7 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)]
+        [file for file in Path(top_level_dir).rglob("*exp*.csv") if is_not_hidden_path(file)]
     )
 
 
@@ -235,8 +238,10 @@ def get_list_of_subsample_dirs(top_level_dir: PathLike) -> List[Path]:
     -------
     List[Path]
     """
-
-    return sorted(Path(top_level_dir).rglob("*sub_sample*/"))
+    return sorted(
+        p for p in Path(top_level_dir).rglob("*sub_sample*/")
+        if is_not_hidden_path(p)
+    )
 
 
 def get_list_of_oracle_run_folders(top_level_dir: PathLike) -> List[Path]:
