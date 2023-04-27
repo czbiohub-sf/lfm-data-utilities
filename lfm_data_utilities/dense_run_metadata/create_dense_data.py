@@ -14,7 +14,6 @@ from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from pathlib import Path
 from typing import Optional
-from functools import partial
 
 import git
 import torch
@@ -129,5 +128,6 @@ if __name__ == "__main__":
                 device=devices[1],
             )
             wait(
-                [flowrate_future, autofocus_future, yogo_future], return_when=ALL_COMPLETED
+                [flowrate_future, autofocus_future, yogo_future],
+                return_when=ALL_COMPLETED,
             )
