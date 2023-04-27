@@ -171,7 +171,7 @@ def plot_cc(im1, im2, im1_subregion, template_result, xy1, xy2, max_x, max_y, dx
 
 
 def get_all_flowrates_from_experiment(
-    top_level_dir: Path,
+    top_level_dir: Path, verbose: bool = False
 ) -> Tuple[List[float], List[float], List[float]]:
     """Return the cross correlation values between all pairs of adjacent images in the given zarr file.
 
@@ -199,7 +199,7 @@ def get_all_flowrates_from_experiment(
     dy_vals = []
     conf_vals = []
 
-    for i in tqdm(range(1, num_images)):
+    for i in tqdm(range(1, num_images), disable=not verbose):
         prev_img = zf[:, :, i - 1]
         img = zf[:, :, i]
         dx, dy, max_conf = get_flowrate_with_cross_correlation(
