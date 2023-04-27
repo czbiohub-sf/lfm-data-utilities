@@ -191,11 +191,7 @@ def get_all_flowrates_from_experiment(
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
-    h, w = (
-        zf[:, :, 0].shape
-        if isinstance(zf, zarr.Array)
-        else zf[0][:].shape
-    )
+    h, w = zf[:, :, 0].shape if isinstance(zf, zarr.Array) else zf[0][:].shape
     num_images = zf.initialized if isinstance(zf, zarr.Array) else len(zf)
     time_diffs = np.diff([float(x) for x in per_img_csv["vals"]["timestamp"]])
     scale_factor = 10

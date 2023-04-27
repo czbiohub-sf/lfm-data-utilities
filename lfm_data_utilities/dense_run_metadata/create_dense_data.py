@@ -8,16 +8,20 @@
 4 save metadata in a yml file
 """
 
+import csv
 import types
 import argparse
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+import warnings
 
 from pathlib import Path
-from typing import Optional
+from itertools import cycle
+from typing import Optional, List, Tuple
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import git
 import torch
 
+# import these so we can get the package version identifiers (commit or __version__)
 import yogo
 import autofocus
 
@@ -28,6 +32,7 @@ from tqdm import tqdm
 from ruamel.yaml import YAML
 
 from lfm_data_utilities import utils
+from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 from lfm_data_utilities.image_processing.flowrate_utils import (
     get_all_flowrates_from_experiment,
 )
@@ -49,22 +54,107 @@ def try_get_package_version_identifier(package: types.ModuleType) -> Optional[st
 
 
 def write_metadata_for_dataset_path(
-    output_parent_dir: Path,
+    output_dir: Path,
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
 ):
     autofocus_package_id = try_get_package_version_identifier(autofocus)
     yogo_package_id = try_get_package_version_identifier(yogo)
-    # write all the above to meta.yml in output_parent_dir
+    # write all the above to meta.yml in output_dir
     yaml = YAML(typ="safe")
     meta = {
         "autofocus_package_id": autofocus_package_id,
         "yogo_package_id": yogo_package_id,
-        "autofocus_path_to_pth": autofocus_path_to_pth,
-        "yogo_path_to_pth": yogo_path_to_pth,
+        "autofocus_path_to_pth": str(autofocus_path_to_pth.absolute()),
+        "yogo_path_to_pth": str(yogo_path_to_pth.absolute()),
     }
-    with open(output_parent_dir / "meta.yml", "w") as f:
+    with open(output_dir / "meta.yml", "w") as f:
         yaml.dump(meta, f)
+
+
+def calculate_yogo_summary(
+    pred: torch.Tensor,
+    threshold_class_probabilities: bool = True,
+    objectness_threshold: float = 0.5,
+) -> List[float]:
+    """calculate class summary predictions for pred
+
+    if t0_i is the objectness of grid cell i and C_ij is the probability
+    that grid cell i has class j, then we return
+
+        if threshold_class_probabilities:
+            sum over all grid cells i (argmax(C_ij) | t0_i > 0.5)
+        else:
+            sum over all grid cells i (C_ij | t0_i > 0.5)
+
+    threshold_class_probabilities=True will give the class with the highest probability for each grid cell,
+    which we use in practice. threshold_class_probabilities=False will give expected number of cells of
+    each class given t0_i > 0.5.
+    """
+    pd, Sy, Sx = pred.shape
+    num_classes = pd - 5
+    reformatted = pred.reshape(pd, Sy * Sx).T
+    objectness_threshold = reformatted[:, 4] > objectness_threshold
+    predicted_cells = reformatted[objectness_threshold]
+
+    if threshold_class_probabilities:
+        result = torch.nn.functional.one_hot(
+            torch.argmax(predicted_cells, dim=1), num_classes=num_classes
+        ).float()
+    else:
+        result = predicted_cells.sum(dim=0)
+
+    return result.tolist()
+
+
+def write_results(
+    output_dir: Path,
+    flowrate_results: Tuple[List[float]],
+    autofocus_results: Tuple[List[float]],
+    yogo_results: Tuple[torch.Tensor],
+    threshold_class_probabilities: bool = True,
+):
+    """Write results to csv file
+
+    columns are:
+        img_idx flowrate_dx flowrate_dy flowrate_confidence focus *calculated_yogo_summary
+    """
+    with open(output_dir / "data.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(
+            [
+                "img_idx",
+                "flowrate_dx",
+                "flowrate_dy",
+                "flowrate_confidence",
+                "autofocus",
+                "yogo",
+                *CLASSES,
+            ]
+        )
+        for i, (
+            flowrate_dx,
+            flowrate_dy,
+            flowrate_confidence,
+            autofocus_res,
+            yogo_res,
+        ) in enumerate(zip(zip(flowrate_results), autofocus_results, yogo_results)):
+            writer.writerow(
+                map(
+                    str,
+                    [
+                        i,
+                        flowrate_dx,
+                        flowrate_dy,
+                        flowrate_confidence,
+                        autofocus_res,
+                        *calculate_yogo_summary(
+                            yogo_res,
+                            threshold_class_probabilities=threshold_class_probabilities,
+                        ),
+                    ],
+                )
+            )
 
 
 if __name__ == "__main__":
@@ -85,6 +175,21 @@ if __name__ == "__main__":
         default=None,
         help="path to autofocus pth file",
     )
+    parser.add_argument(
+        "--expected-class-probabilities",
+        action="store_true",
+        default=False,
+        help=(
+            "if set, calculate expected number of cells per class instead of the sum "
+            "of argmax of class probabilities (default)"
+        ),
+    )
+    parser.add_argument(
+        "--objectness-threshold",
+        type=float,
+        default=0.5,
+        help="threshold for objectness - class statistics are calculated given this threshold is met (default 0.5)",
+    )
 
     args = parser.parse_args()
 
@@ -97,17 +202,18 @@ if __name__ == "__main__":
     elif not args.path_to_autofocus_pth.exists():
         raise ValueError(f"{args.path_to_autofocus_pth} does not exist")
 
-    # args.output_dir.mkdir(exist_ok=True)
-
-    devices = [f"cuda:{i}" for i in range(torch.cuda.device_count())]
-    if len(devices) != 2:
-        # TODO generalize for 1 or 0 devices
-        raise ValueError(f"need exactly two cuda devices, got {len(devices)}")
+    num_gpus = torch.cuda.device_count()
+    if num_gpus == 0:
+        warnings.warn("no cuda devices found, using cpu - this will be slow!")
+        devices = cycle(["cpu"])
+    else:
+        devices = cycle([f"cuda:{i}" for i in range(num_gpus)])
 
     with utils.timing_context_manager("getting all dataset paths"):
         dataset_paths = utils.get_all_dataset_paths(args.path_to_runset, verbose=False)
 
     print(f"starting calculation on {len(dataset_paths)} datasets")
+    writing_futures = []
     with ThreadPoolExecutor(max_workers=8) as pool:
         for dataset_path in tqdm(dataset_paths):
             flowrate_future = pool.submit(
@@ -119,15 +225,40 @@ if __name__ == "__main__":
                 autofocus_infer.predict,
                 path_to_pth=args.path_to_autofocus_pth,
                 path_to_zarr=dataset_path.zarr_path,
-                device=devices[0],
+                device=next(devices),
             )
             yogo_future = pool.submit(
                 yogo_infer.predict,
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
-                device=devices[1],
+                device=next(devices),
             )
+
+            dataset_path_dir = args.output_dir / dataset_path.root_dir.name
+            dataset_path_dir.mkdir(exist_ok=True)
+
+            # while those are working, write the meta.yml file
+            write_metadata_for_dataset_path(
+                output_dir=dataset_path_dir,
+                autofocus_path_to_pth=args.path_to_autofocus_pth,
+                yogo_path_to_pth=args.path_to_yogo_pth,
+            )
+
             wait(
                 [flowrate_future, autofocus_future, yogo_future],
                 return_when=ALL_COMPLETED,
             )
+
+            # submit the writing job to the pool too! :)
+            writing_future = pool.submit(
+                write_results,
+                output_dir=dataset_path_dir,
+                flowrate_results=flowrate_future.result(),
+                autofocus_results=autofocus_future.result(),
+                yogo_results=yogo_future.result(),
+            )
+
+            writing_futures.append(writing_future)
+
+        with utils.timing_context_manager("waiting for all writes to finish"):
+            wait(writing_futures, return_when=ALL_COMPLETED)
