@@ -455,7 +455,7 @@ def protected_fcn(f, *args):
             print(traceback.format_exc())
 
 
-def multiprocess_fn_with_tqdm(
+def multiprocess_fn(
     argument_list: List[Any],
     fn: Callable[
         [
@@ -464,8 +464,9 @@ def multiprocess_fn_with_tqdm(
         Any,
     ],
     ordered: bool = True,
+    verbose: bool = True,
 ) -> List[Any]:
-    """Wraps any function invocation in multiprocessing, with TQDM for progress.
+    """Wraps any function invocation in multiprocessing, with optional TQDM for progress.
 
     Takes a list of arguments for fn, which takes one input. Note that you can use
     functools.partial to fill in any other arguments.
@@ -477,6 +478,8 @@ def multiprocess_fn_with_tqdm(
         TODO: Extend to take an arbitrary amount of parameters
     ordered: bool=True
         return results ordered if true. If false, use imap_unordered which may give a performance boost
+    verbose: bool=True
+        Show progress bar if true
 
     Returns
     -------
@@ -491,7 +494,9 @@ def multiprocess_fn_with_tqdm(
             mp_func = pool.imap_unordered
         return list(
             tqdm(
-                mp_func(protected_fcn_partial, argument_list), total=len(argument_list)
+                mp_func(protected_fcn_partial, argument_list),
+                total=len(argument_list),
+                disable=not verbose,
             )
         )
 
@@ -508,7 +513,7 @@ def multiprocess_load_zarr(filepaths: List[PathLike]) -> List[zarr.core.Array]:
     List[zarr.core.Array]
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_read_only_zarr)
+    return multiprocess_fn(filepaths, load_read_only_zarr)
 
 
 def multiprocess_load_csv(filepaths: List[PathLike]) -> List[Dict]:
@@ -528,7 +533,7 @@ def multiprocess_load_csv(filepaths: List[PathLike]) -> List[Dict]:
             "vals": Dict - this inner dictionary is what maps column headers to lists
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_csv)
+    return multiprocess_fn(filepaths, load_csv)
 
 
 def multiprocess_load_log(filepaths: List[PathLike]) -> List[Dict]:
@@ -547,7 +552,7 @@ def multiprocess_load_log(filepaths: List[PathLike]) -> List[Dict]:
             "vals": List[str] - this is where the log file lines are stored (separated by newline)
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_log_file)
+    return multiprocess_fn(filepaths, load_log_file)
 
 
 def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
