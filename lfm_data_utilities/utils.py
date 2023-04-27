@@ -24,6 +24,7 @@ class DatasetPaths:
     experiment_csv_path: Path
     subsample_path: Path
 
+    @property
     def root_dir(self) -> Path:
         if (
             not self.zarr_path.parent
@@ -44,7 +45,7 @@ class Dataset:
         except:
             self.zarr_file = None
         try:
-            self.per_img_metadata = load_csv(dp.per_img_csv_path)
+            self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
         except:
             self.per_img_metadata = None
         try:
@@ -444,7 +445,7 @@ def load_read_only_zarr(zarr_path: PathLike) -> zarr.core.Array:
     return zarr.open(zarr_path, "r")
 
 
-def load_csv(filepath: PathLike) -> Dict:
+def load_csv(filepath: PathLike) -> Dict[str, Union[PathLike, Dict[str, List[str]]]]:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
 
     Parameters
@@ -467,6 +468,32 @@ def load_csv(filepath: PathLike) -> Dict:
                 d.setdefault(key, []).append(row[key])
 
     return {"filepath": filepath, "vals": d}
+
+
+def load_per_img_csv(filepath: PathLike) -> Dict:
+    """
+    This loads and standardizies per-image csv files
+
+    issues:
+        - `timestamp` can be either a 'seconds from epoch' format or
+        the format of '2022-12-13-111345_485858' 'YYYY-MM-DD-HHMMSS_ffffff'
+    """
+    per_img_csv_raw = load_csv(filepath)
+
+    # fix timestamps
+    for i in range(len(per_img_csv_raw["vals"]["timestamp"])):
+        if per_img_csv_raw["vals"]["timestamp"][i].isnumeric():
+            # assume that timestamp is seconds from epoch for all,
+            # so leave it all alone
+            break
+
+        fixed_timestamp = datetime.strptime(
+            per_img_csv_raw["vals"]["timestamp"][i],
+            "%Y-%m-%d-%H%M%S_%f",
+        ).timestamp()
+        per_img_csv_raw["vals"]["timestamp"][i] = fixed_timestamp
+
+    return per_img_csv_raw
 
 
 def load_log_file(filepath: PathLike) -> Dict:

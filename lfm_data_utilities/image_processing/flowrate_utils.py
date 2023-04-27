@@ -1,11 +1,12 @@
-from typing import Tuple, List
-from pathlib import Path
-
-import numpy as np
 import cv2
+import zarr
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+
 from tqdm import tqdm
+from pathlib import Path
+from typing import Tuple, List
 
 from lfm_data_utilities.utils import get_all_dataset_paths, Dataset
 
@@ -190,8 +191,12 @@ def get_all_flowrates_from_experiment(
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
-    h, w, _ = zf.shape
-    num_images: int = zf.initialized
+    h, w = (
+        zf[:, :, 0].shape
+        if isinstance(zf, zarr.Array)
+        else zf[0][:].shape
+    )
+    num_images = zf.initialized if isinstance(zf, zarr.Array) else len(zf)
     time_diffs = np.diff([float(x) for x in per_img_csv["vals"]["timestamp"]])
     scale_factor = 10
 
@@ -199,12 +204,13 @@ def get_all_flowrates_from_experiment(
     dy_vals = []
     conf_vals = []
 
+    prev_img = zf[:, :, 0] if isinstance(zf, zarr.Array) else zf[0][:]
     for i in tqdm(range(1, num_images), disable=not verbose):
-        prev_img = zf[:, :, i - 1]
-        img = zf[:, :, i]
+        img = zf[:, :, i] if isinstance(zf, zarr.Array) else zf[i][:]
         dx, dy, max_conf = get_flowrate_with_cross_correlation(
             prev_img=prev_img, next_img=img, scale_factor=scale_factor
         )
+        prev_img = img
 
         dt = time_diffs[i - 1]
         dx = (dx / dt) / (w / scale_factor)

@@ -17,9 +17,13 @@ from typing import Optional
 from functools import partial
 
 import git
-import yogo
 import torch
+
+import yogo
 import autofocus
+
+from yogo import infer as yogo_infer
+from autofocus import infer as autofocus_infer
 
 from tqdm import tqdm
 from ruamel.yaml import YAML
@@ -47,8 +51,8 @@ def try_get_package_version_identifier(package: types.ModuleType) -> Optional[st
 
 def write_metadata_for_dataset_path(
     output_parent_dir: Path,
-    autofocus_pth_path: Path,
-    yogo_pth_path: Path,
+    autofocus_path_to_pth: Path,
+    yogo_path_to_pth: Path,
 ):
     autofocus_package_id = try_get_package_version_identifier(autofocus)
     yogo_package_id = try_get_package_version_identifier(yogo)
@@ -57,8 +61,8 @@ def write_metadata_for_dataset_path(
     meta = {
         "autofocus_package_id": autofocus_package_id,
         "yogo_package_id": yogo_package_id,
-        "autofocus_pth_path": autofocus_pth_path,
-        "yogo_pth_path": yogo_pth_path,
+        "autofocus_path_to_pth": autofocus_path_to_pth,
+        "yogo_path_to_pth": yogo_path_to_pth,
     }
     with open(output_parent_dir / "meta.yml", "w") as f:
         yaml.dump(meta, f)
@@ -109,19 +113,19 @@ if __name__ == "__main__":
         pool = ProcessPoolExecutor(max_workers=3)
         flowrate_job = partial(
             get_all_flowrates_from_experiment,
-            dataset_path=dataset_path,
+            top_level_dir=dataset_path.root_dir,
             verbose=False,
         )
         autofocus_job = partial(
-            autofocus.predict,
-            pth_path=args.path_to_autofocus_pth,
-            path_to_zarr=utils.load_read_only_zarr(dataset_path.zarr_path),
+            autofocus_infer.predict,
+            path_to_pth=args.path_to_autofocus_pth,
+            path_to_zarr=dataset_path.zarr_path,
             device=devices[0],
         )
         yogo_job = partial(
-            yogo.predict,
-            pth_path=args.path_to_yogo_pth,
-            path_to_zarr=utils.load_read_only_zarr(dataset_path.zarr_path),
+            yogo_infer.predict,
+            path_to_pth=args.path_to_yogo_pth,
+            path_to_zarr=dataset_path.zarr_path,
             device=devices[1],
         )
 
