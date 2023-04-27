@@ -79,13 +79,6 @@ def generate_tasks_for_runset(
     tasks_file_name="tasks",
     use_tqdm=False,
 ):
-    if use_tqdm:
-        tqdm_ = tqdm
-    else:
-
-        def tqdm_(v):
-            return v
-
     multiprocess_fn(
         run_folders,
         partial(
@@ -95,6 +88,7 @@ def generate_tasks_for_runset(
             tasks_file_name=tasks_file_name,
         ),
         ordered=False,
+        verbose=use_tqdm,
     )
 
 
