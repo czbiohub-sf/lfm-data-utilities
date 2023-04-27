@@ -14,7 +14,7 @@ import argparse
 import warnings
 
 from pathlib import Path
-from itertools import cycle
+from itertools import cycle, chain
 from typing import Optional, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
@@ -61,7 +61,7 @@ def write_metadata_for_dataset_path(
     autofocus_package_id = try_get_package_version_identifier(autofocus)
     yogo_package_id = try_get_package_version_identifier(yogo)
     # write all the above to meta.yml in output_dir
-    yaml = YAML(typ="safe")
+    yaml = YAML()
     meta = {
         "autofocus_package_id": autofocus_package_id,
         "yogo_package_id": yogo_package_id,
@@ -95,12 +95,12 @@ def calculate_yogo_summary(
     num_classes = pd - 5
     reformatted = pred.reshape(pd, Sy * Sx).T
     objectness_threshold = reformatted[:, 4] > objectness_threshold
-    predicted_cells = reformatted[objectness_threshold]
+    predicted_cells = reformatted[objectness_threshold, 5:]
 
     if threshold_class_probabilities:
         result = torch.nn.functional.one_hot(
             torch.argmax(predicted_cells, dim=1), num_classes=num_classes
-        ).float()
+        ).sum(dim=0).float()
     else:
         result = predicted_cells.sum(dim=0)
 
@@ -119,6 +119,8 @@ def write_results(
     columns are:
         img_idx flowrate_dx flowrate_dy flowrate_confidence focus *calculated_yogo_summary
     """
+    # flowrate of 1st frame can't be calculated, so set to 0
+    flowrate_iterable = chain(((0,0,0),), zip(*flowrate_results))
     with open(output_dir / "data.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(
@@ -128,21 +130,26 @@ def write_results(
                 "flowrate_dy",
                 "flowrate_confidence",
                 "autofocus",
-                "yogo",
                 *CLASSES,
             ]
         )
-        for i, (
-            flowrate_dx,
-            flowrate_dy,
-            flowrate_confidence,
-            autofocus_res,
-            yogo_res,
-        ) in enumerate(zip(zip(flowrate_results), autofocus_results, yogo_results)):
+        for i, results in enumerate(
+            zip(flowrate_iterable, autofocus_results, yogo_results)
+        ):
+            (
+                flowrate_results,
+                autofocus_res,
+                yogo_res,
+            ) = results
+            (
+                flowrate_dx,
+                flowrate_dy,
+                flowrate_confidence,
+            ) = flowrate_results
             writer.writerow(
-                map(
-                    str,
-                    [
+                [
+                    str(r)
+                    for r in [
                         i,
                         flowrate_dx,
                         flowrate_dy,
@@ -152,8 +159,8 @@ def write_results(
                             yogo_res,
                             threshold_class_probabilities=threshold_class_probabilities,
                         ),
-                    ],
-                )
+                    ]
+                ]
             )
 
 
@@ -250,15 +257,15 @@ if __name__ == "__main__":
             )
 
             # submit the writing job to the pool too! :)
-            writing_future = pool.submit(
-                write_results,
+            # writing_future = pool.submit(
+            write_results(
                 output_dir=dataset_path_dir,
                 flowrate_results=flowrate_future.result(),
                 autofocus_results=autofocus_future.result(),
                 yogo_results=yogo_future.result(),
             )
 
-            writing_futures.append(writing_future)
+            # writing_futures.append(writing_future)
 
         with utils.timing_context_manager("waiting for all writes to finish"):
             wait(writing_futures, return_when=ALL_COMPLETED)
