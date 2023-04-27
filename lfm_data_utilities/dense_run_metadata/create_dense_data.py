@@ -235,7 +235,7 @@ if __name__ == "__main__":
             )
 
             dataset_path_dir = args.output_dir / dataset_path.root_dir.name
-            dataset_path_dir.mkdir(exist_ok=True)
+            dataset_path_dir.mkdir(exist_ok=True, parents=True)
 
             # while those are working, write the meta.yml file
             write_metadata_for_dataset_path(
