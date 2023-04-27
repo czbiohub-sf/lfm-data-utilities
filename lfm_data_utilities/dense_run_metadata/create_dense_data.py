@@ -10,7 +10,7 @@
 
 import types
 import argparse
-from concurrent.futures import ProcessPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from pathlib import Path
 from typing import Optional
@@ -109,36 +109,25 @@ if __name__ == "__main__":
         dataset_paths = utils.get_all_dataset_paths(args.path_to_runset, verbose=False)
 
     print(f"starting calculation on {len(dataset_paths)} datasets")
-    for dataset_path in tqdm(dataset_paths):
-        pool = ProcessPoolExecutor(max_workers=3)
-        flowrate_job = partial(
-            get_all_flowrates_from_experiment,
-            top_level_dir=dataset_path.root_dir,
-            verbose=False,
-        )
-        autofocus_job = partial(
-            autofocus_infer.predict,
-            path_to_pth=args.path_to_autofocus_pth,
-            path_to_zarr=dataset_path.zarr_path,
-            device=devices[0],
-        )
-        yogo_job = partial(
-            yogo_infer.predict,
-            path_to_pth=args.path_to_yogo_pth,
-            path_to_zarr=dataset_path.zarr_path,
-            device=devices[1],
-        )
-
-        flowrate_future = pool.submit(flowrate_job)
-        autofocus_future = pool.submit(autofocus_job)
-        yogo_future = pool.submit(yogo_job)
-
-        wait(
-            [flowrate_future, autofocus_future, yogo_future], return_when=ALL_COMPLETED
-        )
-
-        print(
-            f"flowrate: {flowrate_future.result()}\n"
-            f"autofocus: {autofocus_future.result()}\n"
-            f"yogo: {yogo_future.result()}\n"
-        )
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for dataset_path in tqdm(dataset_paths):
+            flowrate_future = pool.submit(
+                get_all_flowrates_from_experiment,
+                top_level_dir=dataset_path.root_dir,
+                verbose=False,
+            )
+            autofocus_future = pool.submit(
+                autofocus_infer.predict,
+                path_to_pth=args.path_to_autofocus_pth,
+                path_to_zarr=dataset_path.zarr_path,
+                device=devices[0],
+            )
+            yogo_future = pool.submit(
+                yogo_infer.predict,
+                path_to_pth=args.path_to_yogo_pth,
+                path_to_zarr=dataset_path.zarr_path,
+                device=devices[1],
+            )
+            wait(
+                [flowrate_future, autofocus_future, yogo_future], return_when=ALL_COMPLETED
+            )
