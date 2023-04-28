@@ -4,7 +4,7 @@ import csv
 import argparse
 
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 from abc import ABC, abstractmethod
 
 
