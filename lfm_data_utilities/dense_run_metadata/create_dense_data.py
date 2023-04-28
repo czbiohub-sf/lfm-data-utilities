@@ -286,5 +286,5 @@ if __name__ == "__main__":
                         yogo_results=yogo_results,
                         threshold_class_probabilities=False,
                     )
-            gc.collect() # just to be sure gc is called
+            gc.collect()  # just to be sure gc is called
             torch.cuda.empty_cache()
