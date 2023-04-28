@@ -107,6 +107,7 @@ if __name__ == "__main__":
         multithread_map_unordered(
             files_to_fix,
             partial(convert_zarr_to_image_folder, skip=False),
+            max_num_threads=4,
         )
     elif args.check:
         multiprocess_fn(
