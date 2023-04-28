@@ -55,20 +55,22 @@ class Dataset:
 
 
 @contextmanager
-def timing_context_manager(description: str, precision: int = 5):
+def timing_context_manager(description: str, precision: int = 5, post_print: bool = False):
     """Context manager for timing code execution.
 
     Args:
         description (str): description of code to be timed
+        precision (float): number of digits to print after decimal point
+        post_print (bool): whether to print information only after leaving the context
     """
-    # TODO 'quiet' environment variable?
     try:
         start_time = time.perf_counter()
-        print(f"{description}...", end=" ", flush=True)
+        if not post_print:
+            print(f"{description}...", end=" ", flush=True)
         yield
     finally:
         end_time = time.perf_counter()
-        print(f"{end_time - start_time:.{precision}f} s")
+        print(f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s")
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
@@ -155,7 +157,9 @@ def get_all_dataset_paths(
         raise ValueError(f"more than one possible path: {paths}")
 
     dataset_paths: List[DatasetPaths] = []
+
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
+
     for per_img in per_img_csv_paths:
         zfp = get_path_or_none(get_list_of_zarr_files(per_img.parent))
         efp = get_path_or_none(
@@ -171,10 +175,8 @@ def get_all_dataset_paths(
             dataset_paths.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
             if verbose:
-                print(
-                    f"missing files in {per_img.parent}: "
-                    f"{', '.join(v[0] for v in verbose_names if v[1] is None)}"
-                )
+                missing_files = ', '.join(v[0] for v in verbose_names if v[1] is None)
+                print(f"missing files in {per_img.parent}: {missing_files}")
 
     return dataset_paths
 

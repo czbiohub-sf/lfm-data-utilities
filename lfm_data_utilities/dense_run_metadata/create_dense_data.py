@@ -4,16 +4,19 @@
 
 1 find all run folders (by zarr file)
 2 run SSAF, YOGO, and flowrate on all images
-3 save results in a csv file
-4 save metadata in a yml file
+3 save metadata in a yml file
+4 save results in a csv file
 """
 
+import gc
 import csv
 import types
 import argparse
 import warnings
+import traceback
 
 from pathlib import Path
+from functools import partial
 from itertools import cycle, chain
 from typing import Optional, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
@@ -98,9 +101,13 @@ def calculate_yogo_summary(
     predicted_cells = reformatted[objectness_threshold, 5:]
 
     if threshold_class_probabilities:
-        result = torch.nn.functional.one_hot(
-            torch.argmax(predicted_cells, dim=1), num_classes=num_classes
-        ).sum(dim=0).float()
+        result = (
+            torch.nn.functional.one_hot(
+                torch.argmax(predicted_cells, dim=1), num_classes=num_classes
+            )
+            .sum(dim=0)
+            .float()
+        )
     else:
         result = predicted_cells.sum(dim=0)
 
@@ -120,7 +127,7 @@ def write_results(
         img_idx flowrate_dx flowrate_dy flowrate_confidence focus *calculated_yogo_summary
     """
     # flowrate of 1st frame can't be calculated, so set to 0
-    flowrate_iterable = chain(((0,0,0),), zip(*flowrate_results))
+    flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
     with open(output_dir / "data.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(
@@ -219,23 +226,27 @@ if __name__ == "__main__":
     with utils.timing_context_manager("getting all dataset paths"):
         dataset_paths = utils.get_all_dataset_paths(args.path_to_runset, verbose=False)
 
+    def time_f(f, *args, **kwargs):
+        with utils.timing_context_manager(f.__name__, post_print=True):
+            return f(*args, **kwargs)
+
     print(f"starting calculation on {len(dataset_paths)} datasets")
-    writing_futures = []
-    with ThreadPoolExecutor(max_workers=8) as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:
         for dataset_path in tqdm(dataset_paths):
+            print(dataset_path.root_dir.name)
             flowrate_future = pool.submit(
-                get_all_flowrates_from_experiment,
+                partial(time_f, get_all_flowrates_from_experiment),
                 top_level_dir=dataset_path.root_dir,
                 verbose=False,
             )
             autofocus_future = pool.submit(
-                autofocus_infer.predict,
+                partial(time_f, autofocus_infer.predict),
                 path_to_pth=args.path_to_autofocus_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
             )
             yogo_future = pool.submit(
-                yogo_infer.predict,
+                partial(time_f, yogo_infer.predict),
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
@@ -258,15 +269,22 @@ if __name__ == "__main__":
 
             # we could submit the writing job to the pool too!
             # but, it is actually pretty fast to write the results,
-            # and this way we cah check for errors immediately
+            # and this way we can check for errors immediately
             try:
-                write_results(
-                    output_dir=dataset_path_dir,
-                    flowrate_results=flowrate_future.result(),
-                    autofocus_results=autofocus_future.result(),
-                    yogo_results=yogo_future.result(),
-                )
+                flowrate_results = flowrate_future.result()
+                autofocus_results = autofocus_future.result()
+                yogo_results = yogo_future.result()
             except Exception as e:
-                import traceback
-                print(f"error writing {dataset_path_dir.name}: {e}")
+                print(f"error calculating results for {dataset_path_dir.name}: {e}")
                 traceback.print_exc()
+            else:
+                with utils.timing_context_manager("writing results"):
+                    write_results(
+                        output_dir=dataset_path_dir,
+                        flowrate_results=flowrate_results,
+                        autofocus_results=autofocus_results,
+                        yogo_results=yogo_results,
+                        threshold_class_probabilities=False,
+                    )
+            gc.collect() # just to be sure gc is called
+            torch.cuda.empty_cache()
