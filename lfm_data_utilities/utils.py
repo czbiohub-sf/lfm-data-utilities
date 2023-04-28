@@ -11,7 +11,8 @@ from datetime import datetime
 from functools import partial
 from dataclasses import dataclass
 from contextlib import contextmanager
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
 
 
 PathLike = Union[str, Path]
@@ -526,11 +527,38 @@ print_lock = mp.Lock()
 
 def protected_fcn(f, *args):
     try:
-        f(*args)
+        return f(*args)
     except:
         with print_lock:
             print(f"exception occurred processing {args}")
             print(traceback.format_exc())
+
+
+
+# TODO convert two following functions to have arg ordering (fn, argument_list)
+# instead of (argument_list, fn), to match other higher-ordered python funcs like
+# map
+def multithread_map_unordered(
+    argument_list: Sequence[Any],
+    fn: Callable[[Any,], Any],
+    verbose: bool = True,
+    max_num_threads: Optional[int] = None,
+    realize: bool = False,
+) -> List[Any]:
+    protected_fcn_partial = partial(protected_fcn, fn)
+    try:
+        argument_list_len = len(argument_list)
+    except TypeError:
+        # avoid realizing the argument list if requested
+        if realize:
+            argument_list = list(argument_list)
+            argument_list_len = len(argument_list)
+        else:
+            argument_list_len = None
+
+    with ThreadPoolExecutor(max_num_threads) as executor:
+        futs = [executor.submit(protected_fcn_partial, arg) for arg in argument_list]
+        return [r.result() for r in tqdm(as_completed(futs), total=argument_list_len, disable=not verbose)]
 
 
 def multiprocess_fn(
