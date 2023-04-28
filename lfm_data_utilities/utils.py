@@ -148,10 +148,11 @@ def get_all_dataset_paths(
     """
 
     def get_path_or_none(paths: List[PathLike]) -> Optional[PathLike]:
-        if len(paths) == 1:
-            return paths[0]
-        else:
+        if len(paths) == 0:
             return None
+        elif len(paths) == 1:
+            return paths[0]
+        raise ValueError(f"more than one possible path: {paths}")
 
     dataset_paths: List[DatasetPaths] = []
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
@@ -464,6 +465,14 @@ def load_csv(filepath: PathLike) -> Dict[str, Union[PathLike, Dict[str, List[str
     return {"filepath": filepath, "vals": d}
 
 
+def is_float_like(s: str) -> bool:
+    try:
+        float(s)
+        return True
+    except:
+        return False
+
+
 def load_per_img_csv(filepath: PathLike) -> Dict:
     """
     This loads and standardizies per-image csv files
@@ -476,7 +485,7 @@ def load_per_img_csv(filepath: PathLike) -> Dict:
 
     # fix timestamps
     for i in range(len(per_img_csv_raw["vals"]["timestamp"])):
-        if per_img_csv_raw["vals"]["timestamp"][i].isnumeric():
+        if is_float_like(per_img_csv_raw["vals"]["timestamp"][i]):
             # assume that timestamp is seconds from epoch for all,
             # so leave it all alone
             break
