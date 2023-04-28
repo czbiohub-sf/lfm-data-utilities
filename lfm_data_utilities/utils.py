@@ -38,26 +38,20 @@ class DatasetPaths:
 
 
 class Dataset:
-    def __init__(self, dp: DatasetPaths):
+    def __init__(self, dp: DatasetPaths, fail_silently=True):
         self.dp: DatasetPaths = dp
         try:
             self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
-        except:
-            self.zarr_file = None
-        try:
             self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
-        except:
-            self.per_img_metadata = None
-        try:
             self.experiment_metadata = load_csv(dp.experiment_csv_path)
-        except:
-            self.experiment_metadata = None
-
-        self.successfully_loaded = None not in [
-            self.zarr_file,
-            self.per_img_metadata,
-            self.experiment_metadata,
-        ]
+        except Exception as e:
+            print(f"Error loading dataset {dp.zarr_path}: {e}")
+            if not fail_silently:
+                raise e
+            else:
+                self.successfully_loaded = False
+        else:
+            self.successfully_loaded = True
 
 
 @contextmanager
