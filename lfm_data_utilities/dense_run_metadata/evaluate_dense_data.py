@@ -4,60 +4,30 @@ import csv
 import argparse
 
 from pathlib import Path
-from typing import Dict
-from abc import ABC, abstractmethod
+from typing import List
+
+from lfm_data_utilities import utils
+from lfm_data_utilities.dense_run_metadata import evaluators as ev
 
 
 """ Evaluation of dense metrics
 
 What qualifies as a good run?
+
+improvements:
+    - add more evaluators
+    - multithread options
 """
 
 
-class Evaluator(ABC):
-    @abstractmethod
-    def accumulate(self, value: float):
-        ...
-
-    @abstractmethod
-    def compute(self) -> float:
-        ...
-
-    @abstractmethod
-    def metric_passed(self) -> bool:
-        ...
-
-
-class RangeBooleanEvaluator(Evaluator):
-    def __init__(self, failrate: float, center: float, step: float):
-        assert 0 <= failrate <= 1, f"failrate must be in [0,1] (got {failrate})"
-        self.failrate = failrate
-        self.step = [center - step, center + step]
-        self.sum = 0
-
-    def accumulate(self, value: float):
-        self.sum += int(self.step[0] <= value <= self.step[1])
-
-    def compute(self) -> float:
-        return self.sum
-
-    def metric_passed(self) -> bool:
-        return self.sum >= self.failrate
-
-
-class SSAFBooleanEvaluator(RangeBooleanEvaluator):
-    def __init__(self, failrate: float, step: float):
-        super().__init__(failrate, 0.0, step)
-
-
 def eval_data_csv(
-    data_path: Path, evaluators: Dict[str, Evaluator]
-) -> Dict[str, Evaluator]:
+    data_path: Path, evaluators: List[ev.Evaluator]
+) -> List[ev.Evaluator]:
     with open(data_path, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            for key, evaluator in evaluators.items():
-                evaluator.accumulate(float(row[key]))
+            for evaluator in evaluators:
+                evaluator.accumulate(row)
 
     return evaluators
 
@@ -96,5 +66,13 @@ if __name__ == "__main__":
             f"{args.path_to_dense_data_dir} does not exist or is not a dir"
         )
 
-    for data_csv in args.path_to_dense_data_dir.rglob("data.csv"):
-        pass
+    evaluators = [ev.SSAFBooleanEvaluator(args.ssaf_failrate, args.ssaf_step)]
+
+    with utils.timing_context_manager("evals"):
+        for f in args.path_to_dense_data_dir.rglob("data.csv"):
+            eval_data_csv(f, evaluators=evaluators)
+
+    for evalu in evaluators:
+        print(
+            f"{evalu} success rate = {evalu.compute():.3f} pass? {evalu.metric_passed()}"
+        )
