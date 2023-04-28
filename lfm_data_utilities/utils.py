@@ -106,7 +106,7 @@ def is_not_hidden_path(path: PathLike) -> bool:
     return not Path(path).name.startswith(".")
 
 
-def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
+def load_datasets(top_level_dir: PathLike, fail_silently: bool=False) -> List[Dataset]:
     """Load all zarr and metadata files. Returns all data in a list of Dataset objects."""
 
     print(
@@ -120,7 +120,7 @@ def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
     print(
         "Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute..."
     )
-    return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
+    return [Dataset(dp, fail_silently=fail_silently) for dp in tqdm(all_dataset_paths)]
 
 
 def get_all_dataset_paths(
@@ -481,11 +481,10 @@ def load_per_img_csv(filepath: PathLike) -> Dict:
             # so leave it all alone
             break
 
-        fixed_timestamp = datetime.strptime(
+        per_img_csv_raw["vals"]["timestamp"][i] = datetime.strptime(
             per_img_csv_raw["vals"]["timestamp"][i],
             "%Y-%m-%d-%H%M%S_%f",
         ).timestamp()
-        per_img_csv_raw["vals"]["timestamp"][i] = fixed_timestamp
 
     return per_img_csv_raw
 
