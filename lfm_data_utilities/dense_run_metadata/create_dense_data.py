@@ -256,16 +256,17 @@ if __name__ == "__main__":
                 return_when=ALL_COMPLETED,
             )
 
-            # submit the writing job to the pool too! :)
-            # writing_future = pool.submit(
-            write_results(
-                output_dir=dataset_path_dir,
-                flowrate_results=flowrate_future.result(),
-                autofocus_results=autofocus_future.result(),
-                yogo_results=yogo_future.result(),
-            )
-
-            # writing_futures.append(writing_future)
-
-        with utils.timing_context_manager("waiting for all writes to finish"):
-            wait(writing_futures, return_when=ALL_COMPLETED)
+            # we could submit the writing job to the pool too!
+            # but, it is actually pretty fast to write the results,
+            # and this way we cah check for errors immediately
+            try:
+                write_results(
+                    output_dir=dataset_path_dir,
+                    flowrate_results=flowrate_future.result(),
+                    autofocus_results=autofocus_future.result(),
+                    yogo_results=yogo_future.result(),
+                )
+            except Exception as e:
+                import traceback
+                print(f"error writing {dataset_path_dir.name}: {e}")
+                traceback.print_exc()
