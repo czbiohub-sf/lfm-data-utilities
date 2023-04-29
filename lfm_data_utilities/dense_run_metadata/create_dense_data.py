@@ -95,8 +95,8 @@ def calculate_yogo_summary(
     pd, Sy, Sx = pred.shape
     num_classes = pd - 5
     reformatted = pred.reshape(pd, Sy * Sx).T
-    objectness_threshold = reformatted[:, 4] > objectness_threshold
-    predicted_cells = reformatted[objectness_threshold, 5:]
+    objectness_threshold_mask = reformatted[:, 4] > objectness_threshold
+    predicted_cells = reformatted[objectness_threshold_mask, 5:]
 
     if threshold_class_probabilities:
         result = (
