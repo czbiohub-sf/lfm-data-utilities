@@ -226,27 +226,22 @@ if __name__ == "__main__":
     with utils.timing_context_manager("getting all dataset paths"):
         dataset_paths = utils.get_all_dataset_paths(args.path_to_runset, verbose=False)
 
-    def time_f(f, *args, **kwargs):
-        with utils.timing_context_manager(f.__name__, post_print=True):
-            return f(*args, **kwargs)
-
     print(f"starting calculation on {len(dataset_paths)} datasets")
     with ThreadPoolExecutor(max_workers=4) as pool:
         for dataset_path in tqdm(dataset_paths):
-            print(dataset_path.root_dir.name)
             flowrate_future = pool.submit(
-                partial(time_f, get_all_flowrates_from_experiment),
+                get_all_flowrates_from_experiment,
                 top_level_dir=dataset_path.root_dir,
                 verbose=False,
             )
             autofocus_future = pool.submit(
-                partial(time_f, autofocus_infer.predict),
+                autofocus_infer.predict,
                 path_to_pth=args.path_to_autofocus_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
             )
             yogo_future = pool.submit(
-                partial(time_f, yogo_infer.predict),
+                yogo_infer.predict,
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
@@ -278,13 +273,10 @@ if __name__ == "__main__":
                 print(f"error calculating results for {dataset_path_dir.name}: {e}")
                 traceback.print_exc()
             else:
-                with utils.timing_context_manager("writing results"):
-                    write_results(
-                        output_dir=dataset_path_dir,
-                        flowrate_results=flowrate_results,
-                        autofocus_results=autofocus_results,
-                        yogo_results=yogo_results,
-                        threshold_class_probabilities=False,
-                    )
-            gc.collect()  # just to be sure gc is called
-            torch.cuda.empty_cache()
+                write_results(
+                    output_dir=dataset_path_dir,
+                    flowrate_results=flowrate_results,
+                    autofocus_results=autofocus_results,
+                    yogo_results=yogo_results,
+                    threshold_class_probabilities=False,
+                )
