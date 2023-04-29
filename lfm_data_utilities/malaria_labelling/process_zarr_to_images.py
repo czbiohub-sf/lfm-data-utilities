@@ -6,6 +6,7 @@ import math
 
 from PIL import Image
 from pathlib import Path
+from typing import Optional
 from functools import partial
 
 from lfm_data_utilities.utils import multithread_map_unordered, get_list_of_zarr_files
@@ -38,7 +39,7 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
         Image.fromarray(img).save(image_dir / f"img_{i:0{N}}.png")
 
 
-def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Path:
+def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Optional[Path]:
     data = zarr.open(str(path_to_zarr_zip), "r")
     data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
 
@@ -50,6 +51,8 @@ def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Path:
             f"num images in {image_dir} ({num_imgs}) != num images in zarr file ({data_len})"
         )
         return path_to_zarr_zip
+    # mypy really wants explicit 'return None'
+    return None
 
 
 if __name__ == "__main__":
@@ -111,10 +114,8 @@ if __name__ == "__main__":
             max_num_threads=4,
         )
     elif args.check:
-        multithread_map_unordered(
-            files, check_num_imgs_is_num_zarr_imgs, ordered=False, verbose=False
-        )
+        multithread_map_unordered(files, check_num_imgs_is_num_zarr_imgs, verbose=False)
     else:
         multithread_map_unordered(
-            files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False
+            files, partial(convert_zarr_to_image_folder, skip=skip)
         )

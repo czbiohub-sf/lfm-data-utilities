@@ -4,7 +4,7 @@ import csv
 import argparse
 
 from pathlib import Path
-from typing import List
+from typing import Sequence
 
 from lfm_data_utilities import utils
 from lfm_data_utilities.dense_run_metadata import evaluators as ev
@@ -21,8 +21,8 @@ improvements:
 
 
 def eval_data_csv(
-    data_path: Path, evaluators: List[ev.Evaluator]
-) -> List[ev.Evaluator]:
+    data_path: Path, evaluators: Sequence[ev.Evaluator]
+) -> Sequence[ev.Evaluator]:
     with open(data_path, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
