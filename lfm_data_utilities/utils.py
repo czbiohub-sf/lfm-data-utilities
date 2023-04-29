@@ -56,7 +56,9 @@ class Dataset:
 
 
 @contextmanager
-def timing_context_manager(description: str, precision: int = 5, post_print: bool = False):
+def timing_context_manager(
+    description: str, precision: int = 5, post_print: bool = False
+):
     """Context manager for timing code execution.
 
     Args:
@@ -71,7 +73,9 @@ def timing_context_manager(description: str, precision: int = 5, post_print: boo
         yield
     finally:
         end_time = time.perf_counter()
-        print(f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s")
+        print(
+            f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s"
+        )
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
@@ -109,7 +113,9 @@ def is_not_hidden_path(path: PathLike) -> bool:
     return not Path(path).name.startswith(".")
 
 
-def load_datasets(top_level_dir: PathLike, fail_silently: bool=False) -> List[Dataset]:
+def load_datasets(
+    top_level_dir: PathLike, fail_silently: bool = False
+) -> List[Dataset]:
     """Load all zarr and metadata files. Returns all data in a list of Dataset objects."""
 
     print(
@@ -176,7 +182,7 @@ def get_all_dataset_paths(
             dataset_paths.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
             if verbose:
-                missing_files = ', '.join(v[0] for v in verbose_names if v[1] is None)
+                missing_files = ", ".join(v[0] for v in verbose_names if v[1] is None)
                 print(f"missing files in {per_img.parent}: {missing_files}")
 
     return dataset_paths
@@ -534,13 +540,17 @@ def protected_fcn(f, *args):
             print(traceback.format_exc())
 
 
-
 # TODO convert two following functions to have arg ordering (fn, argument_list)
 # instead of (argument_list, fn), to match other higher-ordered python funcs like
 # map
 def multithread_map_unordered(
     argument_list: Sequence[Any],
-    fn: Callable[[Any,], Any],
+    fn: Callable[
+        [
+            Any,
+        ],
+        Any,
+    ],
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
@@ -558,7 +568,12 @@ def multithread_map_unordered(
 
     with ThreadPoolExecutor(max_num_threads) as executor:
         futs = [executor.submit(protected_fcn_partial, arg) for arg in argument_list]
-        return [r.result() for r in tqdm(as_completed(futs), total=argument_list_len, disable=not verbose)]
+        return [
+            r.result()
+            for r in tqdm(
+                as_completed(futs), total=argument_list_len, disable=not verbose
+            )
+        ]
 
 
 def multiprocess_fn(

@@ -5,7 +5,6 @@ import zarr
 import math
 
 from PIL import Image
-from typing import List
 from pathlib import Path
 from functools import partial
 
@@ -98,22 +97,24 @@ if __name__ == "__main__":
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")
 
     if args.fix:
-        files_to_fix = list(filter(
-            bool,
-            multithread_map_unordered(
-                files, check_num_imgs_is_num_zarr_imgs, verbose=False
-            ),
-        ))
+        files_to_fix = list(
+            filter(
+                bool,
+                multithread_map_unordered(
+                    files, check_num_imgs_is_num_zarr_imgs, verbose=False
+                ),
+            )
+        )
         multithread_map_unordered(
             files_to_fix,
             partial(convert_zarr_to_image_folder, skip=False),
             max_num_threads=4,
         )
     elif args.check:
-        multiprocess_fn(
+        multithread_map_unordered(
             files, check_num_imgs_is_num_zarr_imgs, ordered=False, verbose=False
         )
     else:
-        multiprocess_fn(
+        multithread_map_unordered(
             files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False
         )
