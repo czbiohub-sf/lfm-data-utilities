@@ -64,7 +64,7 @@ if __name__ == "__main__":
         action="store_true",
         help=(
             "check if the number of images in the images folder "
-            "matches the number of images in the zarr file",
+            "matches the number of images in the zarr file"
         ),
     )
     parser.add_argument(
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         help=(
             "fix the number of images in the images folder to match "
             "the number of images in the zarr file (equiv to --check "
-            "and then --overwrite for mismatched folders only)",
+            "and then --overwrite for mismatched folders only)"
         ),
     )
     parser.add_argument(
