@@ -1,4 +1,5 @@
 import cv2
+import time
 import zarr
 import traceback
 import multiprocessing as mp
@@ -9,7 +10,9 @@ from csv import DictReader
 from datetime import datetime
 from functools import partial
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union
+from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
 
 
 PathLike = Union[str, Path]
@@ -22,28 +25,57 @@ class DatasetPaths:
     experiment_csv_path: Path
     subsample_path: Path
 
+    @property
+    def root_dir(self) -> Path:
+        if (
+            not self.zarr_path.parent
+            == self.per_img_csv_path.parent
+            == self.experiment_csv_path.parent
+        ):
+            raise ValueError(
+                f"invalid results for dataset paths - data are from different dirs for {self.zarr_path}"
+            )
+        return self.zarr_path.parent
+
 
 class Dataset:
-    def __init__(self, dp: DatasetPaths):
+    def __init__(self, dp: DatasetPaths, fail_silently=True):
         self.dp: DatasetPaths = dp
         try:
             self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
-        except:
-            self.zarr_file = None
-        try:
-            self.per_img_metadata = load_csv(dp.per_img_csv_path)
-        except:
-            self.per_img_metadata = None
-        try:
+            self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
             self.experiment_metadata = load_csv(dp.experiment_csv_path)
-        except:
-            self.experiment_metadata = None
+        except Exception as e:
+            print(f"Error loading dataset {dp.zarr_path}: {e}")
+            if not fail_silently:
+                raise e
+            else:
+                self.successfully_loaded = False
+        else:
+            self.successfully_loaded = True
 
-        self.successfully_loaded = None not in [
-            self.zarr_file,
-            self.per_img_metadata,
-            self.experiment_metadata,
-        ]
+
+@contextmanager
+def timing_context_manager(
+    description: str, precision: int = 5, post_print: bool = False
+):
+    """Context manager for timing code execution.
+
+    Args:
+        description (str): description of code to be timed
+        precision (float): number of digits to print after decimal point
+        post_print (bool): whether to print information only after leaving the context
+    """
+    try:
+        start_time = time.perf_counter()
+        if not post_print:
+            print(f"{description}...", end=" ", flush=True)
+        yield
+    finally:
+        end_time = time.perf_counter()
+        print(
+            f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s"
+        )
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
@@ -75,13 +107,15 @@ def make_video(dataset: Dataset, save_dir: PathLike):
     writer.release()
 
 
-def is_valid_file(path: PathLike) -> bool:
+def is_not_hidden_path(path: PathLike) -> bool:
     """Check if file is valid or if it's an unreadable temporary file. (Apple saves temporary files as '._<filename>'.)"""
 
     return not Path(path).name.startswith(".")
 
 
-def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
+def load_datasets(
+    top_level_dir: PathLike, fail_silently: bool = False
+) -> List[Dataset]:
     """Load all zarr and metadata files. Returns all data in a list of Dataset objects."""
 
     print(
@@ -95,10 +129,12 @@ def load_datasets(top_level_dir: PathLike) -> List[Dataset]:
     print(
         "Generating dataset objects. Note: Check that a dataset is valid by checking its `successfully_loaded` attribute..."
     )
-    return [Dataset(dp) for dp in tqdm(all_dataset_paths)]
+    return [Dataset(dp, fail_silently=fail_silently) for dp in tqdm(all_dataset_paths)]
 
 
-def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
+def get_all_dataset_paths(
+    top_level_dir: PathLike, verbose: bool = False
+) -> List[DatasetPaths]:
     """Get a list of all dataset paths. This function will find a list of per image metadata csvs, and then attempt to get the
     zarr, experiment-level metadata file, and subsample directory located in that same folder. If one or more of those are
     not present, the "Dataset" named tuple will have "None" for those parameters.
@@ -121,29 +157,35 @@ def get_all_dataset_paths(top_level_dir: PathLike) -> List[DatasetPaths]:
     """
 
     def get_path_or_none(paths: List[PathLike]) -> Optional[PathLike]:
-        if len(paths) == 1:
-            return paths[0]
-        else:
+        if len(paths) == 0:
             return None
+        elif len(paths) == 1:
+            return paths[0]
+        raise ValueError(f"more than one possible path: {paths}")
 
-    datasets: List[DatasetPaths] = []
+    dataset_paths: List[DatasetPaths] = []
+
     per_img_csv_paths = get_list_of_per_image_metadata_files(top_level_dir)
+
     for per_img in per_img_csv_paths:
         zfp = get_path_or_none(get_list_of_zarr_files(per_img.parent))
         efp = get_path_or_none(
             get_list_of_experiment_level_metadata_files(per_img.parent)
         )
         ssp = get_path_or_none(get_list_of_subsample_dirs(per_img.parent))
-
-        if per_img and zfp and efp and ssp:
-            datasets.append(DatasetPaths(zfp, per_img, efp, ssp))
+        verbose_names = [
+            ("zarr file", zfp),
+            ("experiment metadata", efp),
+            ("subsample directory", ssp),
+        ]
+        if zfp and efp and ssp:
+            dataset_paths.append(DatasetPaths(zfp, per_img, efp, ssp))
         else:
-            print(
-                "One or more of the following: invalid zarr / experiment metadata / subsample directory:"
-            )
-            print(f"Look at this directory: {per_img.parent}")
+            if verbose:
+                missing_files = ", ".join(v[0] for v in verbose_names if v[1] is None)
+                print(f"missing files in {per_img.parent}: {missing_files}")
 
-    return datasets
+    return dataset_paths
 
 
 def get_list_of_txt_files(
@@ -183,7 +225,11 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*.zip") if is_valid_file(file)]
+        [
+            file
+            for file in Path(top_level_dir).rglob("*.zip")
+            if is_not_hidden_path(file)
+        ]
     )
 
 
@@ -201,7 +247,11 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """
 
     return sorted(
-        [x for x in Path(top_level_dir).rglob("*perimage*.csv") if is_valid_file(x)]
+        [
+            x
+            for x in Path(top_level_dir).rglob("*perimage*.csv")
+            if is_not_hidden_path(x)
+        ]
     )
 
 
@@ -219,7 +269,11 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     """
 
     return sorted(
-        [file for file in Path(top_level_dir).rglob("*exp*.csv") if is_valid_file(file)]
+        [
+            file
+            for file in Path(top_level_dir).rglob("*exp*.csv")
+            if is_not_hidden_path(file)
+        ]
     )
 
 
@@ -235,8 +289,9 @@ def get_list_of_subsample_dirs(top_level_dir: PathLike) -> List[Path]:
     -------
     List[Path]
     """
-
-    return sorted(Path(top_level_dir).rglob("*sub_sample*/"))
+    return sorted(
+        p for p in Path(top_level_dir).rglob("*sub_sample*/") if is_not_hidden_path(p)
+    )
 
 
 def get_list_of_oracle_run_folders(top_level_dir: PathLike) -> List[Path]:
@@ -394,7 +449,7 @@ def load_read_only_zarr(zarr_path: PathLike) -> zarr.core.Array:
     return zarr.open(zarr_path, "r")
 
 
-def load_csv(filepath: PathLike) -> Dict:
+def load_csv(filepath: PathLike) -> Dict[str, Union[PathLike, Dict[str, List[str]]]]:
     """Read the csv file and return a dictionary mapping keys (column headers) to a list of values.
 
     Parameters
@@ -417,6 +472,39 @@ def load_csv(filepath: PathLike) -> Dict:
                 d.setdefault(key, []).append(row[key])
 
     return {"filepath": filepath, "vals": d}
+
+
+def is_float_like(s: str) -> bool:
+    try:
+        float(s)
+        return True
+    except:
+        return False
+
+
+def load_per_img_csv(filepath: PathLike) -> Dict:
+    """
+    This loads and standardizies per-image csv files
+
+    issues:
+        - `timestamp` can be either a 'seconds from epoch' format or
+        the format of '2022-12-13-111345_485858' 'YYYY-MM-DD-HHMMSS_ffffff'
+    """
+    per_img_csv_raw = load_csv(filepath)
+
+    # fix timestamps
+    for i in range(len(per_img_csv_raw["vals"]["timestamp"])):
+        if is_float_like(per_img_csv_raw["vals"]["timestamp"][i]):
+            # assume that timestamp is seconds from epoch for all,
+            # so leave it all alone
+            break
+
+        per_img_csv_raw["vals"]["timestamp"][i] = datetime.strptime(
+            per_img_csv_raw["vals"]["timestamp"][i],
+            "%Y-%m-%d-%H%M%S_%f",
+        ).timestamp()
+
+    return per_img_csv_raw
 
 
 def load_log_file(filepath: PathLike) -> Dict:
@@ -445,14 +533,50 @@ print_lock = mp.Lock()
 
 def protected_fcn(f, *args):
     try:
-        f(*args)
+        return f(*args)
     except:
         with print_lock:
             print(f"exception occurred processing {args}")
             print(traceback.format_exc())
 
 
-def multiprocess_fn_with_tqdm(
+# TODO convert two following functions to have arg ordering (fn, argument_list)
+# instead of (argument_list, fn), to match other higher-ordered python funcs like
+# map
+def multithread_map_unordered(
+    argument_list: Sequence[Any],
+    fn: Callable[
+        [
+            Any,
+        ],
+        Any,
+    ],
+    verbose: bool = True,
+    max_num_threads: Optional[int] = None,
+    realize: bool = False,
+) -> List[Any]:
+    protected_fcn_partial = partial(protected_fcn, fn)
+    try:
+        argument_list_len = len(argument_list)
+    except TypeError:
+        # avoid realizing the argument list if requested
+        if realize:
+            argument_list = list(argument_list)
+            argument_list_len = len(argument_list)
+        else:
+            argument_list_len = None
+
+    with ThreadPoolExecutor(max_num_threads) as executor:
+        futs = [executor.submit(protected_fcn_partial, arg) for arg in argument_list]
+        return [
+            r.result()
+            for r in tqdm(
+                as_completed(futs), total=argument_list_len, disable=not verbose
+            )
+        ]
+
+
+def multiprocess_fn(
     argument_list: List[Any],
     fn: Callable[
         [
@@ -461,8 +585,9 @@ def multiprocess_fn_with_tqdm(
         Any,
     ],
     ordered: bool = True,
+    verbose: bool = True,
 ) -> List[Any]:
-    """Wraps any function invocation in multiprocessing, with TQDM for progress.
+    """Wraps any function invocation in multiprocessing, with optional TQDM for progress.
 
     Takes a list of arguments for fn, which takes one input. Note that you can use
     functools.partial to fill in any other arguments.
@@ -474,6 +599,8 @@ def multiprocess_fn_with_tqdm(
         TODO: Extend to take an arbitrary amount of parameters
     ordered: bool=True
         return results ordered if true. If false, use imap_unordered which may give a performance boost
+    verbose: bool=True
+        Show progress bar if true
 
     Returns
     -------
@@ -488,7 +615,9 @@ def multiprocess_fn_with_tqdm(
             mp_func = pool.imap_unordered
         return list(
             tqdm(
-                mp_func(protected_fcn_partial, argument_list), total=len(argument_list)
+                mp_func(protected_fcn_partial, argument_list),
+                total=len(argument_list),
+                disable=not verbose,
             )
         )
 
@@ -505,7 +634,7 @@ def multiprocess_load_zarr(filepaths: List[PathLike]) -> List[zarr.core.Array]:
     List[zarr.core.Array]
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_read_only_zarr)
+    return multiprocess_fn(filepaths, load_read_only_zarr)
 
 
 def multiprocess_load_csv(filepaths: List[PathLike]) -> List[Dict]:
@@ -525,7 +654,7 @@ def multiprocess_load_csv(filepaths: List[PathLike]) -> List[Dict]:
             "vals": Dict - this inner dictionary is what maps column headers to lists
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_csv)
+    return multiprocess_fn(filepaths, load_csv)
 
 
 def multiprocess_load_log(filepaths: List[PathLike]) -> List[Dict]:
@@ -544,7 +673,7 @@ def multiprocess_load_log(filepaths: List[PathLike]) -> List[Dict]:
             "vals": List[str] - this is where the log file lines are stored (separated by newline)
     """
 
-    return multiprocess_fn_with_tqdm(filepaths, load_log_file)
+    return multiprocess_fn(filepaths, load_log_file)
 
 
 def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:

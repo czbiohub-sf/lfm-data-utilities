@@ -4,7 +4,7 @@ count=0
 
 # if there are not 1 or 2 arguments, print usage and exit
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-  echo "Usage: $0 <parent_dir> [labels_dir]"
+  echo "Usage: $0 <parent_dir> [labels_dir name (default: labels)]"
   exit 1
 fi
 

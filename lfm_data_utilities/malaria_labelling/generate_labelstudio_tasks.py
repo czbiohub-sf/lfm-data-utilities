@@ -1,13 +1,12 @@
 #! /usr/bin/env python3
 
 
-from tqdm import tqdm
 from pathlib import Path
 from typing import Union, List
 from urllib.request import pathname2url
 from functools import partial
 
-from lfm_data_utilities.utils import multiprocess_fn_with_tqdm
+from lfm_data_utilities.utils import multiprocess_fn
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
@@ -60,7 +59,7 @@ def generate_tasks_for_runset_by_parent_folder(
         raise ValueError(
             "couldn't find labels and images - double check the provided path"
         )
-    multiprocess_fn_with_tqdm(
+    multiprocess_fn(
         folders,
         partial(
             gen_task,
@@ -79,14 +78,7 @@ def generate_tasks_for_runset(
     tasks_file_name="tasks",
     use_tqdm=False,
 ):
-    if use_tqdm:
-        tqdm_ = tqdm
-    else:
-
-        def tqdm_(v):
-            return v
-
-    multiprocess_fn_with_tqdm(
+    multiprocess_fn(
         run_folders,
         partial(
             gen_task,
@@ -95,6 +87,7 @@ def generate_tasks_for_runset(
             tasks_file_name=tasks_file_name,
         ),
         ordered=False,
+        verbose=use_tqdm,
     )
 
 

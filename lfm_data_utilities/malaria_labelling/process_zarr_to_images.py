@@ -6,9 +6,10 @@ import math
 
 from PIL import Image
 from pathlib import Path
+from typing import Optional
 from functools import partial
 
-from lfm_data_utilities.utils import multiprocess_fn_with_tqdm
+from lfm_data_utilities.utils import multithread_map_unordered, get_list_of_zarr_files
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
@@ -38,6 +39,22 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
         Image.fromarray(img).save(image_dir / f"img_{i:0{N}}.png")
 
 
+def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Optional[Path]:
+    data = zarr.open(str(path_to_zarr_zip), "r")
+    data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
+
+    image_dir = path_to_zarr_zip.parent / "images"
+    num_imgs = len(list(image_dir.iterdir())) if image_dir.exists() else 0
+
+    if num_imgs != data_len:
+        print(
+            f"num images in {image_dir} ({num_imgs}) != num images in zarr file ({data_len})"
+        )
+        return path_to_zarr_zip
+    # mypy really wants explicit 'return None'
+    return None
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -45,6 +62,23 @@ if __name__ == "__main__":
         "convert a set of run folders zip files to image folders"
     )
     parser.add_argument("path_to_runset", type=Path, help="path to run folders")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "check if the number of images in the images folder "
+            "matches the number of images in the zarr file"
+        ),
+    )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help=(
+            "fix the number of images in the images folder to match "
+            "the number of images in the zarr file (equiv to --check "
+            "and then --overwrite for mismatched folders only)"
+        ),
+    )
     parser.add_argument(
         "--existing-image-action",
         "-e",
@@ -60,11 +94,28 @@ if __name__ == "__main__":
     if not run_set.exists():
         raise FileNotFoundError(f"directory {sys.argv[1]} not found")
 
-    files = [f for f in run_set.glob("./**/*.zip") if not Path(f).name.startswith(".")]
+    files = get_list_of_zarr_files(run_set)
 
     if len(files) == 0:
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")
 
-    multiprocess_fn_with_tqdm(
-        files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False
-    )
+    if args.fix:
+        files_to_fix = list(
+            filter(
+                bool,
+                multithread_map_unordered(
+                    files, check_num_imgs_is_num_zarr_imgs, verbose=False
+                ),
+            )
+        )
+        multithread_map_unordered(
+            files_to_fix,
+            partial(convert_zarr_to_image_folder, skip=False),
+            max_num_threads=4,
+        )
+    elif args.check:
+        multithread_map_unordered(files, check_num_imgs_is_num_zarr_imgs, verbose=False)
+    else:
+        multithread_map_unordered(
+            files, partial(convert_zarr_to_image_folder, skip=skip)
+        )
