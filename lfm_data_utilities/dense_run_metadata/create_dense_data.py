@@ -8,7 +8,6 @@
 4 save results in a csv file
 """
 
-import gc
 import csv
 import types
 import argparse
@@ -16,7 +15,6 @@ import warnings
 import traceback
 
 from pathlib import Path
-from functools import partial
 from itertools import cycle, chain
 from typing import Optional, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
