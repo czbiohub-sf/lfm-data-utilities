@@ -1,5 +1,7 @@
 import cv2
+import git
 import time
+import types
 import zarr
 import traceback
 import multiprocessing as mp
@@ -53,6 +55,21 @@ class Dataset:
                 self.successfully_loaded = False
         else:
             self.successfully_loaded = True
+
+
+def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
+    """
+    Try to get the git commit hash of the package, if it exists.
+    If it doesn't, return the __version__. If that doesnt exist, return None.
+    """
+    try:
+        repo = git.Repo(package.__path__[0], search_parent_directories=True)
+        return repo.head.commit.hexsha
+    except AttributeError:
+        try:
+            return package.__version__
+        except AttributeError:
+            return None
 
 
 @contextmanager
