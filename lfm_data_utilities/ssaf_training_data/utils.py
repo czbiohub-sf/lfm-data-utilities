@@ -1,12 +1,16 @@
 import cv2
 import numpy as np
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+
+from tqdm import tqdm
 from os import listdir
-from typing import List
+from typing import List, Optional, Callable
 from shutil import copy
 from pathlib import Path
+from scipy.special import erf
+from scipy.stats import skewnorm
+from scipy.optimize import curve_fit
 from multiprocessing import Pool
 from lfm_data_utilities.utils import PathLike
 
@@ -216,12 +220,8 @@ def move_imgs_to_relative_pos_folders(
         Relative positions of the images to the peak focus
     """
 
-    [
+    for img_path, pos in tqdm(zip(img_paths, relative_positions), total=len(img_paths)):
         copy_img_to_folder(img_path, save_dir, pos)
-        for (img_path, pos) in tqdm(
-            zip(img_paths, relative_positions), total=len(img_paths)
-        )
-    ]
 
 
 def log_power_spectrum_radial_average_sum(img: np.ndarray) -> float:
@@ -244,7 +244,7 @@ def log_power_spectrum_radial_average_sum(img: np.ndarray) -> float:
 
 
 def multiprocess_focus_metric(
-    imgs: List[np.ndarray], metric_fn: callable
+    imgs: List[np.ndarray], metric_fn: Callable[[np.ndarray], float]
 ) -> List[float]:
     """Get focus metrics out of a set of images, use multiprocessing to speed up computation.
 
@@ -270,8 +270,8 @@ def find_peak_position(
     imgs_per_step: int = 30,
     local_vicinity: int = 10,
     max_motor_pos: int = 900,
-    save_loc: Path = False,
-    folder_name: str = None,
+    save_loc: Optional[Path] = None,
+    folder_name: Optional[str] = None,
 ) -> int:
     """
     Averages the focus metrics (given the number of images per step), does a simple quadratic fit near the vicinity of the peak,
@@ -301,7 +301,7 @@ def find_peak_position(
 
     # Get metrics and motor positions for the values in the local vicinity of the peak focus
     motor_pos_nodup = np.unique(motor_positions)
-    peak_focus_pos = np.argmax(metrics_normed)
+    peak_focus_pos = np.argmax(metrics_normed).item()
     start = max(peak_focus_pos - local_vicinity, 0)
     end = min(peak_focus_pos + local_vicinity, max_motor_pos)
     motor_pos_local_vicinity = motor_pos_nodup[start:end]
@@ -314,7 +314,7 @@ def find_peak_position(
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 
-    if save_loc:
+    if save_loc is not None:
         plt.figure(figsize=(10, 7))
         plt.plot(
             motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
