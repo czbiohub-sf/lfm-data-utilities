@@ -40,6 +40,11 @@ def write_metadata(
         yaml.dump(meta, f)
 
 
+def guess_model_name(model_path: Path) -> str:
+    # we get the path, not the name of the model
+    return f"{model_path.parent.name}/{model_path.name}"
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("create dense data from runs for vetting")
     parser.add_argument(
@@ -102,11 +107,22 @@ if __name__ == "__main__":
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
-        fig, ax = plt.subplots()
-        ax.set_facecolor((0.95,0.95,0.95))
-        ax.plot(
+        fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2)
+        whole_range_ax.set_facecolor((0.95, 0.95, 0.95))
+        fig.suptitle(
+            f"{guess_model_name(args.path_to_autofocus_pth)}\n{args.dataset_description_file}"
+        )
+        whole_range_ax.plot(
             [mini, maxi],
             [mini, maxi],
+            linestyle="--",
+            color="gray",
+            linewidth=1,
+            alpha=0.5,
+        )
+        tight_range_ax.plot(
+            [-10, 10],
+            [-10, 10],
             linestyle="--",
             color="gray",
             linewidth=1,
@@ -116,17 +132,29 @@ if __name__ == "__main__":
         for label, values in results.items():
             # plot candle plots for each label
             npvalues = np.array(values)
-            ax.violinplot(
+            whole_range_ax.violinplot(
                 npvalues,
                 positions=[label],
                 widths=0.9,
                 showmeans=True,
                 showextrema=False,
-                showmedians=True,
+                showmedians=False,
             )
+            if abs(label) <= 10:
+                tight_range_ax.violinplot(
+                    npvalues,
+                    positions=[label],
+                    widths=0.9,
+                    showmeans=True,
+                    showextrema=False,
+                    showmedians=False,
+                )
 
-        ax.set_xlabel("label")
-        ax.set_ylabel("autofocus output")
+        whole_range_ax.set_xlabel("label")
+        whole_range_ax.set_ylabel("autofocus output")
+        tight_range_ax.set_xlabel("label")
+        tight_range_ax.set_ylabel("autofocus output")
+
         fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=800)
 
     # it takes maybe 15 seconds to shut down dataloader workers,
