@@ -81,7 +81,7 @@ if __name__ == "__main__":
         no_augmentation_split_fraction_name="eval",
     )
 
-    net = af.model.AutoFocus.from_pth(args.path_to_autofocus_pth)
+    net = af.model.AutoFocusOlder.from_pth(args.path_to_autofocus_pth)
     net.eval()
     net.to(device)
     net = torch.jit.script(net)
@@ -104,6 +104,10 @@ if __name__ == "__main__":
         args.output_dir,
         args.path_to_autofocus_pth,
     )
+
+    def set_violin_plot_color(violin_plot):
+        for pc in violin_plot['bodies']:
+            pc.set_facecolor('red')
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
@@ -132,30 +136,32 @@ if __name__ == "__main__":
         for label, values in results.items():
             # plot candle plots for each label
             npvalues = np.array(values)
-            whole_range_ax.violinplot(
+            vps = whole_range_ax.violinplot(
                 npvalues,
                 positions=[label],
-                widths=0.9,
+                widths=0.7,
                 showmeans=True,
                 showextrema=False,
                 showmedians=False,
             )
+            set_violin_plot_color(vps)
             if abs(label) <= 10:
-                tight_range_ax.violinplot(
+                vps = tight_range_ax.violinplot(
                     npvalues,
                     positions=[label],
-                    widths=0.9,
+                    widths=0.7,
                     showmeans=True,
                     showextrema=False,
                     showmedians=False,
                 )
+                set_violin_plot_color(vps)
 
         whole_range_ax.set_xlabel("label")
         whole_range_ax.set_ylabel("autofocus output")
         tight_range_ax.set_xlabel("label")
         tight_range_ax.set_ylabel("autofocus output")
 
-        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=800)
+        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=300)
 
     # it takes maybe 15 seconds to shut down dataloader workers,
     # so just let the user know
