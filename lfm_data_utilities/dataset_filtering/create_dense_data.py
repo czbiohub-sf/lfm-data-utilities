@@ -39,28 +39,13 @@ from lfm_data_utilities.image_processing.flowrate_utils import (
 )
 
 
-def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
-    """
-    Try to get the git commit hash of the package, if it exists.
-    If it doesn't, return the __version__. If that doesnt exist, return None.
-    """
-    try:
-        repo = git.Repo(package.__path__[0], search_parent_directories=True)
-        return repo.head.commit.hexsha
-    except AttributeError:
-        try:
-            return package.__version__
-        except AttributeError:
-            return None
-
-
 def write_metadata_for_dataset_path(
     output_dir: Path,
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
 ):
-    autofocus_package_id = try_get_package_version_identifier(autofocus)
-    yogo_package_id = try_get_package_version_identifier(yogo)
+    autofocus_package_id = utils.try_get_package_version_identifier(autofocus)
+    yogo_package_id = utils.try_get_package_version_identifier(yogo)
     # write all the above to meta.yml in output_dir
     yaml = YAML()
     meta = {

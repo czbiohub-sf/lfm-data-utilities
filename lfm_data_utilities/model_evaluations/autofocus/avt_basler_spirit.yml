@@ -1,0 +1,8 @@
+dataset_split_fractions:
+  train: 0.75
+  test:  0.20
+  val:   0.05
+dataset_paths:
+  Basler: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted/Basler_27052022_2022-11-04-160346/training_data
+  AVT: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted/AVT_11-04-142825/training_data
+  AVT_Spirit: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted/spirit_20230419
