@@ -1,13 +1,5 @@
 #! /usr/bin/env python3
 
-""" Jobs for this file:
-
-1 find all run folders (by zarr file)
-2 run SSAF, YOGO, and flowrate on all images
-3 save metadata in a yml file
-4 save results in a csv file
-"""
-
 import os
 import argparse
 
