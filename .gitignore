@@ -3,6 +3,8 @@ __pycache__
 .DS_Store
 PipFile
 *.egg-info
+.mypy_cache
+.ruff_cache
 
 # Experiment metadata parser output
 metadata_compilation.txt
