@@ -1,3 +1,5 @@
+import os
+import argparse
 import multiprocessing as mp
 
 from tqdm import tqdm
@@ -6,6 +8,9 @@ from pathlib import Path
 from functools import partial
 
 from lfm_data_utilities.ssaf_training_data import utils
+
+os.environ["MPLBACKEND"] = "Agg"
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
@@ -61,25 +66,33 @@ def multiproc_folders(folders: List[Path], save_loc: Path, focus_graph_loc: Path
 
 
 if __name__ == "__main__":
-    tld = Path(input("Folder path of zstacks to be sorted: "))
-    save_loc = Path(
-        input(
-            "Folder path where the training data will be saved (can append to folders in an existing training data directory too): "
-        )
+    parser = argparse.ArgumentParser("sort zstacks into training data")
+    parser.add_argument(
+        "unsorted_zstacks_loc",
+        type=Path,
+        help="Folder path of zstacks to be sorted",
     )
-    focus_graph_loc = Path(
-        input("Folder path where the focus graph plots will be saved: ")
+    parser.add_argument(
+        "save_loc",
+        type=Path,
+        help="Folder path where the training data will be saved (can append to folders in an existing training data directory too)",
     )
+    parser.add_argument(
+        "focus_graph_loc",
+        type=Path,
+        help="Folder path where the focus graph plots will be saved",
+    )
+    args = parser.parse_args()
 
-    if not save_loc.exists():
-        Path.mkdir(save_loc)
+    if not args.save_loc.exists():
+        args.save_loc.mkdir(exist_ok=True, parents=True)
 
-    if not focus_graph_loc.exists():
-        Path.mkdir(focus_graph_loc)
+    if not args.focus_graph_loc.exists():
+        args.focus_graph_loc.mkdir(exist_ok=True, parents=True)
 
-    folders = utils.get_list_of_zstack_folders(tld)
+    folders = utils.get_list_of_zstack_folders(args.unsorted_zstacks_loc)
     valid_folders = utils.get_valid_folders(folders)
 
     # multiproc_folders(valid_folders, save_loc, focus_graph_loc)
     for folder in valid_folders:
-        process_folder(folder, save_loc, focus_graph_loc)
+        process_folder(folder, args.save_loc, args.focus_graph_loc)
