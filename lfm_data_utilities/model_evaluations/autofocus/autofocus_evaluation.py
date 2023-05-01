@@ -81,7 +81,7 @@ if __name__ == "__main__":
         no_augmentation_split_fraction_name="eval",
     )
 
-    net = af.model.AutoFocusOlder.from_pth(args.path_to_autofocus_pth)
+    net = af.model.AutoFocus.from_pth(args.path_to_autofocus_pth)
     net.eval()
     net.to(device)
     net = torch.jit.script(net)
@@ -105,13 +105,15 @@ if __name__ == "__main__":
         args.path_to_autofocus_pth,
     )
 
-    def set_violin_plot_color(violin_plot):
-        for pc in violin_plot['bodies']:
-            pc.set_facecolor('red')
+    def set_violin_plot_color(parts):
+        for pc in parts['bodies']:
+            pc.set_facecolor('#D43F3A')
+            pc.set_edgecolor('black')
+            pc.set_alpha(1)
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
-        fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2)
+        fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2, figsize=(16, 12))
         whole_range_ax.set_facecolor((0.95, 0.95, 0.95))
         fig.suptitle(
             f"{guess_model_name(args.path_to_autofocus_pth)}\n{args.dataset_description_file}"
@@ -149,7 +151,7 @@ if __name__ == "__main__":
                 vps = tight_range_ax.violinplot(
                     npvalues,
                     positions=[label],
-                    widths=0.7,
+                    widths=0.4,
                     showmeans=True,
                     showextrema=False,
                     showmedians=False,
