@@ -3,4 +3,4 @@ dataset_split_fractions:
   test:  0.20
   val:   0.05
 dataset_paths:
-  AVT: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted/AVT_20042023
+  AVT: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted/AVT_20042023/training_data
