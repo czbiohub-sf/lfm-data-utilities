@@ -8,18 +8,12 @@
 4 save results in a csv file
 """
 
-import csv
-import types
+import os
 import argparse
-import warnings
-import traceback
 
 from pathlib import Path
-from itertools import cycle, chain
-from typing import Optional, List, Tuple, DefaultDict
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from typing import DefaultDict
 
-import git
 import torch
 
 import autofocus as af
@@ -29,16 +23,18 @@ from ruamel.yaml import YAML
 from collections import defaultdict
 
 from lfm_data_utilities import utils
-from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
-from lfm_data_utilities.image_processing.flowrate_utils import (
-    get_all_flowrates_from_experiment,
-)
+
+
+# sometimes bruno doesn't like me plotting, even if I am just
+# saving and not displaying any plots - so here is a magic incantation
+# to please Bruno the Great
+os.environ["MPLBACKEND"] = "Agg"
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
 def write_metadata(
     output_dir: Path,
     autofocus_path_to_pth: Path,
-    yogo_path_to_pth: Path,
 ):
     autofocus_package_id = utils.try_get_package_version_identifier(af)
 
@@ -54,12 +50,20 @@ def write_metadata(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("create dense data from runs for vetting")
-    parser.add_argument("dataset_description_file", type=Path, help="path to dataset_description_file")
+    parser.add_argument(
+        "dataset_description_file", type=Path, help="path to dataset_description_file"
+    )
     parser.add_argument(
         "path_to_autofocus_pth",
         type=Path,
         default=None,
         help="path to autofocus pth file",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default="./ssaf_output",
+        help="path to output directory (default ./ssaf_output)",
     )
 
     args = parser.parse_args()
@@ -69,12 +73,14 @@ if __name__ == "__main__":
     elif not args.path_to_autofocus_pth.exists():
         raise ValueError(f"{args.path_to_autofocus_pth} does not exist")
 
+    args.output_dir.mkdir(exist_ok=True, parents=True)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     dataloaders = af.dataloader.get_dataloader(
-         args.dataset_description_file,
-         batch_size=32,
-         split_fractions_override={'eval': 1.},
+        args.dataset_description_file,
+        batch_size=32,
+        split_fractions_override={"eval": 1.0},
     )
 
     net = af.model.AutoFocus.from_pth(args.path_to_autofocus_pth)
@@ -84,7 +90,7 @@ if __name__ == "__main__":
 
     results: DefaultDict[int, list] = defaultdict(list)
     with torch.no_grad():
-        for imgs, labels in tqdm(dataloaders['eval']):
+        for imgs, labels in tqdm(dataloaders["eval"]):
             imgs = imgs.to(device, dtype=torch.float, non_blocking=True)
             labels = labels.to(device, dtype=torch.float, non_blocking=True)
             preds = net(imgs).view(-1)
@@ -92,19 +98,38 @@ if __name__ == "__main__":
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
 
-
     # plot results
     import matplotlib.pyplot as plt
     import numpy as np
 
-    fig, ax = plt.subplots()
-    ax.plot(np.arange(0, 1, 0.01), np.arange(0, 1, 0.01), color='k', linestyle='--')
-    for label, values in results.items():
-        # plot candle plots for each label
-        npvalues = np.array(values)
-        ax.violinplot(npvalues, positions=[label], showmeans=True, showextrema=False)
+    write_metadata(
+        args.output_dir,
+        args.path_to_autofocus_pth,
+    )
 
-    ax.set_xlabel('label')
-    ax.set_ylabel('autofocus output')
-    # save fig with max definition
-    fig.savefig('autofocus_output.png', dpi=1000)
+    mini, maxi = min(results.keys()), max(results.keys())
+    with utils.timing_context_manager("plotting"):
+        fig, ax = plt.subplots()
+        ax.plot(
+            [mini, maxi],
+            [mini, maxi],
+            linestyle="--",
+            color="gray",
+            linewidth=1,
+            alpha=0.5,
+        )
+        # plot a dashed line in gray at y=x
+        for label, values in results.items():
+            # plot candle plots for each label
+            npvalues = np.array(values)
+            ax.violinplot(
+                npvalues, positions=[label], showmeans=True, showextrema=False
+            )
+
+        ax.set_xlabel("label")
+        ax.set_ylabel("autofocus output")
+        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=800)
+
+    # it takes maybe 15 seconds to shut down dataloader workers,
+    # so just let the user know
+    print("shutting down")
