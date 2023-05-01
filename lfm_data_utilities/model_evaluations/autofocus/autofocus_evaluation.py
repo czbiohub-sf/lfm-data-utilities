@@ -73,6 +73,7 @@ if __name__ == "__main__":
         args.dataset_description_file,
         batch_size=32,
         split_fractions_override={"eval": 1.0},
+        no_augmentation_split_fraction_name="eval",
     )
 
     net = af.model.AutoFocus.from_pth(args.path_to_autofocus_pth)
@@ -102,6 +103,7 @@ if __name__ == "__main__":
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
         fig, ax = plt.subplots()
+        ax.set_facecolor((0.95,0.95,0.95))
         ax.plot(
             [mini, maxi],
             [mini, maxi],
@@ -115,7 +117,12 @@ if __name__ == "__main__":
             # plot candle plots for each label
             npvalues = np.array(values)
             ax.violinplot(
-                npvalues, positions=[label], showmeans=True, showextrema=False
+                npvalues,
+                positions=[label],
+                widths=0.9,
+                showmeans=True,
+                showextrema=False,
+                showmedians=True,
             )
 
         ax.set_xlabel("label")
