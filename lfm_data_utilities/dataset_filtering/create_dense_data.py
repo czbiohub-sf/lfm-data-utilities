@@ -15,7 +15,7 @@ import traceback
 
 from pathlib import Path
 from itertools import cycle, chain
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
@@ -37,13 +37,20 @@ from lfm_data_utilities.image_processing.flowrate_utils import (
 )
 
 
+def load_experiment_metadata(experiment_csv_path: Path) -> Dict[str,str]:
+    with open(experiment_csv_path, "r") as ecp:
+        return next(csv.DictReader(ecp))
+
+
 def write_metadata_for_dataset_path(
     output_dir: Path,
+    experiment_metadata_path: Path,
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
 ):
     autofocus_package_id = utils.try_get_package_version_identifier(autofocus)
     yogo_package_id = utils.try_get_package_version_identifier(yogo)
+
     # write all the above to meta.yml in output_dir
     yaml = YAML()
     meta = {
@@ -51,6 +58,7 @@ def write_metadata_for_dataset_path(
         "yogo_package_id": yogo_package_id,
         "autofocus_path_to_pth": str(autofocus_path_to_pth.absolute()),
         "yogo_path_to_pth": str(yogo_path_to_pth.absolute()),
+        **load_experiment_metadata(experiment_metadata_path),
     }
     with open(output_dir / "meta.yml", "w") as f:
         yaml.dump(meta, f)
@@ -98,8 +106,8 @@ def calculate_yogo_summary(
 def write_results(
     output_dir: Path,
     flowrate_results: Tuple[List[float]],
-    autofocus_results: Tuple[List[float]],
-    yogo_results: Tuple[torch.Tensor],
+    autofocus_results: torch.Tensor,
+    yogo_results: torch.Tensor,
     threshold_class_probabilities: bool = True,
 ):
     """Write results to csv file
@@ -125,15 +133,14 @@ def write_results(
             zip(flowrate_iterable, autofocus_results, yogo_results)
         ):
             (
-                flowrate_results,
-                autofocus_res,
-                yogo_res,
-            ) = results
-            (
                 flowrate_dx,
                 flowrate_dy,
                 flowrate_confidence,
-            ) = flowrate_results
+            ) = results[0]
+            (
+                autofocus_res,
+                yogo_res,
+            ) = results[1:]
             writer.writerow(
                 [
                     str(r)
