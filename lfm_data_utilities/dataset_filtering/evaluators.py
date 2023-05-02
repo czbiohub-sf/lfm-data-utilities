@@ -52,6 +52,11 @@ class EvaluatorCollection(Evaluator):
     def __init__(self, *args: Evaluator) -> None:
         self.evaluators = args
 
+    def accumulate(self, value: Any) -> None:
+        raise NotImplementedError(
+            "EvaluatorCollection does not support accumulate - use accumulate_row instead"
+        )
+
     def accumulate_row(self, row: CSVRow) -> None:
         for evaluator in self.evaluators:
             evaluator.accumulate_row(row)

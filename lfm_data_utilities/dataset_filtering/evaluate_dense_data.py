@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Sequence
 
 from lfm_data_utilities import utils
-from lfm_data_utilities.dense_run_metadata import evaluators as ev
+from lfm_data_utilities.dataset_filtering import evaluators as ev
 
 
 """ Evaluation of dense metrics
@@ -22,13 +22,13 @@ improvements:
 
 def eval_data_csv(
     data_path: Path, evaluator: ev.Evaluator
-) -> Sequence[ev.Evaluator]:
+) -> ev.Evaluator:
     with open(data_path, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
             evaluator.accumulate_row(row)
 
-    return evaluators
+    return evaluator
 
 
 if __name__ == "__main__":
