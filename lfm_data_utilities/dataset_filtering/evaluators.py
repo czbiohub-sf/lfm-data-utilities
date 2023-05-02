@@ -49,11 +49,15 @@ class Evaluator(ABC):
 
 class EvaluatorCollection(Evaluator):
     """represents a collection of evaluators"""
+
     def __init__(self, *args: Evaluator) -> None:
         self.evaluators = args
 
     def __iter__(self) -> Iterator[Evaluator]:
         return iter(self.evaluators)
+
+    def __repr__(self) -> str:
+        return f"EvaluatorCollection({', '.join([str(s) for s in self.evaluators])})"
 
     def accumulate(self, value: Any) -> None:
         raise NotImplementedError(
@@ -129,9 +133,6 @@ class SSAFEvaluator(RangeEvaluator):
     def __init__(self, failrate: float, step: float) -> None:
         super().__init__(failrate, 0.0, step)
 
-    def __repr__(self) -> str:
-        return f"SSAFEvaluator(accumulated rate {self.compute():.4f})"
-
     def accumulate_row(self, row: CSVRow) -> None:
         value = float(row["autofocus"])
         self.accumulate(value)
@@ -162,7 +163,7 @@ class FlowrateEvaluator(FractionRangeEvaluator):
 class YOGOEvaluator(Evaluator):
     def __init__(self) -> None:
         self.classes: List[str] = CLASSES
-        self.class_counts: Dict[str,float]  = {c: 0.0 for c in self.classes}
+        self.class_counts: Dict[str, float] = {c: 0.0 for c in self.classes}
 
     def accumulate(self, kv: Tuple[str, float]) -> None:
         key, value = kv
