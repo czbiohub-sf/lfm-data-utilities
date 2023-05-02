@@ -144,7 +144,7 @@ def write_results(
                         flowrate_dx,
                         flowrate_dy,
                         flowrate_confidence,
-                        autofocus_res,
+                        autofocus_res.item(),
                         *calculate_yogo_summary(
                             yogo_res,
                             threshold_class_probabilities=threshold_class_probabilities,
