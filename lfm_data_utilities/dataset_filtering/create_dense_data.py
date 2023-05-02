@@ -15,7 +15,7 @@ import traceback
 
 from pathlib import Path
 from itertools import cycle, chain
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
@@ -37,16 +37,16 @@ from lfm_data_utilities.image_processing.flowrate_utils import (
 )
 
 
-def load_experiment_metadata(experiment_csv_path: Path) -> Dict[str,str]:
+def load_experiment_metadata(experiment_csv_path: Path) -> Dict[str, str]:
     with open(experiment_csv_path, "r") as ecp:
         return next(csv.DictReader(ecp))
 
 
 def write_metadata_for_dataset_path(
     output_dir: Path,
-    experiment_metadata_path: Path,
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
+    experiment_metadata_path: Optional[Path],
 ):
     autofocus_package_id = utils.try_get_package_version_identifier(autofocus)
     yogo_package_id = utils.try_get_package_version_identifier(yogo)
@@ -58,7 +58,11 @@ def write_metadata_for_dataset_path(
         "yogo_package_id": yogo_package_id,
         "autofocus_path_to_pth": str(autofocus_path_to_pth.absolute()),
         "yogo_path_to_pth": str(yogo_path_to_pth.absolute()),
-        **load_experiment_metadata(experiment_metadata_path),
+        **(
+            load_experiment_metadata(experiment_metadata_path)
+            if experiment_metadata_path is not None
+            else dict()
+        ),
     }
     with open(output_dir / "meta.yml", "w") as f:
         yaml.dump(meta, f)
@@ -105,7 +109,7 @@ def calculate_yogo_summary(
 
 def write_results(
     output_dir: Path,
-    flowrate_results: Tuple[List[float]],
+    flowrate_results: Tuple[List[float], List[float], List[float]],
     autofocus_results: torch.Tensor,
     yogo_results: torch.Tensor,
     threshold_class_probabilities: bool = True,
@@ -241,6 +245,9 @@ if __name__ == "__main__":
             # while those are working, write the meta.yml file
             write_metadata_for_dataset_path(
                 output_dir=dataset_path_dir,
+                experiment_metadata_path=next(
+                    dataset_path_dir.glob("*exp__metadata.csv"), None
+                ),
                 autofocus_path_to_pth=args.path_to_autofocus_pth,
                 yogo_path_to_pth=args.path_to_yogo_pth,
             )
