@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Sequence
 
 from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 
@@ -42,6 +42,29 @@ class Evaluator(ABC):
     def reset(self) -> None:
         """take a guess! resets the evaluator to it's initial state"""
         ...
+
+
+class EvaluatorCollection(Evaluator):
+    """represents a collection of evaluators"""
+    def __init__(self, *args: Evaluator) -> None:
+        self.evaluators = args
+
+    def accumulate_row(self, row: CSVRow) -> None:
+        for evaluator in self.evaluators:
+            evaluator.accumulate_row(row)
+
+    def compute(self) -> List[Any]:
+        return [evaluator.compute() for evaluator in self.evaluators]
+
+    def per_metrics_pass_fail(self) -> List[bool]:
+        return [evaluator.metric_passed() for evaluator in self.evaluators]
+
+    def metric_passed(self) -> bool:
+        return all(self.per_metrics_pass_fail())
+
+    def reset(self) -> None:
+        for evaluator in self.evaluators:
+            evaluator.reset()
 
 
 class RangeEvaluator(Evaluator):
