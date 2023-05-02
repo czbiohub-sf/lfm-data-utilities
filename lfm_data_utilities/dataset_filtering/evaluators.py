@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Sequence
+from typing import Any, Dict, List, Tuple, Iterator
 
 from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 
@@ -51,6 +51,9 @@ class EvaluatorCollection(Evaluator):
     """represents a collection of evaluators"""
     def __init__(self, *args: Evaluator) -> None:
         self.evaluators = args
+
+    def __iter__(self) -> Iterator[Evaluator]:
+        return iter(self.evaluators)
 
     def accumulate(self, value: Any) -> None:
         raise NotImplementedError(
