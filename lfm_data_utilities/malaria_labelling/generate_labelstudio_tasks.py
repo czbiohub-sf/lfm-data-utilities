@@ -98,7 +98,6 @@ def gen_task(
     tasks_file_name="tasks",
 ):
     abbreviated_path = str(path_relative_to(folder_path, relative_parent))
-    print(f"ABBREV {abbreviated_path}")
     root_url = (
         f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
     )
@@ -114,12 +113,13 @@ def gen_task(
             image_root_url=root_url,
             image_ext=".png",
             image_dims=(IMG_WIDTH, IMG_HEIGHT),
+            ignore_images_without_labels=True,
         )
     except TypeError:
         # we aren't using our custom version, so try default
         print(
             "warning: couldn't give convert_yolo_to_ls image dims, so defaulting "
-            "to slow version"
+            "to slow version. Will import"
         )
         convert_yolo_to_ls(
             input_dir=str(folder_path),
