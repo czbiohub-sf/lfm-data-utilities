@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
 
-from typing import Any, Dict
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Tuple
+
+from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 
 
 CSVRow = Dict[str, str]
@@ -27,7 +29,7 @@ class Evaluator(ABC):
         ...
 
     @abstractmethod
-    def compute(self) -> float:
+    def compute(self) -> Any:
         """compute the metric"""
         ...
 
@@ -121,3 +123,26 @@ class FlowrateBooleanEvaluator(FractionRangeBooleanEvaluator):
             self.accumulate(value)
         else:
             self.tot_num_samples += 1
+
+
+class YOGOEvaluator(Evaluator):
+    def __init__(self) -> None:
+        self.classes: List[str] = CLASSES
+        self.class_counts: Dict[str,float]  = {c: 0.0 for c in self.classes}
+
+    def accumulate(self, kv: Tuple[str, float]) -> None:
+        key, value = kv
+        self.class_counts[key] += value
+
+    def accumulate_row(self, row: CSVRow) -> None:
+        for c in self.classes:
+            self.accumulate((c, float(row[c])))
+
+    def compute(self) -> Any:
+        return self.class_counts
+
+    def metric_passed(self) -> bool:
+        return True
+
+    def reset(self) -> None:
+        self.class_counts = {c: 0.0 for c in self.classes}
