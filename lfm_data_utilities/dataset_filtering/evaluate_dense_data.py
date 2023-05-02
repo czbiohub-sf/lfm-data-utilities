@@ -27,7 +27,7 @@ def eval_data_csv(
         reader = csv.DictReader(f)
         for row in reader:
             for evaluator in evaluators:
-                evaluator.accumulate(row)
+                evaluator.accumulate_row(row)
 
     return evaluators
 
