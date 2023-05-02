@@ -12,6 +12,9 @@ CSVRow = Dict[str, str]
 class Evaluator(ABC):
     """each evaluator takes a row and accumulates it over time"""
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.compute()})"
+
     @abstractmethod
     def accumulate(self, value: Any) -> None:
         """
