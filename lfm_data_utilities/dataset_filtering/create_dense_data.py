@@ -9,17 +9,15 @@
 """
 
 import csv
-import types
 import argparse
 import warnings
 import traceback
 
 from pathlib import Path
 from itertools import cycle, chain
-from typing import Optional, List, Tuple
+from typing import List, Tuple
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
-import git
 import torch
 
 # import these so we can get the package version identifiers (commit or __version__)
