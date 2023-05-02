@@ -16,14 +16,6 @@ class Evaluator(ABC):
         return f"{self.__class__.__name__}({self.compute()})"
 
     @abstractmethod
-    def accumulate(self, value: Any) -> None:
-        """
-        accumulate a specific value - main method for accumulating
-        the relevant data for the subclass
-        """
-        ...
-
-    @abstractmethod
     def accumulate_row(self, row: CSVRow) -> None:
         """
         accumulate a row - in general, this will pick the relevant
@@ -58,11 +50,6 @@ class EvaluatorCollection(Evaluator):
 
     def __repr__(self) -> str:
         return f"EvaluatorCollection({', '.join([str(s) for s in self.evaluators])})"
-
-    def accumulate(self, value: Any) -> None:
-        raise NotImplementedError(
-            "EvaluatorCollection does not support accumulate - use accumulate_row instead"
-        )
 
     def accumulate_row(self, row: CSVRow) -> None:
         for evaluator in self.evaluators:
