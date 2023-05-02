@@ -39,7 +39,7 @@ from lfm_data_utilities.image_processing.flowrate_utils import (
 
 def load_experiment_metadata(experiment_csv_path: Path) -> Dict[str, str]:
     with open(experiment_csv_path, "r") as ecp:
-        return next(csv.DictReader(ecp))
+        return next(csv.DictReader(ecp), dict())
 
 
 def write_metadata_for_dataset_path(
@@ -243,15 +243,16 @@ if __name__ == "__main__":
             dataset_path_dir.mkdir(exist_ok=True, parents=True)
 
             # while those are working, write the meta.yml file
-            experiment_metadata_path = next(
-                dataset_path.glob("*exp__metadata.csv"), None
-            )
-            write_metadata_for_dataset_path(
-                output_dir=dataset_path_dir,
-                experiment_metadata_path=experiment_metadata_path,
-                autofocus_path_to_pth=args.path_to_autofocus_pth,
-                yogo_path_to_pth=args.path_to_yogo_pth,
-            )
+            try:
+                write_metadata_for_dataset_path(
+                    output_dir=dataset_path_dir,
+                    experiment_metadata_path=dataset_path.experiment_csv_path,
+                    autofocus_path_to_pth=args.path_to_autofocus_pth,
+                    yogo_path_to_pth=args.path_to_yogo_pth,
+                )
+            except:
+                print(f"error writing metadata for {dataset_path_dir.name}")
+                traceback.print_exc()
 
             wait(
                 [flowrate_future, autofocus_future, yogo_future],
