@@ -243,7 +243,9 @@ if __name__ == "__main__":
             dataset_path_dir.mkdir(exist_ok=True, parents=True)
 
             # while those are working, write the meta.yml file
-            experiment_metadata_path = next(dataset_path.glob("*exp__metadata.csv"), None)
+            experiment_metadata_path = next(
+                dataset_path.glob("*exp__metadata.csv"), None
+            )
             write_metadata_for_dataset_path(
                 output_dir=dataset_path_dir,
                 experiment_metadata_path=experiment_metadata_path,
