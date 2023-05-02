@@ -44,7 +44,7 @@ class Evaluator(ABC):
         ...
 
 
-class RangeBooleanEvaluator(Evaluator):
+class RangeEvaluator(Evaluator):
     """Generic evaluator used to check that a value is in an absolute range
 
     Concretely, if the total fraction of samples that are in the range
@@ -74,7 +74,7 @@ class RangeBooleanEvaluator(Evaluator):
         self.tot_num_samples = 0
 
 
-class FractionRangeBooleanEvaluator(RangeBooleanEvaluator):
+class FractionRangeEvaluator(RangeEvaluator):
     """Generic evaluator used to check that a value is in a relative range
 
     Concretely, if the total fraction of samples that are in the range
@@ -91,19 +91,19 @@ class FractionRangeBooleanEvaluator(RangeBooleanEvaluator):
         self.step = (center - fraction * center, center + fraction * center)
 
 
-class SSAFBooleanEvaluator(RangeBooleanEvaluator):
+class SSAFEvaluator(RangeEvaluator):
     def __init__(self, failrate: float, step: float) -> None:
         super().__init__(failrate, 0.0, step)
 
     def __repr__(self) -> str:
-        return f"SSAFBooleanEvaluator(accumulated rate {self.compute():.4f})"
+        return f"SSAFEvaluator(accumulated rate {self.compute():.4f})"
 
     def accumulate_row(self, row: CSVRow) -> None:
         value = float(row["autofocus"])
         self.accumulate(value)
 
 
-class FlowrateBooleanEvaluator(FractionRangeBooleanEvaluator):
+class FlowrateEvaluator(FractionRangeEvaluator):
     def __init__(
         self,
         failrate: float,

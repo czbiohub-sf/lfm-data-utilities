@@ -66,7 +66,11 @@ if __name__ == "__main__":
             f"{args.path_to_dense_data_dir} does not exist or is not a dir"
         )
 
-    evaluators = [ev.SSAFBooleanEvaluator(args.ssaf_failrate, args.ssaf_step)]
+    evaluators = [
+        ev.SSAFEvaluator(args.ssaf_failrate, args.ssaf_step),
+        ev.FlowrateEvaluator(args.ssaf_failrate, args.ssaf_step),
+        ev.YOGOEvaluator(args.ssaf_failrate, args.ssaf_step),
+    ]
 
     with utils.timing_context_manager("evals"):
         for f in args.path_to_dense_data_dir.rglob("data.csv"):
