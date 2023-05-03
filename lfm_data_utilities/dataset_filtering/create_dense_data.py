@@ -15,7 +15,7 @@ import traceback
 
 from pathlib import Path
 from itertools import cycle, chain
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
@@ -47,7 +47,7 @@ def write_metadata_for_dataset_path(
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
     experiment_metadata_path: Optional[Path],
-):
+) -> None:
     autofocus_package_id = utils.try_get_package_version_identifier(autofocus)
     yogo_package_id = utils.try_get_package_version_identifier(yogo)
 
@@ -104,7 +104,7 @@ def calculate_yogo_summary(
     else:
         result = predicted_cells.sum(dim=0)
 
-    return result.tolist()
+    return cast(List[float], result.tolist())
 
 
 def write_results(
@@ -113,7 +113,7 @@ def write_results(
     autofocus_results: torch.Tensor,
     yogo_results: torch.Tensor,
     threshold_class_probabilities: bool = True,
-):
+) -> None:
     """Write results to csv file
 
     columns are:

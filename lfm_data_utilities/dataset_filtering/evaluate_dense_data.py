@@ -4,7 +4,7 @@ import csv
 import argparse
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, cast
 
 from ruamel.yaml import YAML
 from lfm_data_utilities import utils
@@ -28,9 +28,9 @@ def get_flowrate(flowrate_str: str) -> float:
     return float(cleaner_str.split(", ")[1])
 
 
-def load_metadata_for_dataset_path(metadata_path) -> Dict[str, str]:
+def load_metadata_for_dataset_path(metadata_path: Path) -> Dict[str, str]:
     with open(metadata_path, "r") as f:
-        return YAML().load(f)
+        return cast(Dict[str, str], YAML().load(f))
 
 
 def eval_data_csv(data_path: Path, evaluator: ev.Evaluator) -> ev.Evaluator:
