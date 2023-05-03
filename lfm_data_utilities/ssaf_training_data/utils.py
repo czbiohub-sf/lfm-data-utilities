@@ -8,9 +8,6 @@ from os import listdir
 from typing import List, Optional, Callable
 from shutil import copy
 from pathlib import Path
-from scipy.special import erf
-from scipy.stats import skewnorm
-from scipy.optimize import curve_fit
 from multiprocessing import Pool
 from lfm_data_utilities.utils import PathLike
 

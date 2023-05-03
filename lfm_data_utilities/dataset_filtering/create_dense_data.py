@@ -15,7 +15,7 @@ import traceback
 
 from pathlib import Path
 from itertools import cycle, chain
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
@@ -39,7 +39,7 @@ from lfm_data_utilities.image_processing.flowrate_utils import (
 
 def load_experiment_metadata(experiment_csv_path: Path) -> Dict[str, str]:
     with open(experiment_csv_path, "r") as ecp:
-        return next(csv.DictReader(ecp))
+        return next(csv.DictReader(ecp), dict())
 
 
 def write_metadata_for_dataset_path(
@@ -47,7 +47,7 @@ def write_metadata_for_dataset_path(
     autofocus_path_to_pth: Path,
     yogo_path_to_pth: Path,
     experiment_metadata_path: Optional[Path],
-):
+) -> None:
     autofocus_package_id = utils.try_get_package_version_identifier(autofocus)
     yogo_package_id = utils.try_get_package_version_identifier(yogo)
 
@@ -104,7 +104,7 @@ def calculate_yogo_summary(
     else:
         result = predicted_cells.sum(dim=0)
 
-    return result.tolist()
+    return cast(List[float], result.tolist())
 
 
 def write_results(
@@ -113,7 +113,7 @@ def write_results(
     autofocus_results: torch.Tensor,
     yogo_results: torch.Tensor,
     threshold_class_probabilities: bool = True,
-):
+) -> None:
     """Write results to csv file
 
     columns are:
@@ -243,14 +243,16 @@ if __name__ == "__main__":
             dataset_path_dir.mkdir(exist_ok=True, parents=True)
 
             # while those are working, write the meta.yml file
-            write_metadata_for_dataset_path(
-                output_dir=dataset_path_dir,
-                experiment_metadata_path=next(
-                    dataset_path_dir.glob("*exp__metadata.csv"), None
-                ),
-                autofocus_path_to_pth=args.path_to_autofocus_pth,
-                yogo_path_to_pth=args.path_to_yogo_pth,
-            )
+            try:
+                write_metadata_for_dataset_path(
+                    output_dir=dataset_path_dir,
+                    experiment_metadata_path=dataset_path.experiment_csv_path,
+                    autofocus_path_to_pth=args.path_to_autofocus_pth,
+                    yogo_path_to_pth=args.path_to_yogo_pth,
+                )
+            except:
+                print(f"error writing metadata for {dataset_path_dir.name}")
+                traceback.print_exc()
 
             wait(
                 [flowrate_future, autofocus_future, yogo_future],

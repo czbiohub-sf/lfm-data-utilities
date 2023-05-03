@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     dataloaders = af.dataloader.get_dataloader(
         args.dataset_description_file,
-        img_size=(150,200),
+        img_size=(150, 200),
         batch_size=32,
         split_fractions_override={"eval": 1.0},
         augmentation_split_fraction_name="",
@@ -107,9 +107,9 @@ if __name__ == "__main__":
     )
 
     def set_violin_plot_color(parts):
-        for pc in parts['bodies']:
-            pc.set_facecolor('#D43F3A')
-            pc.set_edgecolor('black')
+        for pc in parts["bodies"]:
+            pc.set_facecolor("#D43F3A")
+            pc.set_edgecolor("black")
             pc.set_alpha(1)
 
     mini, maxi = min(results.keys()), max(results.keys())
