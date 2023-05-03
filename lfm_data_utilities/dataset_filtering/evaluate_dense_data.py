@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Sequence
 
 from lfm_data_utilities import utils
-from lfm_data_utilities.dense_run_metadata import evaluators as ev
+
+from lfm_data_utilities.dataset_filtering import evaluators as ev
 
 
 """ Evaluation of dense metrics
