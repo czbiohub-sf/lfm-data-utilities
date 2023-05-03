@@ -74,17 +74,18 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    dataloaders = af.dataloader.get_dataloader(
-        args.dataset_description_file,
-        batch_size=32,
-        split_fractions_override={"eval": 1.0},
-        no_augmentation_split_fraction_name="eval",
-    )
-
     net = af.model.AutoFocus.from_pth(args.path_to_autofocus_pth)
     net.eval()
     net.to(device)
     net = torch.jit.script(net)
+
+    dataloaders = af.dataloader.get_dataloader(
+        args.dataset_description_file,
+        img_size=(150,200),
+        batch_size=32,
+        split_fractions_override={"eval": 1.0},
+        augmentation_split_fraction_name="",
+    )
 
     results: DefaultDict[int, list] = defaultdict(list)
     with torch.no_grad():
