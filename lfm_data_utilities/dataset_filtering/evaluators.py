@@ -38,7 +38,7 @@ class Evaluator(ABC):
         """take a guess! resets the evaluator to it's initial state"""
         ...
 
-    def to_csv(self) -> Tuple[str,str]:
+    def to_csv(self) -> Tuple[str, str]:
         return f"{self.__class__.__name__}", str(self.compute())
 
 
@@ -71,7 +71,7 @@ class EvaluatorCollection(Evaluator):
         for evaluator in self.evaluators:
             evaluator.reset()
 
-    def to_csv(self) -> Tuple[str,str]:
+    def to_csv(self) -> Tuple[str, str]:
         headers, values = zip(*[evaluator.to_csv() for evaluator in self.evaluators])
         return ",".join(headers), ",".join(values)
 
@@ -131,7 +131,7 @@ class SSAFEvaluator(RangeEvaluator):
         value = float(row["autofocus"])
         self.accumulate(value)
 
-    def to_csv(self) -> Tuple[str,str]:
+    def to_csv(self) -> Tuple[str, str]:
         return "autofocus", str(self.compute())
 
 
@@ -156,8 +156,8 @@ class FlowrateEvaluator(FractionRangeEvaluator):
         else:
             self.tot_num_samples += 1
 
-    def to_csv(self) -> Tuple[str,str]:
-        return "flowrate",str(self.compute())
+    def to_csv(self) -> Tuple[str, str]:
+        return "flowrate", str(self.compute())
 
 
 class YOGOEvaluator(Evaluator):
@@ -182,7 +182,7 @@ class YOGOEvaluator(Evaluator):
     def reset(self) -> None:
         self.class_counts = {c: 0.0 for c in self.classes}
 
-    def to_csv(self) -> Tuple[str,str]:
+    def to_csv(self) -> Tuple[str, str]:
         header = ",".join(self.classes)
         values = ",".join([str(self.class_counts[c]) for c in self.classes])
         return header, values
