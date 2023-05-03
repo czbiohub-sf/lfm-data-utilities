@@ -54,16 +54,16 @@ if __name__ == "__main__":
         help="percent of results (in [0,1]) that must succeed for a pass",
     )
     parser.add_argument(
-        "--flowrate-failrate",
-        type=float,
-        default=0.9,
-        help="percent of results (in [0,1]) that must succeed for a pass (default 0.9)",
-    )
-    parser.add_argument(
         "--ssaf-step",
         type=float,
         default=2.0,
         help="step size for a pass - i.e. a value must be in [-val, val] (default 2.0)",
+    )
+    parser.add_argument(
+        "--flowrate-failrate",
+        type=float,
+        default=0.9,
+        help="percent of results (in [0,1]) that must succeed for a pass (default 0.9)",
     )
 
     args = parser.parse_args()
@@ -97,4 +97,4 @@ if __name__ == "__main__":
                 ev.YOGOEvaluator(),
             )
             eval_data_csv(data_file, evaluator=evaluators)
-            print(evaluators.per_metrics_pass_fail())
+            print("\n".join(evaluators.to_csv()))
