@@ -114,6 +114,7 @@ if __name__ == "__main__":
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
+        plt.tight_layout()
         fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2, figsize=(16, 12))
         whole_range_ax.set_facecolor((0.95, 0.95, 0.95))
         fig.suptitle(
