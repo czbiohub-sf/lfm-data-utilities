@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     dataloaders = af.dataloader.get_dataloader(
         args.dataset_description_file,
-        img_size=(150, 200),
+        img_size=(300, 400),
         batch_size=32,
         split_fractions_override={"eval": 1.0},
         augmentation_split_fraction_name="",

@@ -65,8 +65,8 @@ def get_flowrate_with_cross_correlation(
     scale_factor: int = 10,
     temp_x1_perc: float = 0.05,
     temp_y1_perc: float = 0.05,
-    temp_x2_perc: float = 0.45,
-    temp_y2_perc: float = 0.85,
+    temp_x2_perc: float = 0.85,
+    temp_y2_perc: float = 0.45,
     debug: bool = False,
 ) -> Tuple[float, float, float]:
     """Find the displacement of a subregion of an image with another, temporally adjacent, image.
@@ -103,7 +103,7 @@ def get_flowrate_with_cross_correlation(
 
     # Select the subregion within the first image by defining which quantiles to use
     im1_ds_subregion, x_offset, y_offset = getTemplateRegion(
-        im1_ds, 0.05, 0.05, 0.85, 0.45
+        im1_ds, temp_x1_perc, temp_y1_perc, temp_x2_perc, temp_y2_perc
     )
 
     # Run a normalized cross correlation between the image to search and subregion
