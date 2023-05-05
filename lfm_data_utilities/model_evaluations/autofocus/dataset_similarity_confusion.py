@@ -39,7 +39,7 @@ def generate_confusion_matrix(folder: Path, output_dir: Path = Path(".")):
     for img in images:
         imgs.append(cv2.imread(str(img), cv2.IMREAD_GRAYSCALE))
 
-    indices = [(i,j) for i in range(len(imgs)) for j in range(i+1, len(imgs))]
+    indices = [(i, j) for i in range(len(imgs)) for j in range(i + 1, len(imgs))]
 
     # Calculate similarity
     conf = np.zeros((len(imgs), len(imgs)))
@@ -73,11 +73,12 @@ def generate_confusion_matrix(folder: Path, output_dir: Path = Path(".")):
     np.save(str(output_dir / f"confusion_matrix_{folder_name}.npy"), conf)
 
     # and the confusion matrix image
-    im = Image.fromarray(conf)
-    im.save(str(output_dir / f"confusion_matrix_{folder_name}.png"))
+    im = Image.fromarray(255 * conf)
+    im = im.convert("L")
+    im.save(str(output_dir / f"confusion_matrix_raw_{folder_name}.png"))
 
     # Plot confusion matrix
-    plt.rcParams["figure.figsize"] = (12,12)
+    plt.rcParams["figure.figsize"] = (12, 12)
     plt.imshow(conf, cmap="gray")
     plt.colorbar()
     plt.title(f"{folder.name}")
@@ -86,10 +87,8 @@ def generate_confusion_matrix(folder: Path, output_dir: Path = Path(".")):
     plt.ylabel("Image")
     plt.tight_layout()
 
-    if args.output:
-        plt.savefig((output_dir / "map").with_suffix(".png"), dpi=800)
-    else:
-        plt.show()
+    plt.savefig(str(output_dir / f"confusion_matrix_raw_{folder_name}.png"), dpi=800)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -101,7 +100,7 @@ if __name__ == "__main__":
         help=(
             "path to folder of training data - will find all `training_data` dirs"
             "to find images, and will create a graph per each `training_data` dir"
-        )
+        ),
     )
     parser.add_argument("-o", "--output", type=Path, help="Output file name")
     args = parser.parse_args()
@@ -110,11 +109,16 @@ if __name__ == "__main__":
         generate_confusion_matrix(args.folder, args.output)
     else:
         for training_data_dir in args.ssaf_data_dir.rglob("training_data"):
-            step_folders = [step_folder for step_folder in training_data_dir.iterdir() if step_folder.is_dir()]
-            output = training_data_dir / "confusion_matricies"
+            step_folders = [
+                step_folder
+                for step_folder in training_data_dir.iterdir()
+                if step_folder.is_dir()
+            ]
+            output = training_data_dir.parent / "confusion_matricies"
             output.mkdir(exist_ok=True)
             utils.multiprocess_fn(
                 step_folders,
                 partial(generate_confusion_matrix, output_dir=output),
                 ordered=False,
+                verbose=False,
             )
