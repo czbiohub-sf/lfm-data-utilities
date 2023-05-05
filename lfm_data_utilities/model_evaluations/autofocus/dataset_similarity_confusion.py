@@ -14,6 +14,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
+from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
 from typing import Optional
@@ -56,6 +57,12 @@ def generate_confusion_matrix(folder: Path, output: Optional[Path] = None):
         update_confusion_matrix,
         verbose=True,
    )
+
+    # Save confusion matrix as image
+    np.save("confusion_matrix.npy", conf)
+    im = Image.fromarray(conf)
+    newname = args.output.parent / f"{args.output.stem}_confusion_matrix.png"
+    im.save(str(newname.with_suffix(".png")))
 
     # Plot confusion matrix
     plt.rcParams["figure.figsize"] = (12,12)
