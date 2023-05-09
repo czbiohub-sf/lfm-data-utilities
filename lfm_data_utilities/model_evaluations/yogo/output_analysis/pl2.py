@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
-from dash import Dash, dcc, html, Input, Output
-from plotly.subplots import make_subplots
+from dash import Dash, dcc, html
 
 import argparse
 import numpy as np
@@ -30,16 +29,12 @@ def plot_heatmap(image_data, objectness_data, class_data, scale=0.8):
         rows=1,
         cols=2,
         subplot_titles=["image", "objectness", "", "class predictions"],
-        specs=[[{"type": "image"},  {"type": "heatmap"}],[None,{"type": "heatmap"}]],
+        specs=[[{"type": "image"}, {"type": "heatmap"}], [None, {"type": "heatmap"}]],
         horizontal_spacing=spacing,
         vertical_spacing=spacing,
     )
 
-    fig.add_trace(
-        px.imshow(image_data).data[0],
-        row=1,
-        col=1
-    )
+    fig.add_trace(px.imshow(image_data).data[0], row=1, col=1)
 
     fig.add_trace(
         go.Heatmap(
@@ -89,7 +84,14 @@ def plot_heatmap(image_data, objectness_data, class_data, scale=0.8):
         yaxis=dict(domain=[0, 0.5]),
         yaxis2=dict(domain=[0, 0.5]),
         yaxis3=dict(domain=[0.5 + spacing, 1]),
-        width=int((1032 + objectness_data.shape[1] * (image_data.shape[0] / objectness_data.shape[0])) * scale),
+        width=int(
+            (
+                1032
+                + objectness_data.shape[1]
+                * (image_data.shape[0] / objectness_data.shape[0])
+            )
+            * scale
+        ),
         height=int(772 * 2 * scale),
         margin=dict(l=20, r=20, t=20, b=20),
     )
@@ -112,7 +114,12 @@ if __name__ == "__main__":
         path_to_images=image_path,
     )
 
-    bbox_image = yogo.utils.draw_rects(image_data, result_tensor, thresh=0.5, labels=yogo.data.dataset.YOGO_CLASS_ORDERING)
+    bbox_image = yogo.utils.draw_rects(
+        image_data,
+        result_tensor,
+        thresh=0.5,
+        labels=yogo.data.dataset.YOGO_CLASS_ORDERING,
+    )
     bbox_image = np.array(bbox_image)
 
     objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
@@ -120,8 +127,10 @@ if __name__ == "__main__":
     class_confidences = np.max(classifications, axis=0)
 
     app = Dash(__name__)
-    app.layout = html.Div([
-        html.H4('YOGO Output Analysis'),
-        dcc.Graph(id="graph"),
-        html.Button('swap', id='submit-val', n_clicks=0),
-    ])
+    app.layout = html.Div(
+        [
+            html.H4("YOGO Output Analysis"),
+            dcc.Graph(id="graph"),
+            html.Button("swap", id="submit-val", n_clicks=0),
+        ]
+    )
