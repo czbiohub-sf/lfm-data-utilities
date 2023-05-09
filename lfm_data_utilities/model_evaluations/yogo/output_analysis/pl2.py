@@ -116,7 +116,7 @@ if __name__ == "__main__":
     bbox_image = np.array(bbox_image)
 
     objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
-    classifications = np.flipud(result_tensor[0, 5:, :, :].numpy())
+    classifications = result_tensor[0, 5:, :, :].numpy()
     class_confidences = np.max(classifications, axis=0)
 
     app = Dash(__name__)

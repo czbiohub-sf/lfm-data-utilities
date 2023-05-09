@@ -57,8 +57,8 @@ def plot_heatmap(image_data, objectness_data, class_data, scale=0.8):
             showscale=False,
             colorscale="Viridis",
             hoverinfo="z",
-            xaxis="x2",
-            yaxis="y2",
+            xaxis="x3",
+            yaxis="y3",
         ),
         row=1,
         col=2,
@@ -88,7 +88,6 @@ def plot_heatmap(image_data, objectness_data, class_data, scale=0.8):
         yaxis3=dict(domain=[0.5 + spacing, 1]),
         width=int((1032 + objectness_data.shape[1] * (image_data.shape[0] / objectness_data.shape[0])) * scale),
         height=int(772 * 2 * scale),
-        margin=dict(l=20, r=20, t=20, b=20),
     )
 
     fig.show()
@@ -113,7 +112,7 @@ if __name__ == "__main__":
     bbox_image = np.array(bbox_image)
 
     objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
-    classifications = np.flipud(result_tensor[0, 5:, :, :].numpy())
-    class_confidences = np.max(classifications, axis=0)
+    classifications = result_tensor[0, 5:, :, :].numpy()
+    class_confidences = np.flipud(np.max(classifications, axis=0))
 
     plot_heatmap(bbox_image, objectness_heatmap, class_confidences)
