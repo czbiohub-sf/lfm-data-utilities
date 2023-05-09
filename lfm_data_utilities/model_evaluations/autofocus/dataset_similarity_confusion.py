@@ -10,14 +10,11 @@ Similarity is calculated using cv2.matchTemplate
 import os
 import cv2
 import argparse
-import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
 from PIL import Image
-from tqdm import tqdm
 from pathlib import Path
-from typing import Optional
 from functools import partial
 
 from lfm_data_utilities import utils
@@ -29,7 +26,9 @@ os.environ["MPLBACKEND"] = "Agg"
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
-def generate_confusion_matrix(folder: Path, output_dir: Path = Path("."), matplotlib=False):
+def generate_confusion_matrix(
+    folder: Path, output_dir: Path = Path("."), matplotlib=False
+):
     # Get list of images in folder
     images = list(folder.glob("*.png"))
     images.sort()
