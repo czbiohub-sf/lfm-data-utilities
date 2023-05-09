@@ -91,8 +91,14 @@ if __name__ == "__main__":
         args.focus_graph_loc.mkdir(exist_ok=True, parents=True)
 
     folders = utils.get_list_of_zstack_folders(args.unsorted_zstacks_loc)
-    valid_folders = utils.get_valid_folders(folders)
+    # valid_folders = utils.get_valid_folders(folders)
 
     # multiproc_folders(valid_folders, save_loc, focus_graph_loc)
-    for folder in valid_folders:
-        process_folder(folder, args.save_loc, args.focus_graph_loc)
+    # for folder in valid_folders:
+    for folder in folders:
+        try:
+            process_folder(folder, args.save_loc, args.focus_graph_loc)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()

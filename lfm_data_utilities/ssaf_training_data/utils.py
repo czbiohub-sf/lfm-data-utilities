@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from os import listdir
-from typing import List, Optional, Callable
+from collections import defaultdict
+from typing import List, Optional, Callable, Any
 from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
@@ -114,6 +115,22 @@ def get_motor_position_from_path(path: Path) -> int:
     return int(path.stem.split("_")[0])
 
 
+def get_image_step_idx_from_path(path: Path) -> int:
+    """Parse and return the image step index from the filepath.
+
+    Parameters
+    ----------
+    path: str
+        Image filepath
+    Returns
+    -------
+    int
+        Motor position where the image was taken
+    """
+
+    return int(path.stem.split("_")[1])
+
+
 def get_motor_positions_from_img_paths(paths: List[Path]) -> List[int]:
     """Get all motor positions from a list of image paths
 
@@ -131,6 +148,23 @@ def get_motor_positions_from_img_paths(paths: List[Path]) -> List[int]:
     return [get_motor_position_from_path(path) for path in paths]
 
 
+def get_img_step_idx_from_img_paths(paths: List[Path]) -> List[int]:
+    """Get all image step indices from a list of image paths
+
+    Parameters
+    ----------
+    List[Path]
+        List of image paths (filenames should be of the format XXX_YYY.png) where XXX is the motor position and YYY is the n'th image taken at that position.
+
+    Returns
+    -------
+    List[int]
+        List of image step indices
+    """
+
+    return [get_image_step_idx_from_path(path) for path in paths]
+
+
 def load_img(img_path: Path) -> np.ndarray:
     """Load an image using opencv
 
@@ -142,7 +176,6 @@ def load_img(img_path: Path) -> np.ndarray:
     -------
     np.ndarray
     """
-
     return cv2.imread(str(img_path), 0)
 
 
@@ -199,7 +232,6 @@ def copy_img_to_folder(img_path: Path, save_dir: Path, relative_pos: int) -> Non
     relative_pos: int
         Relative position of the image to the peak focus
     """
-
     copy(img_path, save_dir / str(relative_pos))
 
 
@@ -261,6 +293,31 @@ def multiprocess_focus_metric(
     return focus_metrics
 
 
+def group_by_motor_positions(
+    items: List[Any], motor_positions: List[int]
+) -> List[List[Any]]:
+    """Given a list of items (e.g. images, paths, focus metrics) and motor positions that
+    correspond to those items, this groups the items together by their focus metrics
+
+    Parameters
+    ----------
+    items: List[Any]
+        List of items to group together
+    motor_positions: List[int]
+        List of motor positions corresponding to the items
+
+    Returns
+    -------
+    Dict[int, List[Any]]
+        Dictionary of motor positions to items
+    """
+    motor_pos_to_items = defaultdict(list)
+    for item, pos in zip(items, motor_positions):
+        motor_pos_to_items[pos].append(item)
+    sorted_motor_positions = sorted(motor_pos_to_items.items())
+    return [item for _, item in sorted_motor_positions]
+
+
 def find_peak_position(
     focus_metrics: List[float],
     motor_positions: List[int],
@@ -289,11 +346,9 @@ def find_peak_position(
     int
         Motor position at which the peak focus was found.
     """
-
+    grouped_focus_metrics = group_by_motor_positions(focus_metrics, motor_positions)
     # Get mean and normalize focus metric
-    metrics_averaged = np.mean(
-        np.asarray(focus_metrics).reshape(-1, imgs_per_step), axis=1
-    )
+    metrics_averaged = np.asarray(list(np.mean(fms) for fms in grouped_focus_metrics))
     metrics_normed = metrics_averaged / np.max(metrics_averaged)
 
     # Get metrics and motor positions for the values in the local vicinity of the peak focus
