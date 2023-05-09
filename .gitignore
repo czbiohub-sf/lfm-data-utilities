@@ -9,3 +9,4 @@ PipFile
 # Experiment metadata parser output
 metadata_compilation.txt
 lfm_data_utilities/model_evaluations/autofocus/ssaf_output
+lfm_data_utilities/model_evaluations/yogo/out.mp4
