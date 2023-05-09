@@ -29,7 +29,7 @@ os.environ["MPLBACKEND"] = "Agg"
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
-def generate_confusion_matrix(folder: Path, output_dir: Path = Path(".")):
+def generate_confusion_matrix(folder: Path, output_dir: Path = Path("."), matplotlib=False):
     # Get list of images in folder
     images = list(folder.glob("*.png"))
     images.sort()
@@ -77,17 +77,18 @@ def generate_confusion_matrix(folder: Path, output_dir: Path = Path(".")):
     im = im.convert("L")
     im.save(str(output_dir / f"confusion_matrix_raw_{folder_name}.png"))
 
-    # Plot confusion matrix
-    plt.rcParams["figure.figsize"] = (12, 12)
-    plt.imshow(conf, cmap="gray")
-    plt.colorbar()
-    plt.title(f"{folder.name}")
-    plt.gca().xaxis.tick_top()
-    plt.xlabel("Image")
-    plt.ylabel("Image")
-    plt.tight_layout()
+    if matplotlib:
+        # Plot confusion matrix
+        plt.rcParams["figure.figsize"] = (12, 12)
+        plt.imshow(conf, cmap="gray")
+        plt.colorbar()
+        plt.title(f"{folder.name}")
+        plt.gca().xaxis.tick_top()
+        plt.xlabel("Image")
+        plt.ylabel("Image")
+        plt.tight_layout()
 
-    plt.savefig(str(output_dir / f"confusion_matrix_raw_{folder_name}.png"), dpi=800)
+        plt.savefig(str(output_dir / f"confusion_matrix_{folder_name}.png"), dpi=800)
 
 
 if __name__ == "__main__":
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         "--ssaf-data-dir",
         type=Path,
         help=(
-            "path to folder of training data - will find all `training_data` dirs"
+            "path to folder of training data - will find all `training_data` dirs "
             "to find images, and will create a graph per each `training_data` dir"
         ),
     )
