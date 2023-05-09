@@ -1,49 +1,59 @@
 #! /usr/bin/env python3
 
 import argparse
-import plotly.subplots as sp
-import plotly.graph_objects as go
-from PIL import Image
 import numpy as np
+
+from PIL import Image
 from pathlib import Path
 
+import plotly.express as px
+import plotly.subplots as sp
+import plotly.graph_objects as go
 
-def plot_heatmap(image_data, heatmap_data):
+import yogo
+
+
+def plot_heatmap(image_data, objectness_data, class_data, scale=0.8):
     # Calculate the total aspect ratio and the proportion for each subplot
     image_aspect = image_data.shape[1] / image_data.shape[0]
-    heatmap_aspect = heatmap_data.shape[1] / heatmap_data.shape[0]
+    heatmap_aspect = objectness_data.shape[1] / objectness_data.shape[0]
 
     total_aspect = image_aspect + heatmap_aspect
     image_proportion = image_aspect / total_aspect
-    heatmap_proportion = heatmap_aspect / total_aspect
 
     # Create subplots with 1 row and 2 columns
-    horz_spacing = 0.02
+    spacing = 0.04
     fig = sp.make_subplots(
-        rows=1,
+        rows=2,
         cols=2,
-        subplot_titles=("Grayscale Image", "Heatmap"),
-        specs=[[{"type": "heatmap"}, {"type": "heatmap"}]],
-        horizontal_spacing=horz_spacing,  # Adjust this as needed
+        subplot_titles=["image", "objectness", "", "class predictions"],
+        specs=[[{"type": "image"},  {"type": "heatmap"}],[None,{"type": "heatmap"}]],
+        horizontal_spacing=spacing,
+        vertical_spacing=spacing,
     )
 
-    # Add grayscale image to the left
     fig.add_trace(
-        go.Heatmap(
-            z=image_data,
-            colorscale="gray",
-            showscale=False,
-            xaxis="x1",
-            yaxis="y1",
-        ),
+        px.imshow(image_data).data[0],
         row=1,
-        col=1,
+        col=1
     )
 
-    # Add heatmap to the right
     fig.add_trace(
         go.Heatmap(
-            z=heatmap_data,
+            z=objectness_data,
+            showscale=False,
+            colorscale="Viridis",
+            hoverinfo="z",
+            xaxis="x2",
+            yaxis="y2",
+        ),
+        row=2,
+        col=2,
+    )
+
+    fig.add_trace(
+        go.Heatmap(
+            z=class_data,
             showscale=False,
             colorscale="Viridis",
             hoverinfo="z",
@@ -65,21 +75,28 @@ def plot_heatmap(image_data, heatmap_data):
         yaxis2_showticklabels=False,
         xaxis2_visible=False,
         xaxis2_showticklabels=False,
+        yaxis3_visible=False,
+        yaxis3_showticklabels=False,
+        xaxis3_visible=False,
+        xaxis3_showticklabels=False,
         coloraxis_showscale=False,
         xaxis=dict(domain=[0, image_proportion]),
-        xaxis2=dict(domain=[image_proportion + horz_spacing, 1]),
-        yaxis=dict(domain=[0, 1]),
-        yaxis2=dict(domain=[0, 1]),
-        width=int(1032 * 2 * 3 / 4),
-        height=int(772 * 3 / 4),
+        xaxis2=dict(domain=[image_proportion + spacing, 1]),
+        xaxis3=dict(domain=[image_proportion + spacing, 1]),
+        yaxis=dict(domain=[0, 0.5]),
+        yaxis2=dict(domain=[0, 0.5]),
+        yaxis3=dict(domain=[0.5 + spacing, 1]),
+        width=int((1032 + objectness_data.shape[1] * (image_data.shape[0] / objectness_data.shape[0])) * scale),
+        height=int(772 * 2 * scale),
+        margin=dict(l=20, r=20, t=20, b=20),
     )
 
     fig.show()
 
 
 if __name__ == "__main__":
-    # Load your grayscale image
     parser = argparse.ArgumentParser()
+    parser.add_argument("pth_path", type=Path, help="path to yogo pth file")
     parser.add_argument("image_path", type=Path, help="path to image file")
     args = parser.parse_args()
 
@@ -87,7 +104,16 @@ if __name__ == "__main__":
     image = Image.open(image_path).convert("L")
     image_data = np.array(image)
 
-    # Replace these with your YOLO-like object detector's output data
-    heatmap_data = np.random.rand(97, 129)  # Example data
+    result_tensor = yogo.infer.predict(
+        args.pth_path,
+        path_to_images=image_path,
+    )
 
-    plot_heatmap(image_data, heatmap_data)
+    bbox_image = yogo.utils.draw_rects(image_data, result_tensor, thresh=0.5, labels=yogo.data.dataset.YOGO_CLASS_ORDERING)
+    bbox_image = np.array(bbox_image)
+
+    objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
+    classifications = np.flipud(result_tensor[0, 5:, :, :].numpy())
+    class_confidences = np.max(classifications, axis=0)
+
+    plot_heatmap(bbox_image, objectness_heatmap, class_confidences)
