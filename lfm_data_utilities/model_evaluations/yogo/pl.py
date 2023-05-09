@@ -7,19 +7,8 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 
-if __name__ == "__main__":
-    # Load your grayscale image
-    parser = argparse.ArgumentParser()
-    parser.add_argument("image_path", type=Path, help="path to image file")
-    args = parser.parse_args()
 
-    image_path = args.image_path
-    image = Image.open(image_path).convert("L")
-    image_data = np.array(image)
-
-    # Replace these with your YOLO-like object detector's output data
-    heatmap_data = np.random.rand(97, 129)  # Example data
-
+def plot_heatmap(image_data, heatmap_data):
     # Calculate the total aspect ratio and the proportion for each subplot
     image_aspect = image_data.shape[1] / image_data.shape[0]
     heatmap_aspect = heatmap_data.shape[1] / heatmap_data.shape[0]
@@ -29,12 +18,13 @@ if __name__ == "__main__":
     heatmap_proportion = heatmap_aspect / total_aspect
 
     # Create subplots with 1 row and 2 columns
+    horz_spacing = 0.02
     fig = sp.make_subplots(
         rows=1,
         cols=2,
         subplot_titles=("Grayscale Image", "Heatmap"),
         specs=[[{"type": "heatmap"}, {"type": "heatmap"}]],
-        horizontal_spacing=0.02,  # Adjust this as needed
+        horizontal_spacing=horz_spacing,  # Adjust this as needed
     )
 
     # Add grayscale image to the left
@@ -54,6 +44,7 @@ if __name__ == "__main__":
     fig.add_trace(
         go.Heatmap(
             z=heatmap_data,
+            showscale=False,
             colorscale="Viridis",
             hoverinfo="z",
             xaxis="x2",
@@ -63,14 +54,40 @@ if __name__ == "__main__":
         col=2,
     )
 
-    # Set domain based on the calculated proportions
+    # Update layouts so the heatmaps ahve same heights, maintain aspect ratios,
+    # and in general make the plot pretty
     fig.update_layout(
+        yaxis_visible=False,
+        yaxis_showticklabels=False,
+        xaxis_visible=False,
+        xaxis_showticklabels=False,
+        yaxis2_visible=False,
+        yaxis2_showticklabels=False,
+        xaxis2_visible=False,
+        xaxis2_showticklabels=False,
+        coloraxis_showscale=False,
         xaxis=dict(domain=[0, image_proportion]),
-        xaxis2=dict(domain=[image_proportion + 0.02, 1]),  # 0.02 is the spacing
+        xaxis2=dict(domain=[image_proportion + horz_spacing, 1]),
         yaxis=dict(domain=[0, 1]),
         yaxis2=dict(domain=[0, 1]),
-        width=int(1032 * 2 * 3/4),
-        height=int(772 * 3/4),
+        width=int(1032 * 2 * 3 / 4),
+        height=int(772 * 3 / 4),
     )
 
     fig.show()
+
+
+if __name__ == "__main__":
+    # Load your grayscale image
+    parser = argparse.ArgumentParser()
+    parser.add_argument("image_path", type=Path, help="path to image file")
+    args = parser.parse_args()
+
+    image_path = args.image_path
+    image = Image.open(image_path).convert("L")
+    image_data = np.array(image)
+
+    # Replace these with your YOLO-like object detector's output data
+    heatmap_data = np.random.rand(97, 129)  # Example data
+
+    plot_heatmap(image_data, heatmap_data)
