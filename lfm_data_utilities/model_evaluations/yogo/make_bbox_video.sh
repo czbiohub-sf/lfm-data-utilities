@@ -10,6 +10,8 @@ else
   exit 1
 fi
 
+rm /tmp/temporary-yogo-images/*
+
 if [ -d "$2" ]; then
   # if path-to-images is a directory, check that it is only full of pngs
   if [ -z "$(ls -A $2/*.png)" ]; then
