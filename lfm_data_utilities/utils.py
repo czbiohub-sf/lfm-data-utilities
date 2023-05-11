@@ -129,17 +129,19 @@ def is_not_hidden_path(path: PathLike) -> bool:
 
     return not Path(path).name.startswith(".")
 
-def load_txtfile(file_dir: PathLike) -> List[float]:
+
+def load_txtfile(file_dir: PathLike) -> Optional[List[float]]:
     """Read txtfiles (typically storing SSAF values on every frame) where every value is separated by \n"""
 
     with open(file_dir, "r") as f:
         try:
             f.readline()
         except UnicodeDecodeError:
-            print(f"Skipping invalid file: {file}")
-            return
+            print(f"Skipping invalid file: {file_dir}")
+            return None
 
         return [-float(line.strip()) for line in f]
+
 
 def load_datasets(
     top_level_dir: PathLike, fail_silently: bool = False
