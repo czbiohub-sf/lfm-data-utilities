@@ -5,11 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from lfm_data_utilities.utils import parse_datetime_string, load_txtfile
 
-def run(file_dir):
+
+def run(file_dir, txtfile_dir = None):
     # Get date
     basename = pathlib.Path(file_dir).stem
-    date = basename[:16]
+    print(basename)
+    date = parse_datetime_string(basename)
 
     # Read data
     data = pd.read_csv(file_dir)
@@ -52,6 +55,8 @@ if __name__ == "__main__":
     argparser.add_argument(
         "-f", "--file", help="Path to per image metadata file", required=True
     )
+    argparser.add_argument(
+        "-f", "--file", help="Path to txtfile with every frame's SSAF data",
 
     args = argparser.parse_args()
 

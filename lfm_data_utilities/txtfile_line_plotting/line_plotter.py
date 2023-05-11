@@ -4,6 +4,8 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
+from lfm_data_utilities.utils import load_txtfile
+
 
 def plotter(datasets, names, ylabel, legend, title, output):
     """Plot all datasets on the same graph, with appropriate labels"""
@@ -37,7 +39,6 @@ def extractor(folder):
 
     Returns list of tuples for each file, containing extracted data and dataset name.
     """
-    datasets = []
     files = os.listdir(folder)
 
     if len(files) > 10:
@@ -45,21 +46,7 @@ def extractor(folder):
     else:
         legend = True
 
-    for file in files:
-        dataset = []
-
-        with open(os.path.join(folder, file), "r") as f:
-            print("READ")
-            try:
-                f.readline()
-            except UnicodeDecodeError:
-                print(f"Skipping invalid file: {file}")
-                continue
-
-            for line in f:
-                dataset.append(float(line.strip()))
-
-        datasets.append(dataset)
+    datasets = [datasets.append(load_txtfile(os.path.join(folder, file))) for file in files]
 
     return datasets, files, legend
 
