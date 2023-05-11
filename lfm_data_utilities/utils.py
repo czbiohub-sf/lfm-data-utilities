@@ -137,7 +137,7 @@ def load_txtfile(file_dir: PathLike) -> List[float]:
             f.readline()
         except UnicodeDecodeError:
             print(f"Skipping invalid file: {file}")
-            continue
+            return
 
         return [float(line.strip()) for line in f]
 
