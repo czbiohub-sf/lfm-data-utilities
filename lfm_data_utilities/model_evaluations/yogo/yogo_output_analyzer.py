@@ -72,6 +72,9 @@ if __name__ == "__main__":
                 f"wbc: {classifications[5, j, k]:.2f}<br>"
                 f"misc: {classifications[6, j, k]:.2f}<br>"
             )
+    boxmap = yogo.utils.draw_rects(
+        image_data, result_tensor, thresh=0.5, iou_thresh=0, objectness_opacity=1
+    )
 
     app = Dash(__name__)
 
@@ -121,7 +124,15 @@ if __name__ == "__main__":
                 ]
             )
         elif value == "bbox":
-            raise NotImplementedError
+            fig = px.imshow(boxmap)
+            fig.update(
+                data=[
+                    {
+                        "customdata": objectness_heatmap,
+                        "hovertemplate": "objectness: <b>%{customdata}</b><extra></extra>",
+                    }
+                ]
+            )
 
         set_universal_fig_settings_(fig)
         return fig
