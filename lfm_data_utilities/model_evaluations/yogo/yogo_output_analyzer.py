@@ -13,6 +13,9 @@ import plotly.express as px
 import yogo
 
 
+CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
+
+
 def set_universal_fig_settings_(fig, scale=0.8):
     fig.update_layout(
         yaxis_visible=False,
@@ -51,14 +54,15 @@ if __name__ == "__main__":
         image_data,
         result_tensor,
         thresh=0.5,
-        labels=yogo.data.dataset.YOGO_CLASS_ORDERING,
+        labels=CLASS_LIST,
     )
     bbox_image = np.array(bbox_image)
 
     objectness_heatmap = result_tensor[0, 4, :, :].numpy()
     classifications = result_tensor[0, 5:, :, :].numpy()
-    class_confidences = np.max(classifications, axis=0)
-    class_confidence_strings = np.zeros_like(class_confidences, dtype=object)
+    max_class_confidences = np.max(classifications, axis=0)
+
+    class_confidence_strings = np.zeros_like(max_class_confidences, dtype=object)
     for j in range(classifications.shape[1]):
         for k in range(classifications.shape[2]):
             class_confidence_strings[j, k] = (
@@ -110,15 +114,21 @@ if __name__ == "__main__":
                 value="objectness",
                 id="YOGO-output-selector",
             ),
+            dcc.RadioItems(
+                options=["max-confidence", *CLASS_LIST],
+                id="class-heatmap-selector",
+                value="max-confidence",
+            ),
         ]
     )
 
     @callback(
         Output(component_id="YOGO-output", component_property="figure"),
         Input(component_id="YOGO-output-selector", component_property="value"),
+        Input(component_id="class-heatmap-selector", component_property="value"),
     )
-    def update_yogo_output(value):
-        if value == "objectness":
+    def update_yogo_output(output_value, classification_value):
+        if output_value == "objectness":
             fig = px.imshow(objectness_heatmap)
             fig.update(
                 data=[
@@ -127,8 +137,13 @@ if __name__ == "__main__":
                     }
                 ]
             )
-        elif value == "classification":
-            fig = px.imshow(class_confidences)
+        elif output_value == "classification":
+            if classification_value == "max-confidence":
+                fig = px.imshow(max_class_confidences)
+            else:
+                class_index = CLASS_LIST.index(classification_value)
+                fig = px.imshow(classifications[class_index, :, :])
+
             fig.update(
                 data=[
                     {
@@ -137,7 +152,7 @@ if __name__ == "__main__":
                     }
                 ]
             )
-        elif value == "bbox":
+        elif output_value == "bbox":
             fig = px.imshow(boxmap)
             fig.update_layout(hovermode=False)
 
