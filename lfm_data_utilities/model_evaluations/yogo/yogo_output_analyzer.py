@@ -7,11 +7,8 @@ import numpy as np
 
 from PIL import Image
 from pathlib import Path
-from typing import Optional
 
 import plotly.express as px
-import plotly.subplots as sp
-import plotly.graph_objects as go
 
 import yogo
 
@@ -31,6 +28,7 @@ def set_universal_fig_settings_(fig, scale=0.8):
             * scale
         ),
         height=int(772 * scale),
+        margin=dict(l=20, r=20, t=20, b=20),
     )
 
 
@@ -72,13 +70,22 @@ if __name__ == "__main__":
                 f"wbc: {classifications[5, j, k]:.2f}<br>"
                 f"misc: {classifications[6, j, k]:.2f}<br>"
             )
-    boxmap = yogo.utils.draw_rects(
-        image_data, result_tensor, thresh=0.5, iou_thresh=0, objectness_opacity=1
+    boxmap = np.array(
+        yogo.utils.draw_rects(
+            image_data, result_tensor, thresh=0.5, iou_thresh=0, objectness_opacity=1
+        )
     )
 
     app = Dash(__name__)
 
     img_fig = px.imshow(bbox_image)
+    img_fig.update(
+        data=[
+            {
+                "hovertemplate": "<b>%{x}, %{y}</b><extra></extra>",
+            }
+        ]
+    )
     set_universal_fig_settings_(img_fig)
 
     app.layout = html.Div(
@@ -94,7 +101,7 @@ if __name__ == "__main__":
                 style={
                     "display": "flex",
                     "flex-direction": "row",
-                    "margin": "2rem",
+                    "margin": "1rem",
                     "width": "100%",
                 },
             ),
@@ -113,6 +120,13 @@ if __name__ == "__main__":
     def update_yogo_output(value):
         if value == "objectness":
             fig = px.imshow(objectness_heatmap)
+            fig.update(
+                data=[
+                    {
+                        "hovertemplate": "<b>%{z}</b><extra></extra>",
+                    }
+                ]
+            )
         elif value == "classification":
             fig = px.imshow(class_confidences)
             fig.update(
@@ -125,14 +139,7 @@ if __name__ == "__main__":
             )
         elif value == "bbox":
             fig = px.imshow(boxmap)
-            fig.update(
-                data=[
-                    {
-                        "customdata": objectness_heatmap,
-                        "hovertemplate": "objectness: <b>%{customdata}</b><extra></extra>",
-                    }
-                ]
-            )
+            fig.update_layout(hovermode=False)
 
         set_universal_fig_settings_(fig)
         return fig
