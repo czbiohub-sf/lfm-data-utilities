@@ -139,7 +139,7 @@ def load_txtfile(file_dir: PathLike) -> List[float]:
             print(f"Skipping invalid file: {file}")
             return
 
-        return [float(line.strip()) for line in f]
+        return [-float(line.strip()) for line in f]
 
 def load_datasets(
     top_level_dir: PathLike, fail_silently: bool = False
