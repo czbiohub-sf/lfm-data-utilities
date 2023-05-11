@@ -51,7 +51,7 @@ def extractor(folder):
         with open(os.path.join(folder, file), "r") as f:
             print("READ")
             try:
-                f.readlines()
+                f.readline()
             except UnicodeDecodeError:
                 print(f"Skipping invalid file: {file}")
                 continue
@@ -59,7 +59,6 @@ def extractor(folder):
             for line in f:
                 dataset.append(float(line.strip()))
 
-        print("UNSKIPPED")
         datasets.append(dataset)
 
     return datasets, files, legend
