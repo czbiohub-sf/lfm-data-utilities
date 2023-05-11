@@ -16,12 +16,24 @@ import plotly.graph_objects as go
 import yogo
 
 
-def plot_heatmap(yogo_output_array: np.ndarray, z_data: Optional[np.ndarray] = None):
-    return px.imshow(
-        yogo_output_array,
-        # showscale=False,
-        # hoverinfo=z_data if z_data is not None else "z",
+
+def set_universal_fig_settings_(fig, scale=0.8):
+    fig.update_layout(
+        yaxis_visible=False,
+        yaxis_showticklabels=False,
+        xaxis_visible=False,
+        xaxis_showticklabels=False,
+        coloraxis_showscale=False,
+        width=int(
+            (
+                objectness_heatmap.shape[1]
+                * (image_data.shape[0] / objectness_heatmap.shape[0])
+            )
+            * scale
+        ),
+        height=int(772 * scale),
     )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -52,11 +64,14 @@ if __name__ == "__main__":
 
     app = Dash(__name__)
 
+    img_fig = px.imshow(bbox_image)
+    set_universal_fig_settings_(img_fig)
+
     app.layout = html.Div([
         html.Div(children="YOGO model output analysis"),
         html.Div(children=f"model: {args.pth_path}"),
         html.Div(children=f"image: {args.image_path}"),
-        dcc.Graph(figure=px.imshow(bbox_image)),
+        dcc.Graph(figure=img_fig),
         dcc.Graph(figure={}, id='YOGO-output'),
         dcc.RadioItems(options=['objectness', 'classification', 'bbox'], value='objectness', id='YOGO-output-selector'),
     ])
@@ -66,11 +81,16 @@ if __name__ == "__main__":
         Input(component_id='YOGO-output-selector', component_property='value'),
     )
     def update_yogo_output(value):
+        # TODO how to get custom hover data
         if value == 'objectness':
-            return plot_heatmap(objectness_heatmap)
+            fig = px.imshow(objectness_heatmap)
         elif value == 'classification':
-            return plot_heatmap(class_confidences)
+            fig = px.imshow(class_confidences)
+            fig.update_traces(showlegend=False)
         elif value == 'bbox':
             raise NotImplementedError
+
+        set_universal_fig_settings_(fig)
+        return fig
 
     app.run_server(debug=True, use_reloader=True)
