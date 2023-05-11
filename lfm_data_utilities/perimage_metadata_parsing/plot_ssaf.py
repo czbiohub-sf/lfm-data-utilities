@@ -8,7 +8,7 @@ import pandas as pd
 from lfm_data_utilities.utils import parse_datetime_string, load_txtfile
 
 
-def run(file_dir, txtfile_dir = None):
+def run(file_dir, txtfile_dir=None):
     # Get date
     basename = pathlib.Path(file_dir).stem
     print(basename)
@@ -23,6 +23,8 @@ def run(file_dir, txtfile_dir = None):
     non_nan = ~np.isnan(raw_w_nan)
     raw = raw_w_nan[non_nan]
     filtered = filtered_w_nan[non_nan]
+
+    print(np.argwhere(~np.isnan(raw_w_nan)))
 
     # Get throttle
     throttle = np.diff(np.where(non_nan is True))[0][0]
@@ -56,8 +58,8 @@ if __name__ == "__main__":
         "-f", "--file", help="Path to per image metadata file", required=True
     )
     argparser.add_argument(
-        "-f", "--file", help="Path to txtfile with every frame's SSAF data",
+        "-t", "--txt", help="Path to txtfile with SSAF data for every frame",
+    )
 
     args = argparser.parse_args()
-
-    run(args.file)
+    run(args.file, txtfile_dir=args.txt)

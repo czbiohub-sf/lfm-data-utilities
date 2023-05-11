@@ -129,7 +129,7 @@ def is_not_hidden_path(path: PathLike) -> bool:
 
     return not Path(path).name.startswith(".")
 
-def load_txtfile(file_dir: PathLike) -> List[float]
+def load_txtfile(file_dir: PathLike) -> List[float]:
     """Read txtfiles (typically storing SSAF values on every frame) where every value is separated by \n"""
 
     with open(file_dir, "r") as f:
