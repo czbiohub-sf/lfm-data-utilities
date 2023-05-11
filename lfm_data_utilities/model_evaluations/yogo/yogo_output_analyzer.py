@@ -129,7 +129,7 @@ if __name__ == "__main__":
     )
     def update_yogo_output(output_value, classification_value):
         if output_value == "objectness":
-            fig = px.imshow(objectness_heatmap)
+            fig = px.imshow(objectness_heatmap, zmin=0, zmax=1)
             fig.update(
                 data=[
                     {
@@ -139,10 +139,10 @@ if __name__ == "__main__":
             )
         elif output_value == "classification":
             if classification_value == "max-confidence":
-                fig = px.imshow(max_class_confidences)
+                fig = px.imshow(max_class_confidences, zmin=0, zmax=1)
             else:
                 class_index = CLASS_LIST.index(classification_value)
-                fig = px.imshow(classifications[class_index, :, :])
+                fig = px.imshow(classifications[class_index, :, :], zmin=0, zmax=1)
 
             fig.update(
                 data=[
