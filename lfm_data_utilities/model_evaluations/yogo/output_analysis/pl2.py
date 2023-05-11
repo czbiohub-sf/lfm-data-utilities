@@ -61,6 +61,19 @@ if __name__ == "__main__":
     objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
     classifications = result_tensor[0, 5:, :, :].numpy()
     class_confidences = np.max(classifications, axis=0)
+    class_confidence_strings = np.zeros_like(class_confidences, dtype=object)
+    for j in range(classifications.shape[1]):
+        for k in range(classifications.shape[2]):
+            class_confidence_strings[j, k] = (
+                f"healthy: {classifications[0, j, k]:.2f}<br>"
+                f"ring: {classifications[1, j, k]:.2f}<br>"
+                f"troph: {classifications[2, j, k]:.2f}<br>"
+                f"scizont: {classifications[3, j, k]:.2f}<br>"
+                f"gametocyte: {classifications[4, j, k]:.2f}<br>"
+                f"wbc: {classifications[5, j, k]:.2f}<br>"
+                f"misc: {classifications[6, j, k]:.2f}<br>"
+            )
+
 
     app = Dash(__name__)
 
@@ -71,8 +84,12 @@ if __name__ == "__main__":
         html.Div(children="YOGO model output analysis"),
         html.Div(children=f"model: {args.pth_path}"),
         html.Div(children=f"image: {args.image_path}"),
-        dcc.Graph(figure=img_fig),
-        dcc.Graph(figure={}, id='YOGO-output'),
+        html.Div(children=[
+                dcc.Graph(figure=img_fig),
+                dcc.Graph(figure={}, id='YOGO-output'),
+            ],
+         style={'display': 'flex', 'flex-direction': 'row', 'margin': '2rem', 'width': '100%'},
+        ),
         dcc.RadioItems(options=['objectness', 'classification', 'bbox'], value='objectness', id='YOGO-output-selector'),
     ])
 
@@ -86,7 +103,12 @@ if __name__ == "__main__":
             fig = px.imshow(objectness_heatmap)
         elif value == 'classification':
             fig = px.imshow(class_confidences)
-            fig.update_traces(showlegend=False)
+            fig.update(data=[{
+                "customdata": class_confidence_strings,
+                "hovertemplate": "<b>%{customdata}</b><extra></extra>",
+            }])
+            # fig.update_traces(showlegend=False)
+            # fig.update_layout(hovermode=class_confidence_strings)
         elif value == 'bbox':
             raise NotImplementedError
 
