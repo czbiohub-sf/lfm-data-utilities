@@ -46,7 +46,7 @@ def extractor(folder):
     else:
         legend = True
 
-    datasets = [datasets.append(load_txtfile(os.path.join(folder, file))) for file in files]
+    datasets = [load_txtfile(os.path.join(folder, file)) for file in files]
 
     return datasets, files, legend
 

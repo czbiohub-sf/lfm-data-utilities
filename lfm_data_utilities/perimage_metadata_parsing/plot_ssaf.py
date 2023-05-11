@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from lfm_data_utilities.utils import load_txtfile
-
 
 def run(file_dir, txtfile_dir=None):
     # Get folder name
@@ -32,7 +30,7 @@ def run(file_dir, txtfile_dir=None):
     adjusted_index = np.transpose(np.nonzero(adjusted))
 
     # Get throttle
-    throttle = frame_index[1][0] - frame_index[0][0] 
+    throttle = frame_index[1][0] - frame_index[0][0]
 
     # Plot
     plt.plot(frame_index, raw, label="Raw error", alpha=0.5, color="orange")
@@ -60,7 +58,9 @@ if __name__ == "__main__":
         "-f", "--file", help="Path to per image metadata file", required=True
     )
     argparser.add_argument(
-        "-t", "--txt", help="Path to txtfile with SSAF data for every frame",
+        "-t",
+        "--txt",
+        help="Path to txtfile with SSAF data for every frame",
     )
 
     args = argparser.parse_args()
