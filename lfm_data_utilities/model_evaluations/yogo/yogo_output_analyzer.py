@@ -39,7 +39,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("pth_path", type=Path, help="path to yogo pth file")
     parser.add_argument("image_path", type=Path, help="path to image file")
-    parser.add_argument("--port", type=int, default=8050, help="port to run on (default 8050)")
+    parser.add_argument(
+        "--port", type=int, default=8050, help="port to run on (default 8050)"
+    )
     args = parser.parse_args()
 
     image_path = args.image_path
