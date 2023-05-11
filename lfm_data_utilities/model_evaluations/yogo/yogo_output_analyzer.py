@@ -16,7 +16,6 @@ import plotly.graph_objects as go
 import yogo
 
 
-
 def set_universal_fig_settings_(fig, scale=0.8):
     fig.update_layout(
         yaxis_visible=False,
@@ -74,40 +73,55 @@ if __name__ == "__main__":
                 f"misc: {classifications[6, j, k]:.2f}<br>"
             )
 
-
     app = Dash(__name__)
 
     img_fig = px.imshow(bbox_image)
     set_universal_fig_settings_(img_fig)
 
-    app.layout = html.Div([
-        html.Div(children="YOGO model output analysis"),
-        html.Div(children=f"model: {args.pth_path}"),
-        html.Div(children=f"image: {args.image_path}"),
-        html.Div(children=[
-                dcc.Graph(figure=img_fig),
-                dcc.Graph(figure={}, id='YOGO-output'),
-            ],
-         style={'display': 'flex', 'flex-direction': 'row', 'margin': '2rem', 'width': '100%'},
-        ),
-        dcc.RadioItems(options=['objectness', 'classification', 'bbox'], value='objectness', id='YOGO-output-selector'),
-    ])
+    app.layout = html.Div(
+        [
+            html.Div(children="YOGO model output analysis"),
+            html.Div(children=f"model: {args.pth_path}"),
+            html.Div(children=f"image: {args.image_path}"),
+            html.Div(
+                children=[
+                    dcc.Graph(figure=img_fig),
+                    dcc.Graph(figure={}, id="YOGO-output"),
+                ],
+                style={
+                    "display": "flex",
+                    "flex-direction": "row",
+                    "margin": "2rem",
+                    "width": "100%",
+                },
+            ),
+            dcc.RadioItems(
+                options=["objectness", "classification", "bbox"],
+                value="objectness",
+                id="YOGO-output-selector",
+            ),
+        ]
+    )
 
     @callback(
-        Output(component_id='YOGO-output', component_property='figure'),
-        Input(component_id='YOGO-output-selector', component_property='value'),
+        Output(component_id="YOGO-output", component_property="figure"),
+        Input(component_id="YOGO-output-selector", component_property="value"),
     )
     def update_yogo_output(value):
         # TODO how to get custom hover data
-        if value == 'objectness':
+        if value == "objectness":
             fig = px.imshow(objectness_heatmap)
-        elif value == 'classification':
+        elif value == "classification":
             fig = px.imshow(class_confidences)
-            fig.update(data=[{
-                "customdata": class_confidence_strings,
-                "hovertemplate": "<b>%{customdata}</b><extra></extra>",
-            }])
-        elif value == 'bbox':
+            fig.update(
+                data=[
+                    {
+                        "customdata": class_confidence_strings,
+                        "hovertemplate": "<b>%{customdata}</b><extra></extra>",
+                    }
+                ]
+            )
+        elif value == "bbox":
             raise NotImplementedError
 
         set_universal_fig_settings_(fig)
