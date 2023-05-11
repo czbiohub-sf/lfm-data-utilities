@@ -57,7 +57,7 @@ if __name__ == "__main__":
     )
     bbox_image = np.array(bbox_image)
 
-    objectness_heatmap = np.flipud(result_tensor[0, 4, :, :].numpy())
+    objectness_heatmap = result_tensor[0, 4, :, :].numpy()
     classifications = result_tensor[0, 5:, :, :].numpy()
     class_confidences = np.max(classifications, axis=0)
     class_confidence_strings = np.zeros_like(class_confidences, dtype=object)
@@ -108,7 +108,6 @@ if __name__ == "__main__":
         Input(component_id="YOGO-output-selector", component_property="value"),
     )
     def update_yogo_output(value):
-        # TODO how to get custom hover data
         if value == "objectness":
             fig = px.imshow(objectness_heatmap)
         elif value == "classification":
