@@ -107,8 +107,6 @@ if __name__ == "__main__":
                 "customdata": class_confidence_strings,
                 "hovertemplate": "<b>%{customdata}</b><extra></extra>",
             }])
-            # fig.update_traces(showlegend=False)
-            # fig.update_layout(hovermode=class_confidence_strings)
         elif value == 'bbox':
             raise NotImplementedError
 
