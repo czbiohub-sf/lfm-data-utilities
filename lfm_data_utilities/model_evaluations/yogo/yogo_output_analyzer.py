@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-from dash import Dash, dcc, html, callback, Input, Output
-
 import argparse
 import numpy as np
 
@@ -12,8 +10,14 @@ import plotly.express as px
 
 import yogo
 
+from dash import Dash, ctx, dcc, html, callback, Input, Output, State
+
 
 CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
+
+# for layout updating between the graphs
+prev_image_original_layout_change = None
+prev_yogo_layout_change = None
 
 
 def set_universal_fig_settings_(fig, scale=0.8):
@@ -102,7 +106,7 @@ if __name__ == "__main__":
             html.Div(children=f"image: {args.image_path}"),
             html.Div(
                 children=[
-                    dcc.Graph(figure=img_fig),
+                    dcc.Graph(figure=img_fig, id="image-original"),
                     dcc.Graph(figure={}, id="YOGO-output"),
                 ],
                 style={
@@ -161,5 +165,59 @@ if __name__ == "__main__":
 
         set_universal_fig_settings_(fig)
         return fig
+
+    @callback(
+        Output(
+            component_id="YOGO-output",
+            component_property="figure",
+            allow_duplicate=True,
+        ),
+        Output(component_id="image-original", component_property="figure"),
+        Input("image-original", "relayoutData"),
+        Input("YOGO-output", "relayoutData"),
+        State("YOGO-output", "figure"),
+        State("image-original", "figure"),
+        prevent_initial_call=True,
+    )
+    def zoom_event(
+        image_original_layout_change, yogo_layout_change, yogo_fig, image_fig
+    ):
+        img_h, img_w, _ = bbox_image.shape
+        try:
+            yogo_h, yogo_w = np.array(yogo_fig["data"][0]["z"]).shape
+        except KeyError:
+            # TODO this is a hack, ideally we could recover the img
+            # shape from the b64 encoded img
+            yogo_h, yogo_w = img_h, img_w
+
+        if ctx.triggered_id == "image-original":
+            relayout_data = image_original_layout_change
+            w_ratio = yogo_w / img_w
+            h_ratio = yogo_h / img_h
+            fig = yogo_fig
+        elif ctx.triggered_id == "YOGO-output":
+            relayout_data = yogo_layout_change
+            w_ratio = img_w / yogo_w
+            h_ratio = img_h / yogo_h
+            fig = image_fig
+        else:
+            raise RuntimeError("unknown trigger!")
+
+        try:
+            fig["layout"]["xaxis"]["range"] = [
+                w_ratio * relayout_data["xaxis.range[0]"],
+                w_ratio * relayout_data["xaxis.range[1]"],
+            ]
+            fig["layout"]["yaxis"]["range"] = [
+                h_ratio * relayout_data["yaxis.range[0]"],
+                h_ratio * relayout_data["yaxis.range[1]"],
+            ]
+            fig["layout"]["xaxis"]["autorange"] = False
+            fig["layout"]["yaxis"]["autorange"] = False
+        except (KeyError, TypeError):
+            fig["layout"]["xaxis"]["autorange"] = True
+            fig["layout"]["yaxis"]["autorange"] = True
+
+        return yogo_fig, image_fig
 
     app.run_server(debug=True, use_reloader=True, port=args.port)
