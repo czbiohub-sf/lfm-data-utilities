@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lfm_data_utilities.utils import load_txtfile
+from lfm_data_utilities.utils import load_txtfile, get_rms
 
 
 def plotter(datasets, names, ylabel, legend, title, output):
@@ -49,18 +49,6 @@ def extractor(folder):
     datasets = [load_txtfile(os.path.join(folder, file)) for file in files]
 
     return datasets, files, legend
-
-
-def get_rms(data):
-    """Compute root mean square (rms)"""
-    ms = 0
-    N = len(data)
-
-    for val in data:
-        ms += val**2
-
-    return np.sqrt(ms / N)
-
 
 def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""

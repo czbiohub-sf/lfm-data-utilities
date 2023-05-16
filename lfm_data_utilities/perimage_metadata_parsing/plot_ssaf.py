@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from lfm_data_utilities.utils import get_rms
+
 
 def run(file_dir, txtfile_dir=None):
     # Get folder name
@@ -61,7 +63,10 @@ def run(file_dir, txtfile_dir=None):
     # Labels
     plt.xlabel(f"Measurement (every {throttle} frames)")
     plt.ylabel("SSAF error [motor steps]")
-    plt.title(f"{basename}: SSAF measured every {throttle} frames")
+    if txtfile_dir is not None:
+        plt.title(f"{basename}: SSAF measured every {throttle} frames (RMS = {get_rms(txt_data)})")
+    else:
+        plt.title(f"{basename}: SSAF measured every {throttle} frames")
 
     # Display
     plt.legend()
