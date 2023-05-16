@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import os
+import queue
 import argparse
 
 from pathlib import Path
@@ -11,6 +12,7 @@ import torch
 import autofocus as af
 
 from tqdm import tqdm
+from typing import Tuple
 from ruamel.yaml import YAML
 from collections import defaultdict
 
@@ -87,12 +89,27 @@ if __name__ == "__main__":
         augmentation_split_fraction_name="",
     )
 
+    loss_fn = torch.nn.MSELoss(reduction='none')
+    loss_fn.to(device)
+
+    pq: "queue.PriorityQueue[Tuple[int,int,int,torch.Tensor]]" = queue.PriorityQueue(maxsize=16)
+
     results: DefaultDict[int, list] = defaultdict(list)
     with torch.no_grad():
         for imgs, labels in tqdm(dataloaders["eval"]):
             imgs = imgs.to(device, dtype=torch.float, non_blocking=True)
             labels = labels.to(device, dtype=torch.float, non_blocking=True)
             preds = net(imgs).view(-1)
+            loss = loss_fn(preds, labels)
+            for l, pred, label, img in zip(loss, preds, labels, imgs):
+                try:
+                    pq.put_nowait((l, pred, label, img.cpu()))
+                except queue.Full:
+                    lpli = pq.get()
+                    if lpli[0] < l:
+                        pq.put((l, pred, label, img.cpu()))
+                    else:
+                        pq.put(lpli)
 
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
@@ -100,6 +117,14 @@ if __name__ == "__main__":
     # plot results
     import matplotlib.pyplot as plt
     import numpy as np
+
+    ii = 0
+    while not pq.empty():
+        loss, pred, label, img = pq.get()
+        plt.imshow(img[0,...].numpy(), cmap='gray')
+        plt.title(f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}")
+        plt.savefig(f"{(args.output_dir / str(ii)).with_suffix('.png')}", dpi=500)
+        ii += 1
 
     write_metadata(
         args.output_dir,
