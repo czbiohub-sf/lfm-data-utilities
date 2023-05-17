@@ -4,6 +4,7 @@ import time
 import types
 import zarr
 import traceback
+import numpy as np
 import multiprocessing as mp
 
 from tqdm import tqdm
@@ -94,6 +95,15 @@ def timing_context_manager(
             f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s"
         )
 
+def get_rms(data: List[float]):
+    """Compute root mean square (rms)"""
+    ms = 0
+    N = len(data)
+
+    for val in data:
+        ms += val**2
+
+    return np.sqrt(ms / N)
 
 def make_video(dataset: Dataset, save_dir: PathLike):
     zf = dataset.zarr_file

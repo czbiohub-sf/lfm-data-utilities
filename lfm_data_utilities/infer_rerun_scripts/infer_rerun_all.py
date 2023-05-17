@@ -81,7 +81,7 @@ if __name__ == "__main__":
     valid_types = ["yogo", "ssaf"]
     if model_type not in valid_types:
         raise ValueError(
-            "Invalid model type provided. Allowed model types: {valid_types}"
+            f"Invalid model type provided. Allowed model types: {valid_types}"
         )
 
     run(scope_folder, model_file, output_folder, model_type)
