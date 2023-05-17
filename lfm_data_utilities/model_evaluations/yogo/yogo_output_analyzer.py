@@ -15,10 +15,6 @@ from dash import Dash, ctx, dcc, html, callback, Input, Output, State
 
 CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
 
-# for layout updating between the graphs
-prev_image_original_layout_change = None
-prev_yogo_layout_change = None
-
 
 def set_universal_fig_settings_(fig, scale=0.8):
     fig.update_layout(
