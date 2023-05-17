@@ -92,7 +92,6 @@ if __name__ == "__main__":
 
     folders = utils.get_list_of_zstack_folders(args.unsorted_zstacks_loc)
 
-    # for folder in valid_folders:
     for folder in folders:
         try:
             process_folder(folder, args.save_loc, args.focus_graph_loc)
