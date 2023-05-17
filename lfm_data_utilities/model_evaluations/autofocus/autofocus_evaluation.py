@@ -155,7 +155,7 @@ if __name__ == "__main__":
             f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
             fontsize=7
         )
-        plt.savefig(f"min_{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=300)
+        plt.savefig(f"{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=300)
         ii += 1
 
     fig,ax = plt.subplots(constrained_layout=True, figsize=(16, 12))
