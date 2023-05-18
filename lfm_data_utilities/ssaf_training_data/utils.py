@@ -326,7 +326,7 @@ def find_peak_position(
     max_motor_pos: int = 900,
     save_loc: Optional[Path] = None,
     folder_name: Optional[str] = None,
-) -> int:
+):
     """
     Averages the focus metrics (given the number of images per step), does a simple quadratic fit near the vicinity of the peak,
     and returns the motor position of the peak focus.
@@ -366,26 +366,13 @@ def find_peak_position(
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 
-    if save_loc is not None:
-        plt.figure(figsize=(10, 7))
-        plt.plot(
-            motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
-        )
-        plt.plot(motor_pos_local_vicinity, curve, label="Curve fit")
-        plt.plot(
-            peak_focus_motor_position,
-            np.max(curve),
-            "*",
-            label=f"Max@{peak_focus_motor_position}",
-        )
-
-        plt.title(f"{folder_name}")
-        plt.xlabel("Motor position (steps)")
-        plt.ylabel("Focus metric (dimensionless)")
-        plt.legend()
-        plt.savefig(f"{save_loc / folder_name}.png")
-
-    return peak_focus_motor_position
+    return (
+        peak_focus_motor_position,
+        motor_pos_nodup,
+        metrics_normed,
+        motor_pos_local_vicinity,
+        curve,
+    )
 
 
 def get_relative_to_peak_positions(

@@ -1,6 +1,8 @@
 import os
 import argparse
+import numpy as np
 import multiprocessing as mp
+import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from typing import List
@@ -38,12 +40,47 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         imgs, utils.log_power_spectrum_radial_average_sum
     )
 
-    peak_motor_pos = utils.find_peak_position(
+    (
+        peak_motor_pos,
+        motor_pos_nodup,
+        metrics_normed,
+        motor_pos_local_vicinity,
+        curve,
+    ) = utils.find_peak_position(
         focus_metrics,
         motor_positions,
         save_loc=focus_graph_loc,
         folder_name=folder_path.stem,
     )
+    while True:
+        plt.figure(figsize=(10, 7))
+        plt.plot(
+            motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
+        )
+        plt.plot(motor_pos_local_vicinity, curve, label="Curve fit")
+        # vertical line at peak motor pos too
+        plt.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
+        plt.plot(
+            peak_motor_pos,
+            np.max(curve),
+            "*",
+            label=f"Max@{peak_motor_pos}",
+        )
+
+        plt.title(f"{folder_path.stem}")
+        plt.xlabel("Motor position (steps)")
+        plt.ylabel("Focus metric (dimensionless)")
+        plt.legend()
+        plt.show()
+
+        input_ = input("Is this peak position correct? (y/n): ")
+        if input_ == "y":
+            break
+        else:
+            shift = int(input("enter the number of steps to shift the peak position by: "))
+            peak_motor_pos += shift
+
+    plt.savefig(f"{focus_graph_loc / folder_path.stem}.png")
 
     rel_pos = utils.get_relative_to_peak_positions(motor_positions, peak_motor_pos)
     utils.generate_relative_position_folders(save_loc, rel_pos)
