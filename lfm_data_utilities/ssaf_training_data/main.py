@@ -11,8 +11,6 @@ from functools import partial
 
 from lfm_data_utilities.ssaf_training_data import utils
 
-os.environ["MPLBACKEND"] = "Agg"
-
 
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
     """Run the analysis + sorting on a given folder
@@ -25,8 +23,8 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
     focus_graph_loc: Path
         Where the focus graphs will be saved (optional)
     """
-
-    print(folder_path.stem)
+    local_vicinity: int = 10
+    max_motor_pos: int = 900
 
     img_paths = utils.get_list_of_img_paths_in_folder(folder_path)
     motor_positions = utils.get_motor_positions_from_img_paths(img_paths)
@@ -39,8 +37,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         imgs, utils.log_power_spectrum_radial_average_sum
     )
 
-    local_vicinity: int = 10
-    max_motor_pos: int = 900
+    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
     grouped_focus_metrics = utils.group_by_motor_positions(
         focus_metrics, motor_positions
     )
@@ -65,15 +62,11 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
     )
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
-    peak_motor_pos = peak_focus_motor_position
-    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
-    utils.group_by_motor_positions(img_paths, motor_positions)
 
     n_rows = 4
     n_cols = 3
 
-    predicted_peak = np.argmax(curve) + start
-    print(f"predicted peak {predicted_peak=}")
+    predicted_peak = np.argmax(curve).item() + start
 
     while True:
         fig = plt.figure(figsize=(4 * 6, 4 * 5))
@@ -85,12 +78,14 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
             motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
         )
         ax0.plot(motor_pos_local_vicinity, curve, label="Curve fit")
-        ax0.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
+        ax0.axvline(
+            peak_focus_motor_position, color="k", linestyle="--", label="Peak position"
+        )
         ax0.plot(
-            peak_motor_pos,
+            peak_focus_motor_position,
             np.max(curve),
             "*",
-            label=f"Max@{peak_motor_pos}",
+            label=f"Max@{peak_focus_motor_position}",
         )
 
         ax0.set_title(f"{folder_path.stem}")
@@ -155,11 +150,13 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
             shift = int(
                 input("enter the number of steps to shift the peak position by: ")
             )
-            peak_motor_pos += shift
+            peak_focus_motor_position += shift
 
     plt.savefig(f"{focus_graph_loc / folder_path.stem}.png")
 
-    rel_pos = utils.get_relative_to_peak_positions(motor_positions, peak_motor_pos)
+    rel_pos = utils.get_relative_to_peak_positions(
+        motor_positions, peak_focus_motor_position
+    )
     utils.generate_relative_position_folders(save_loc, rel_pos)
 
     print("Copying images to their relative position folders...")
