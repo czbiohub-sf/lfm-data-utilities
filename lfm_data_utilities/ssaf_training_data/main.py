@@ -1,3 +1,4 @@
+import random
 import argparse
 import numpy as np
 import multiprocessing as mp
@@ -59,12 +60,13 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 
-    n_rows, n_cols = 4, 3
+    n_rows, n_cols = 3, 3
 
     predicted_peak = np.argmax(curve).item() + start
 
     while True:
-        fig = plt.figure(figsize=(4 * 6, 4 * 5))
+        fig = plt.figure(figsize=(6 * 6, 6 * 5), layout="constrained")
+        fig.set_facecolor("gray")
 
         gs = fig.add_gridspec(n_rows, n_cols)
 
@@ -83,65 +85,57 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
             motor_pos_nodup[predicted_peak],
             color="k",
             linestyle="--",
-            label="Peak position",
+            label="set zero for zstack",
         )
+        ax0.tick_params(axis="y", direction="in", pad=-22)
+        ax0.tick_params(axis="x", direction="in", pad=-40)
 
+        # ax0.xaxis.set_label_position('top')
+        # ax0.set_xlabel("Motor position (steps)")
+        ax0.xaxis.tick_top()
         ax0.set_title(f"{folder_path.stem}")
-        ax0.set_xlabel("Motor position (steps)")
-        ax0.set_ylabel("Focus metric (dimensionless)")
         ax0.legend()
 
         ax1 = fig.add_subplot(fig.add_subplot(gs[1, 0]))
-        ax1.imshow(grouped_images[predicted_peak][0], cmap="gray")
-        ax1.set_title("peak img")
+        ax1.imshow(random.choice(grouped_images[predicted_peak - 1]), cmap="gray")
+        ax1.set_title("focus - 1 step")
         ax1.axis("off")
 
-        ax2 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
-        ax2.imshow(grouped_images[predicted_peak - 1][0], cmap="gray")
-        ax2.set_title("peak - 1")
+        ax2 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
+        ax2.imshow(random.choice(grouped_images[predicted_peak - 2]), cmap="gray")
+        ax2.set_title("focus - 2 steps")
         ax2.axis("off")
 
-        ax3 = fig.add_subplot(fig.add_subplot(gs[1, 2]))
-        ax3.imshow(grouped_images[predicted_peak + 1][0], cmap="gray")
-        ax3.set_title("peak + 1")
+        ax3 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
+        ax3.imshow(random.choice(grouped_images[predicted_peak]), cmap="gray")
+        ax3.set_title("focus")
         ax3.axis("off")
 
-        ax4 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
-        ax4.imshow(grouped_images[predicted_peak + 2][0], cmap="gray")
-        ax4.set_title("peak + 2")
+        ax4 = fig.add_subplot(fig.add_subplot(gs[2, 1]))
+        ax4.imshow(random.choice(grouped_images[predicted_peak]), cmap="gray")
+        ax4.set_title("focus (another one)")
         ax4.axis("off")
 
-        ax5 = fig.add_subplot(fig.add_subplot(gs[2, 1]))
-        ax5.imshow(grouped_images[predicted_peak + 3][0], cmap="gray")
-        ax5.set_title("peak + 3")
+        ax5 = fig.add_subplot(fig.add_subplot(gs[1, 2]))
+        ax5.imshow(random.choice(grouped_images[predicted_peak + 1]), cmap="gray")
+        ax5.set_title("focus + 1 step")
         ax5.axis("off")
 
-        ax5 = fig.add_subplot(fig.add_subplot(gs[2, 2]))
-        ax5.imshow(grouped_images[predicted_peak + 4][0], cmap="gray")
-        ax5.set_title("peak + 4")
-        ax5.axis("off")
-
-        ax6 = fig.add_subplot(fig.add_subplot(gs[3, 0]))
-        ax6.imshow(grouped_images[predicted_peak + 5][0], cmap="gray")
-        ax6.set_title("peak + 5")
+        ax6 = fig.add_subplot(fig.add_subplot(gs[2, 2]))
+        ax6.imshow(random.choice(grouped_images[predicted_peak + 2]), cmap="gray")
+        ax6.set_title("focus + 2 steps")
         ax6.axis("off")
 
-        ax7 = fig.add_subplot(fig.add_subplot(gs[3, 1]))
-        ax7.imshow(grouped_images[predicted_peak + 6][0], cmap="gray")
-        ax7.set_title("peak + 6")
-        ax7.axis("off")
-
-        ax8 = fig.add_subplot(fig.add_subplot(gs[3, 2]))
-        ax8.imshow(grouped_images[predicted_peak + 7][0], cmap="gray")
-        ax8.set_title("peak + 7")
-        ax8.axis("off")
+        gs.tight_layout(fig)
 
         plt.show()
 
-        input_ = input("Is this peak position correct? (y/n): ")
+        input_ = input(
+            "Is this peak position correct? ('y' for yes, 'n' for no, and just press enter for more images): "
+        )
         if input_ == "y":
             break
-        else:
+        elif input_ == "n":
             shift = 0
             while True:
                 try:
@@ -154,6 +148,8 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
                     print(f"{usr_input} doesn't seem to be an integer; try again")
 
             predicted_peak += shift
+        else:
+            continue
 
     peak_focus_motor_position = motor_pos_nodup[predicted_peak]
 
@@ -194,6 +190,18 @@ if __name__ == "__main__":
 
     folders = utils.get_list_of_zstack_folders(args.unsorted_zstacks_loc)
 
+    input(
+        "\n\nThis will take you through z-stacks and will prompt you for input.\n"
+        "We will load a set of images and show you a focus plot, along with a set of images.\n"
+        "Once you close the plot, you will be promped on whether the focus plot was correct.\n"
+        "If it was correct, this will start sorting the images in the background and go to the next z-stack.\n"
+        "If it was not correct, this will prompt you for the correction in steps (eg '1', '-1', '2', etc)\n"
+        "If you can't tell, when promped, just press enter to see more images.\n"
+        "Make sure that the images marked as 'focus' are actually in focus.\n"
+        "At the end, there will be a wait to let the program finish sorting images. Go get a coffee, and revel in the glory of a human-machine partnership!\n\n"
+        "press enter to continue...\n"
+    )
+
     procs = []
     for folder in folders:
         try:
@@ -201,7 +209,9 @@ if __name__ == "__main__":
                 folder, args.save_loc, args.focus_graph_loc
             )
 
-            print("Copying images to their relative position folders...")
+            print(
+                "Copying images to their relative position folders in child process..."
+            )
 
             proc = mp.Process(
                 target=utils.move_imgs_to_relative_pos_folders,
