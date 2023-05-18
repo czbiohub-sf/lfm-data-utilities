@@ -67,6 +67,12 @@ if __name__ == "__main__":
         default="./ssaf_output",
         help="path to output directory (default ./ssaf_output)",
     )
+    parser.add_argument(
+        "--N",
+        type=int,
+        default=32,
+        help="number of best and worst images (by loss) that will be saved (default 32)"
+    )
 
     args = parser.parse_args()
 
@@ -96,10 +102,10 @@ if __name__ == "__main__":
     loss_fn.to(device)
 
     min_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
-        maxsize=32
+        maxsize=args.N
     )
     max_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
-        maxsize=32
+        maxsize=args.N
     )
     all_losses: List[float] = []
 
