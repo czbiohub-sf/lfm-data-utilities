@@ -105,7 +105,7 @@ def make_video_from_pngs(folder_path: PathLike, save_dir: PathLike, framerate=30
     save_dir: Path to save video
     """
 
-    imgs = load_imgs(get_list_of_img_paths_in_folder(folder_path))
+    imgs = load_imgs_threaded(get_list_of_img_paths_in_folder(folder_path))
     height, width = imgs[0].shape
     output_path = Path(save_dir) / Path(folder_path.stem) + ".mp4"
 
@@ -816,3 +816,21 @@ def load_imgs(img_paths: List[Path]) -> List[np.ndarray]:
     with mp.Pool() as pool:
         imgs = list(tqdm(pool.imap(load_img, img_paths), total=len(img_paths)))
     return imgs
+
+
+def load_imgs_threaded(img_paths: List[Path]) -> List[np.ndarray]:
+    """Multithread load images
+
+    Parameters
+    ----------
+    img_paths: List[Path]
+        List of image paths to load
+
+    Returns
+    -------
+    List[np.ndarray]
+    """
+
+    with ThreadPoolExecutor() as executor:
+        images = executor.map(load_img, img_paths)
+    return list(images)
