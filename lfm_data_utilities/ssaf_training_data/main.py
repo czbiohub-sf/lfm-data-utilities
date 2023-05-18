@@ -11,6 +11,9 @@ from pathlib import Path
 from lfm_data_utilities.ssaf_training_data import utils
 
 
+# (Axel) I am not proud of this function - it's messy and hacky and fragile,
+# but i don't want to spend a lot of time working on this, so hacky and fast
+# is the way to go
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     """Run the analysis + sorting on a given folder
 
@@ -141,7 +144,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
             ) from e
 
         input_ = input(
-            "Is this peak position correct? ('y' for yes, 'n' for no, and just press enter for more images): "
+            "Is this peak position correct? ('y' for yes, 'n' for no, 's' to skip folder, and 'enter' to see different images): "
         )
         if input_ == "y":
             break
@@ -158,6 +161,8 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
                     print(f"{usr_input} doesn't seem to be an integer; try again")
 
             predicted_peak += shift
+        elif input_ == "s":
+            return None
         else:
             continue
 
@@ -207,6 +212,7 @@ if __name__ == "__main__":
         "If it was correct, this will start sorting the images in the background and go to the next z-stack.\n"
         "If it was not correct, this will prompt you for the correction in steps (eg '1', '-1', '2', etc)\n"
         "If you can't tell, when promped, just press enter to see more images.\n"
+        "You can also skip a folder to not sort it at all, e.g. if you've already sorted it or if it's just too bad to sort.\n"
         "Make sure that the images marked as 'focus' are actually in focus.\n"
         "At the end, there will be a wait to let the program finish sorting images. Go get a coffee, and revel in the glory of a human-machine partnership!\n\n"
         "press enter to continue...\n"
@@ -215,10 +221,16 @@ if __name__ == "__main__":
     procs = []
     for i, folder in enumerate(folders, start=1):
         try:
+            print("-----------------------------")
+            print(f"{folder.name}")
             print(f"folder {i} / {len(folders)}")
-            img_paths, save_loc, rel_pos = process_folder(
+            ret_val = process_folder(
                 folder, args.save_loc, args.focus_graph_loc
             )
+            if ret_val is None:
+                continue
+
+            img_paths, save_loc, rel_pos = ret_val
 
             print(
                 "Copying images to their relative position folders in child process..."
