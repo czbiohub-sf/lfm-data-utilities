@@ -12,7 +12,6 @@ from functools import partial
 from lfm_data_utilities.ssaf_training_data import utils
 
 os.environ["MPLBACKEND"] = "Agg"
-# os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
@@ -40,65 +39,112 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         imgs, utils.log_power_spectrum_radial_average_sum
     )
 
-    (
-        peak_motor_pos,
-        motor_pos_nodup,
-        metrics_normed,
-        motor_pos_local_vicinity,
-        curve,
-    ) = utils.find_peak_position(
-        focus_metrics,
-        motor_positions,
-        save_loc=focus_graph_loc,
-        folder_name=folder_path.stem,
+    local_vicinity: int = 10
+    max_motor_pos: int = 900
+    grouped_focus_metrics = utils.group_by_motor_positions(
+        focus_metrics, motor_positions
     )
+
+    # Get mean and normalize focus metric
+    metrics_averaged = np.asarray([np.mean(fms) for fms in grouped_focus_metrics])
+    metrics_normed = metrics_averaged / np.max(metrics_averaged)
+
+    # Get metrics and motor positions for the values in the local vicinity of the peak focus
+    motor_pos_nodup = np.unique(motor_positions)
+    peak_focus_pos = np.argmax(metrics_normed).item()
+
+    start = max(peak_focus_pos - local_vicinity, 0)
+    end = min(peak_focus_pos + local_vicinity, max_motor_pos)
+
+    motor_pos_local_vicinity = motor_pos_nodup[start:end]
+    metrics_local_vicinity = metrics_normed[start:end]
+
+    # Quadratic fit
+    qf = np.polynomial.polynomial.Polynomial.fit(
+        motor_pos_local_vicinity, metrics_local_vicinity, 2
+    )
+    curve = qf(motor_pos_local_vicinity)
+    peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
+    peak_motor_pos = peak_focus_motor_position
+    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
+    utils.group_by_motor_positions(img_paths, motor_positions)
 
     n_rows = 4
     n_cols = 3
 
-    predicted_peak = peak_motor_pos
-    while True:
+    predicted_peak = np.argmax(curve) + start
+    print(f"predicted peak {predicted_peak=}")
 
-        fig = plt.figure(figsize=(20, 14))
-        gs = fig.add_gridspec( n_cols, n_rows)
-        ax1 = fig.add_subplot(gs[0, :])
-        ax1.plot(
+    while True:
+        fig = plt.figure(figsize=(4 * 6, 4 * 5))
+
+        gs = fig.add_gridspec(n_rows, n_cols)
+
+        ax0 = fig.add_subplot(gs[0, :])
+        ax0.plot(
             motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
         )
-        ax1.plot(motor_pos_local_vicinity, curve, label="Curve fit")
-        # vertical line at peak motor pos too
-        ax1.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
-        ax1.plot(
+        ax0.plot(motor_pos_local_vicinity, curve, label="Curve fit")
+        ax0.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
+        ax0.plot(
             peak_motor_pos,
             np.max(curve),
             "*",
             label=f"Max@{peak_motor_pos}",
         )
 
-        ax1.set_title(f"{folder_path.stem}")
-        ax1.set_xlabel("Motor position (steps)")
-        ax1.set_ylabel("Focus metric (dimensionless)")
-        ax1.legend()
+        ax0.set_title(f"{folder_path.stem}")
+        ax0.set_xlabel("Motor position (steps)")
+        ax0.set_ylabel("Focus metric (dimensionless)")
+        ax0.legend()
 
-        ax2 = fig.add_subplot(fig.add_subplot(gs[1, 0]))
-        ax2.imshow(imgs[predicted_peak], cmap="gray")
-        ax2.set_title("peak img")
+        ax1 = fig.add_subplot(fig.add_subplot(gs[1, 0]))
+        ax1.imshow(grouped_images[predicted_peak][0], cmap="gray")
+        ax1.set_title("peak img")
+        ax1.axis("off")
+
+        ax2 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
+        ax2.imshow(grouped_images[predicted_peak - 1][0], cmap="gray")
+        ax2.set_title("peak - 1")
         ax2.axis("off")
 
-        ax3 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
-        ax3.imshow(imgs[predicted_peak-1], cmap="gray")
-        ax3.set_title("peak - 1")
+        ax3 = fig.add_subplot(fig.add_subplot(gs[1, 2]))
+        ax3.imshow(grouped_images[predicted_peak + 1][0], cmap="gray")
+        ax3.set_title("peak + 1")
         ax3.axis("off")
 
         ax4 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
-        ax4.imshow(imgs[predicted_peak+1], cmap="gray")
-        ax4.set_title("peak + 1")
+        ax4.imshow(grouped_images[predicted_peak + 2][0], cmap="gray")
+        ax4.set_title("peak + 2")
         ax4.axis("off")
 
         ax5 = fig.add_subplot(fig.add_subplot(gs[2, 1]))
-        ax5.imshow(imgs[predicted_peak+2], cmap="gray")
-        ax5.set_title("peak + 2")
+        ax5.imshow(grouped_images[predicted_peak + 3][0], cmap="gray")
+        ax5.set_title("peak + 3")
         ax5.axis("off")
+
+        ax5 = fig.add_subplot(fig.add_subplot(gs[2, 2]))
+        ax5.imshow(grouped_images[predicted_peak + 4][0], cmap="gray")
+        ax5.set_title("peak + 4")
+        ax5.axis("off")
+
+        ax6 = fig.add_subplot(fig.add_subplot(gs[3, 0]))
+        ax6.imshow(grouped_images[predicted_peak + 5][0], cmap="gray")
+        ax6.set_title("peak + 5")
+        ax6.axis("off")
+
+        ax7 = fig.add_subplot(fig.add_subplot(gs[3, 1]))
+        ax7.imshow(grouped_images[predicted_peak + 6][0], cmap="gray")
+        ax7.set_title("peak + 6")
+        ax7.axis("off")
+
+        ax8 = fig.add_subplot(fig.add_subplot(gs[3, 2]))
+        ax8.imshow(grouped_images[predicted_peak + 7][0], cmap="gray")
+        ax8.set_title("peak + 7")
+        ax8.axis("off")
+
+        # set tight plot
+        fig.tight_layout()
 
         plt.show()
 
@@ -106,7 +152,9 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         if input_ == "y":
             break
         else:
-            shift = int(input("enter the number of steps to shift the peak position by: "))
+            shift = int(
+                input("enter the number of steps to shift the peak position by: ")
+            )
             peak_motor_pos += shift
 
     plt.savefig(f"{focus_graph_loc / folder_path.stem}.png")

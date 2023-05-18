@@ -1,12 +1,11 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 from tqdm import tqdm
 from os import listdir
 from collections import defaultdict
-from typing import List, Optional, Callable, Any
+from typing import List, Callable, Any
 from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
@@ -316,63 +315,6 @@ def group_by_motor_positions(
         motor_pos_to_items[pos].append(item)
     sorted_motor_positions = sorted(motor_pos_to_items.items())
     return [item for _, item in sorted_motor_positions]
-
-
-def find_peak_position(
-    focus_metrics: List[float],
-    motor_positions: List[int],
-    imgs_per_step: int = 30,
-    local_vicinity: int = 10,
-    max_motor_pos: int = 900,
-    save_loc: Optional[Path] = None,
-    folder_name: Optional[str] = None,
-):
-    """
-    Averages the focus metrics (given the number of images per step), does a simple quadratic fit near the vicinity of the peak,
-    and returns the motor position of the peak focus.
-
-    Parameters
-    ----------
-    focus_metrics: List[float]
-    motor_positions: List[int]
-    imgs_per_step: int=30
-    local_vicinity: int=10
-        The number of steps (+/-) of the peak focus position about which the quadratic fit will be done
-    save: bool=False
-        Whether to save the plot of the focus metric and quadratic fit
-
-    Returns
-    -------
-    int
-        Motor position at which the peak focus was found.
-    """
-    grouped_focus_metrics = group_by_motor_positions(focus_metrics, motor_positions)
-    # Get mean and normalize focus metric
-    metrics_averaged = np.asarray(list(np.mean(fms) for fms in grouped_focus_metrics))
-    metrics_normed = metrics_averaged / np.max(metrics_averaged)
-
-    # Get metrics and motor positions for the values in the local vicinity of the peak focus
-    motor_pos_nodup = np.unique(motor_positions)
-    peak_focus_pos = np.argmax(metrics_normed).item()
-    start = max(peak_focus_pos - local_vicinity, 0)
-    end = min(peak_focus_pos + local_vicinity, max_motor_pos)
-    motor_pos_local_vicinity = motor_pos_nodup[start:end]
-    metrics_local_vicinity = metrics_normed[start:end]
-
-    # Quadratic fit
-    qf = np.polynomial.polynomial.Polynomial.fit(
-        motor_pos_local_vicinity, metrics_local_vicinity, 2
-    )
-    curve = qf(motor_pos_local_vicinity)
-    peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
-
-    return (
-        peak_focus_motor_position,
-        motor_pos_nodup,
-        metrics_normed,
-        motor_pos_local_vicinity,
-        curve,
-    )
 
 
 def get_relative_to_peak_positions(
