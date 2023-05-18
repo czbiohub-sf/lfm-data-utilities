@@ -119,7 +119,7 @@ def make_video_from_pngs(folder_path: PathLike, save_dir: PathLike, framerate=30
 
     for img in imgs:
         writer.write(img)
-    writer.relase()
+    writer.release()
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
