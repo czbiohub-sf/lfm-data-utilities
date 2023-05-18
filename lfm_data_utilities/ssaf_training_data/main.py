@@ -168,7 +168,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 
     peak_focus_motor_position = motor_pos_nodup[predicted_peak]
 
-    plt.savefig(f"{focus_graph_loc / folder_path.stem}.png")
+    fig.savefig(f"{focus_graph_loc / folder_path.stem}.png")
 
     rel_pos = utils.get_relative_to_peak_positions(
         motor_positions, peak_focus_motor_position
