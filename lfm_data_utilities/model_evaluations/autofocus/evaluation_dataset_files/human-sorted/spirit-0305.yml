@@ -1,0 +1,4 @@
+dataset_split_fractions:
+  eval: 1
+dataset_paths:
+  spirit_0305: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted-human-verified/spirit_03052023/training_data
