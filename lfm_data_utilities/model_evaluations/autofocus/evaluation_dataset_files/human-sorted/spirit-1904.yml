@@ -1,4 +1,6 @@
 dataset_split_fractions:
-  eval: 1
+  train: 1
+  test: 0
+  val: 0
 dataset_paths:
   spirit_1904: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted-human-verified/spirit_19042023/training_data
