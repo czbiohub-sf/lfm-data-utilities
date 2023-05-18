@@ -66,7 +66,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 
     while True:
         fig = plt.figure(figsize=(6 * 6, 6 * 5), layout="constrained")
-        fig.set_facecolor("gray", vmin=0, vmax=255)
+        fig.set_facecolor("gray")
 
         gs = fig.add_gridspec(n_rows, n_cols)
 
