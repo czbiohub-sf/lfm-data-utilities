@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+from __future__ import annotations
+
 import os
 import queue
 import argparse
@@ -12,10 +14,11 @@ import torch
 import autofocus as af
 
 from tqdm import tqdm
-from typing import Tuple
+from typing import Tuple, List
 from ruamel.yaml import YAML
 from collections import defaultdict
 
+from filepath_dataloader import get_dataloader
 from lfm_data_utilities import utils
 
 
@@ -64,6 +67,12 @@ if __name__ == "__main__":
         default="./ssaf_output",
         help="path to output directory (default ./ssaf_output)",
     )
+    parser.add_argument(
+        "--N",
+        type=int,
+        default=32,
+        help="number of best and worst images (by loss) that will be saved (default 32)"
+    )
 
     args = parser.parse_args()
 
@@ -81,7 +90,7 @@ if __name__ == "__main__":
     net.to(device)
     net = torch.jit.script(net)
 
-    dataloaders = af.dataloader.get_dataloader(
+    dataloaders = get_dataloader(
         args.dataset_description_file,
         img_size=(300, 400),
         batch_size=32,
@@ -89,27 +98,42 @@ if __name__ == "__main__":
         augmentation_split_fraction_name="",
     )
 
-    loss_fn = torch.nn.MSELoss(reduction='none')
+    loss_fn = torch.nn.MSELoss(reduction="none")
     loss_fn.to(device)
 
-    pq: "queue.PriorityQueue[Tuple[int,int,int,torch.Tensor]]" = queue.PriorityQueue(maxsize=16)
+    min_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
+        maxsize=args.N
+    )
+    max_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
+        maxsize=args.N
+    )
+    all_losses: List[float] = []
 
     results: DefaultDict[int, list] = defaultdict(list)
     with torch.no_grad():
-        for imgs, labels in tqdm(dataloaders["eval"]):
+        for imgs, labels, paths in tqdm(dataloaders["eval"]):
             imgs = imgs.to(device, dtype=torch.float, non_blocking=True)
             labels = labels.to(device, dtype=torch.float, non_blocking=True)
             preds = net(imgs).view(-1)
             loss = loss_fn(preds, labels)
-            for l, pred, label, img in zip(loss, preds, labels, imgs):
+
+            for l, pred, label, img, path in zip(loss, preds, labels, imgs, paths):
+                all_losses.append(l.item())
                 try:
-                    pq.put_nowait((l, pred, label, img.cpu()))
+                    min_pq.put_nowait((-l, pred, label, img.cpu(), path))
+                    max_pq.put_nowait((l, pred, label, img.cpu(), path))
                 except queue.Full:
-                    lpli = pq.get()
+                    lpli = max_pq.get()
                     if lpli[0] < l:
-                        pq.put((l, pred, label, img.cpu()))
+                        max_pq.put((l, pred, label, img.cpu(), path))
                     else:
-                        pq.put(lpli)
+                        max_pq.put(lpli)
+
+                    lpli = min_pq.get()
+                    if lpli[0] < l:
+                        min_pq.put((l, pred, label, img.cpu(), path))
+                    else:
+                        min_pq.put(lpli)
 
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
@@ -119,12 +143,33 @@ if __name__ == "__main__":
     import numpy as np
 
     ii = 0
-    while not pq.empty():
-        loss, pred, label, img = pq.get()
-        plt.imshow(img[0,...].numpy(), cmap='gray')
-        plt.title(f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}")
-        plt.savefig(f"{(args.output_dir / str(ii)).with_suffix('.png')}", dpi=500)
+    while not max_pq.empty():
+        loss, pred, label, img, path = max_pq.get()
+        plt.imshow(img[0, ...].numpy(), cmap="gray")
+        plt.title(
+            f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
+            fontsize=7
+        )
+        plt.savefig(f"{(args.output_dir / ('max_' + str(ii))).with_suffix('.png')}", dpi=300)
         ii += 1
+
+    ii = 0
+    while not min_pq.empty():
+        loss, pred, label, img, path = min_pq.get()
+        plt.imshow(img[0, ...].numpy(), cmap="gray")
+        plt.title(
+            f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
+            fontsize=7
+        )
+        plt.savefig(f"{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=300)
+        ii += 1
+
+    fig,ax = plt.subplots(constrained_layout=True, figsize=(16, 12))
+    ax.hist(all_losses, bins=50, log=True)
+    ax.set_title("loss histogram")
+    ax.set_xlabel("loss")
+    ax.set_ylabel("Frequency")
+    plt.savefig(f"{args.output_dir / 'loss_hist.png'}", dpi=300)
 
     write_metadata(
         args.output_dir,
@@ -139,7 +184,6 @@ if __name__ == "__main__":
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
-        plt.tight_layout()
         fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2, figsize=(16, 12))
         whole_range_ax.set_facecolor((0.95, 0.95, 0.95))
         fig.suptitle(

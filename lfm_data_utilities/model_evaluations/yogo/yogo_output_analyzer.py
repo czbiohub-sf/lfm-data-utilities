@@ -15,12 +15,8 @@ from dash import Dash, ctx, dcc, html, callback, Input, Output, State
 
 CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
 
-# for layout updating between the graphs
-prev_image_original_layout_change = None
-prev_yogo_layout_change = None
 
-
-def set_universal_fig_settings_(fig, scale=0.8):
+def set_universal_fig_settings_(fig, img_shape, prediction_shape, scale=0.8):
     fig.update_layout(
         yaxis_visible=False,
         yaxis_showticklabels=False,
@@ -29,8 +25,8 @@ def set_universal_fig_settings_(fig, scale=0.8):
         coloraxis_showscale=False,
         width=int(
             (
-                objectness_heatmap.shape[1]
-                * (image_data.shape[0] / objectness_heatmap.shape[0])
+                prediction_shape[1]
+                * (img_shape[0] / prediction_shape[0])
             )
             * scale
         ),
@@ -97,7 +93,7 @@ if __name__ == "__main__":
             }
         ]
     )
-    set_universal_fig_settings_(img_fig)
+    set_universal_fig_settings_(img_fig, image_data.shape, objectness_heatmap.shape)
 
     app.layout = html.Div(
         [
@@ -163,7 +159,7 @@ if __name__ == "__main__":
             fig = px.imshow(boxmap)
             fig.update_layout(hovermode=False)
 
-        set_universal_fig_settings_(fig)
+        set_universal_fig_settings_(fig, image_data.shape, objectness_heatmap.shape)
         return fig
 
     @callback(
