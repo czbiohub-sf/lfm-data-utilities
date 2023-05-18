@@ -1,13 +1,9 @@
-import os
 import argparse
 import numpy as np
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 
-from tqdm import tqdm
-from typing import List
 from pathlib import Path
-from functools import partial
 
 from lfm_data_utilities.ssaf_training_data import utils
 
@@ -87,7 +83,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
             motor_pos_nodup[predicted_peak],
             color="k",
             linestyle="--",
-            label="Peak position"
+            label="Peak position",
         )
 
         ax0.set_title(f"{folder_path.stem}")
@@ -150,8 +146,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
             while True:
                 try:
                     usr_input = input(
-                        "enter the number of steps to "
-                        "shift the peak position by: "
+                        "enter the number of steps to " "shift the peak position by: "
                     )
                     shift = int(usr_input)
                     break
@@ -202,18 +197,25 @@ if __name__ == "__main__":
     procs = []
     for folder in folders:
         try:
-            img_paths, save_loc, rel_pos = process_folder(folder, args.save_loc, args.focus_graph_loc)
+            img_paths, save_loc, rel_pos = process_folder(
+                folder, args.save_loc, args.focus_graph_loc
+            )
 
             print("Copying images to their relative position folders...")
 
-            proc = mp.Process(target=utils.move_imgs_to_relative_pos_folders, args=(img_paths, save_loc, rel_pos))
+            proc = mp.Process(
+                target=utils.move_imgs_to_relative_pos_folders,
+                args=(img_paths, save_loc, rel_pos),
+            )
             proc.start()
-            procs.append( proc)
+            procs.append(proc)
         except Exception:
             import traceback
 
             traceback.print_exc()
 
-    print("waiting for images to finish copying to their folders - this can take a while...")
+    print(
+        "waiting for images to finish copying to their folders - this can take a while..."
+    )
     for p in procs:
         p.join()
