@@ -248,7 +248,7 @@ def move_imgs_to_relative_pos_folders(
         Relative positions of the images to the peak focus
     """
 
-    for img_path, pos in tqdm(zip(img_paths, relative_positions), total=len(img_paths)):
+    for img_path, pos in zip(img_paths, relative_positions):
         copy_img_to_folder(img_path, save_dir, pos)
 
 

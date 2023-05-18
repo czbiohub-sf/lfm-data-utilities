@@ -12,7 +12,7 @@ from functools import partial
 from lfm_data_utilities.ssaf_training_data import utils
 
 
-def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
+def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     """Run the analysis + sorting on a given folder
 
     Parameters
@@ -28,16 +28,17 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
 
     img_paths = utils.get_list_of_img_paths_in_folder(folder_path)
     motor_positions = utils.get_motor_positions_from_img_paths(img_paths)
+    motor_pos_nodup = np.unique(motor_positions)
 
     print("Loading images...")
     imgs = utils.load_imgs(img_paths)
+    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
 
     print("Calculating focus metrics...")
     focus_metrics = utils.multiprocess_focus_metric(
         imgs, utils.log_power_spectrum_radial_average_sum
     )
 
-    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
     grouped_focus_metrics = utils.group_by_motor_positions(
         focus_metrics, motor_positions
     )
@@ -47,7 +48,6 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
     metrics_normed = metrics_averaged / np.max(metrics_averaged)
 
     # Get metrics and motor positions for the values in the local vicinity of the peak focus
-    motor_pos_nodup = np.unique(motor_positions)
     peak_focus_pos = np.argmax(metrics_normed).item()
 
     start = max(peak_focus_pos - local_vicinity, 0)
@@ -63,8 +63,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 
-    n_rows = 4
-    n_cols = 3
+    n_rows, n_cols = 4, 3
 
     predicted_peak = np.argmax(curve).item() + start
 
@@ -147,9 +146,18 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         if input_ == "y":
             break
         else:
-            shift = int(
-                input("enter the number of steps to shift the peak position by: ")
-            )
+            shift = 0
+            while True:
+                try:
+                    usr_input = input(
+                        "enter the number of steps to "
+                        "shift the peak position by: "
+                    )
+                    shift = int(usr_input)
+                    break
+                except TypeError:
+                    print(f"{usr_input} doesn't seem to be an integer; try again")
+
             predicted_peak += shift
 
     peak_focus_motor_position = motor_pos_nodup[predicted_peak]
@@ -161,21 +169,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
     )
     utils.generate_relative_position_folders(save_loc, rel_pos)
 
-    print("Copying images to their relative position folders...")
-    utils.move_imgs_to_relative_pos_folders(img_paths, save_loc, rel_pos)
-
-
-def multiproc_folders(folders: List[Path], save_loc: Path, focus_graph_loc: Path):
-    with mp.Pool() as pool:
-        tqdm(
-            pool.imap(
-                partial(
-                    process_folder, save_loc=save_loc, focus_graph_loc=focus_graph_loc
-                ),
-                folders,
-            ),
-            total=len(folders),
-        )
+    return img_paths, save_loc, rel_pos
 
 
 if __name__ == "__main__":
@@ -205,10 +199,21 @@ if __name__ == "__main__":
 
     folders = utils.get_list_of_zstack_folders(args.unsorted_zstacks_loc)
 
+    procs = []
     for folder in folders:
         try:
-            process_folder(folder, args.save_loc, args.focus_graph_loc)
+            img_paths, save_loc, rel_pos = process_folder(folder, args.save_loc, args.focus_graph_loc)
+
+            print("Copying images to their relative position folders...")
+
+            proc = mp.Process(target=utils.move_imgs_to_relative_pos_folders, args=(img_paths, save_loc, rel_pos))
+            proc.start()
+            procs.append( proc)
         except Exception:
             import traceback
 
             traceback.print_exc()
+
+    print("waiting for images to finish copying to their folders - this can take a while...")
+    for p in procs:
+        p.join()
