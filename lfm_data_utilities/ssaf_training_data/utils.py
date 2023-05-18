@@ -69,36 +69,6 @@ def get_valid_folders(
     return valid_folders
 
 
-def get_list_of_img_paths_in_folder(folder_path: PathLike) -> List[Path]:
-    """Get a list of the filepaths of the tiffs or pngs in this folder.
-
-    The only reason we accommodate tiffs is cause the original SSAF data was collected using tiffs, we have
-    since changed to saving pngs.
-
-    Parameters
-    ----------
-    folder_path: str
-        Folder containing zstack images
-    Returns
-    -------
-    List[Path]
-    """
-
-    pngs = sorted(Path(folder_path).glob("*.png"))
-    tiffs = sorted(Path(folder_path).glob("*.tiff"))
-
-    if len(pngs) == 0 and len(tiffs) > 0:
-        return tiffs
-
-    elif len(pngs) > 0 and len(tiffs) == 0:
-        return pngs
-
-    else:
-        raise ValueError(
-            f"For some reason there are both pngs and tiffs in this folder: \npngs: {pngs}\ntiffs: {tiffs}"
-        )
-
-
 def get_motor_position_from_path(path: Path) -> int:
     """Parse and return the motor position from the filepath.
 
@@ -165,38 +135,6 @@ def get_img_step_idx_from_img_paths(paths: List[Path]) -> List[int]:
     return [get_image_step_idx_from_path(path) for path in paths]
 
 
-def load_img(img_path: Path) -> np.ndarray:
-    """Load an image using opencv
-
-    Parameters
-    ----------
-    img_path: Path
-
-    Returns
-    -------
-    np.ndarray
-    """
-    return cv2.imread(str(img_path), 0)
-
-
-def load_imgs(img_paths: List[Path]) -> List[np.ndarray]:
-    """Multiprocess load and return images
-
-    Parameters
-    ----------
-    img_paths: List[Path]
-        List of image paths to load
-
-    Returns
-    -------
-    List[np.ndarray]
-    """
-
-    with Pool() as pool:
-        imgs = list(tqdm(pool.imap(load_img, img_paths), total=len(img_paths)))
-    return imgs
-
-
 def generate_relative_position_folders(
     save_dir: Path, relative_positions: List[int]
 ) -> None:
@@ -256,7 +194,7 @@ def move_imgs_to_relative_pos_folders(
 def log_power_spectrum_radial_average_sum(img: np.ndarray) -> float:
     def radial_average(data: np.ndarray) -> np.ndarray:
         data = data / np.max(data)
-        h, w = data.shape[0], data.shape[1]
+        h, w = data.shape
         center = (w // 2, h // 2)
         y, x = np.indices((data.shape))
         r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)

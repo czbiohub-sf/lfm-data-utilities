@@ -1,13 +1,8 @@
-import cv2
-import git
-import time
-import types
-import zarr
 import traceback
 import multiprocessing as mp
-
-from tqdm import tqdm
-from pathlib import Path
+import time
+import git
+import types
 from csv import DictReader
 from datetime import datetime
 from functools import partial
@@ -15,6 +10,12 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
+from pathlib import Path
+
+from tqdm import tqdm
+import cv2
+import zarr
+import numpy as np
 
 
 PathLike = Union[str, Path]
@@ -93,6 +94,32 @@ def timing_context_manager(
         print(
             f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s"
         )
+
+
+def make_video_from_pngs(folder_path: PathLike, save_dir: PathLike, framerate=30):
+    """Generate a video (mp4) from a folder of pngs.
+
+    Parameters
+    ----------
+    folder_path: Path of folder of pngs
+    save_dir: Path to save video
+    """
+
+    imgs = load_imgs(get_list_of_img_paths_in_folder(folder_path))
+    height, width = imgs[0].shape
+    output_path = Path(save_dir) / Path(folder_path.stem) + ".mp4"
+
+    writer = cv2.VideoWriter(
+        f"{output_path}",
+        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
+        fps=framerate,
+        frameSize=(width, height),
+        isColor=False,
+    )
+
+    for img in imgs:
+        writer.write(img)
+    writer.relase()
 
 
 def make_video(dataset: Dataset, save_dir: PathLike):
@@ -727,3 +754,65 @@ def get_autobrightness_vals_from_log(lines: List[str]) -> List[float]:
     autobrightness_vals = [float(l.split(" ")[-1][:-1]) for l in autobrightness_vals]
 
     return autobrightness_vals
+
+
+def get_list_of_img_paths_in_folder(folder_path: PathLike) -> List[Path]:
+    """Get a list of the filepaths of the tiffs or pngs in this folder.
+
+    The only reason we accommodate tiffs is because the original SSAF data was collected using tiffs, we have
+    since changed to saving pngs.
+
+    Parameters
+    ----------
+    folder_path: str
+        Folder containing zstack images
+    Returns
+    -------
+    List[Path]
+    """
+
+    pngs = sorted(Path(folder_path).glob("*.png"))
+    tiffs = sorted(Path(folder_path).glob("*.tiff"))
+
+    if len(pngs) == 0 and len(tiffs) > 0:
+        return tiffs
+
+    elif len(pngs) > 0 and len(tiffs) == 0:
+        return pngs
+
+    else:
+        raise ValueError(
+            f"For some reason there are both pngs and tiffs in this folder: \npngs: {pngs}\ntiffs: {tiffs}"
+        )
+
+
+def load_img(img_path: Path) -> np.ndarray:
+    """Load an image using opencv
+
+    Parameters
+    ----------
+    img_path: Path
+
+    Returns
+    -------
+    np.ndarray
+    """
+    return cv2.imread(str(img_path), 0)
+
+
+def load_imgs(img_paths: List[Path]) -> List[np.ndarray]:
+    """Multiprocess load and return images
+
+    Parameters
+    ----------
+    img_paths: List[Path]
+        List of image paths to load
+
+    Returns
+    -------
+    List[np.ndarray]
+    """
+
+    with mp.Pool() as pool:
+        imgs = list(tqdm(pool.imap(load_img, img_paths), total=len(img_paths)))
+    return imgs
