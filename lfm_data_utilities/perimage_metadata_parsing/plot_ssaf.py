@@ -66,7 +66,7 @@ def run(file_dir, txtfile_dir=None):
     if txtfile_dir is not None:
         plt.title(f"{basename}: SSAF measured every {throttle} frames (RMS = {get_rms(txt_data)})")
     else:
-        plt.title(f"{basename}: SSAF measured every {throttle} frames")
+        plt.title(f"{basename}: SSAF measured every {throttle} frames (RMS = {get_rms(raw)})")
 
     # Display
     plt.legend()
