@@ -19,7 +19,7 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    path_to_runset = sys.argv[1]
+    path_to_runset = Path(sys.argv[1])
     path_to_save = Path(sys.argv[2])
     folders = [f for f in path_to_runset.glob("*/") if f.name[0] != "."]
 

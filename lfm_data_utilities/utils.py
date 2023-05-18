@@ -107,7 +107,7 @@ def make_video_from_pngs(folder_path: PathLike, save_dir: PathLike, framerate=30
 
     imgs = load_imgs_threaded(get_list_of_img_paths_in_folder(folder_path))
     height, width = imgs[0].shape
-    output_path = Path(save_dir) / Path(folder_path.stem) + ".mp4"
+    output_path = Path(save_dir) / Path(folder_path.stem + ".mp4")
 
     writer = cv2.VideoWriter(
         f"{output_path}",
