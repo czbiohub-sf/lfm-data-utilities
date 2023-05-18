@@ -1,4 +1,6 @@
+import sys
 import random
+import termios
 import argparse
 import numpy as np
 import multiprocessing as mp
@@ -130,6 +132,14 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 
         plt.show()
 
+        try:
+            termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+        except Exception as e:
+            raise NotImplementedError(
+                "most likely, you are running Windows, which we do not support "
+                "(and also our software isn't compatible with Windows)"
+            ) from e
+
         input_ = input(
             "Is this peak position correct? ('y' for yes, 'n' for no, and just press enter for more images): "
         )
@@ -144,7 +154,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
                     )
                     shift = int(usr_input)
                     break
-                except TypeError:
+                except (TypeError, ValueError):
                     print(f"{usr_input} doesn't seem to be an integer; try again")
 
             predicted_peak += shift
@@ -203,8 +213,9 @@ if __name__ == "__main__":
     )
 
     procs = []
-    for folder in folders:
+    for i, folder in enumerate(folders, start=1):
         try:
+            print(f"folder {i} / {len(folders)}")
             img_paths, save_loc, rel_pos = process_folder(
                 folder, args.save_loc, args.focus_graph_loc
             )
