@@ -12,7 +12,7 @@ from functools import partial
 from lfm_data_utilities.ssaf_training_data import utils
 
 os.environ["MPLBACKEND"] = "Agg"
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> None:
@@ -52,25 +52,54 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         save_loc=focus_graph_loc,
         folder_name=folder_path.stem,
     )
+
+    n_rows = 4
+    n_cols = 3
+
+    predicted_peak = peak_motor_pos
     while True:
-        plt.figure(figsize=(10, 7))
-        plt.plot(
+
+        fig = plt.figure(figsize=(20, 14))
+        gs = fig.add_gridspec( n_cols, n_rows)
+        ax1 = fig.add_subplot(gs[0, :])
+        ax1.plot(
             motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
         )
-        plt.plot(motor_pos_local_vicinity, curve, label="Curve fit")
+        ax1.plot(motor_pos_local_vicinity, curve, label="Curve fit")
         # vertical line at peak motor pos too
-        plt.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
-        plt.plot(
+        ax1.axvline(peak_motor_pos, color="k", linestyle="--", label="Peak position")
+        ax1.plot(
             peak_motor_pos,
             np.max(curve),
             "*",
             label=f"Max@{peak_motor_pos}",
         )
 
-        plt.title(f"{folder_path.stem}")
-        plt.xlabel("Motor position (steps)")
-        plt.ylabel("Focus metric (dimensionless)")
-        plt.legend()
+        ax1.set_title(f"{folder_path.stem}")
+        ax1.set_xlabel("Motor position (steps)")
+        ax1.set_ylabel("Focus metric (dimensionless)")
+        ax1.legend()
+
+        ax2 = fig.add_subplot(fig.add_subplot(gs[1, 0]))
+        ax2.imshow(imgs[predicted_peak], cmap="gray")
+        ax2.set_title("peak img")
+        ax2.axis("off")
+
+        ax3 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
+        ax3.imshow(imgs[predicted_peak-1], cmap="gray")
+        ax3.set_title("peak - 1")
+        ax3.axis("off")
+
+        ax4 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
+        ax4.imshow(imgs[predicted_peak+1], cmap="gray")
+        ax4.set_title("peak + 1")
+        ax4.axis("off")
+
+        ax5 = fig.add_subplot(fig.add_subplot(gs[2, 1]))
+        ax5.imshow(imgs[predicted_peak+2], cmap="gray")
+        ax5.set_title("peak + 2")
+        ax5.axis("off")
+
         plt.show()
 
         input_ = input("Is this peak position correct? (y/n): ")
