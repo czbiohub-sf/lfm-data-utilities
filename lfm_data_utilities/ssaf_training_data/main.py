@@ -78,14 +78,17 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
             motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
         )
         ax0.plot(motor_pos_local_vicinity, curve, label="Curve fit")
-        ax0.axvline(
-            peak_focus_motor_position, color="k", linestyle="--", label="Peak position"
-        )
         ax0.plot(
             peak_focus_motor_position,
             np.max(curve),
             "*",
             label=f"Max@{peak_focus_motor_position}",
+        )
+        ax0.axvline(
+            motor_pos_nodup[predicted_peak],
+            color="k",
+            linestyle="--",
+            label="Peak position"
         )
 
         ax0.set_title(f"{folder_path.stem}")
@@ -138,9 +141,6 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
         ax8.set_title("peak + 7")
         ax8.axis("off")
 
-        # set tight plot
-        fig.tight_layout()
-
         plt.show()
 
         input_ = input("Is this peak position correct? (y/n): ")
@@ -150,7 +150,9 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path) -> 
             shift = int(
                 input("enter the number of steps to shift the peak position by: ")
             )
-            peak_focus_motor_position += shift
+            predicted_peak += shift
+
+    peak_focus_motor_position = motor_pos_nodup[predicted_peak]
 
     plt.savefig(f"{focus_graph_loc / folder_path.stem}.png")
 
