@@ -38,7 +38,7 @@ def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
 
     for path, img in zip(img_paths, imgs):
         filename = path.name
-        img = cv2.putText(img, filename, bottomLeftOrigin=(height, 0))
+        img = cv2.putText(img, filename, org=(height, 0))
         writer.write(img)
     writer.release()
 
