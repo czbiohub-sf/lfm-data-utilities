@@ -142,7 +142,6 @@ if __name__ == "__main__":
     for el in tqdm(max_pq, desc="max pq plotting"):
         loss, pred, label, img, path = el
         # fix -los setting for max heap
-        loss = -loss
         plt.imshow(img[0, ...].numpy(), cmap="gray")
         plt.title(
             f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
@@ -158,6 +157,7 @@ if __name__ == "__main__":
     ii = 0
     for el in tqdm(min_pq, desc="min pq plotting"):
         loss, pred, label, img, path = el
+        loss = -loss
         plt.imshow(img[0, ...].numpy(), cmap="gray")
         plt.title(
             f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
