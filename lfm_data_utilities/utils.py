@@ -1,5 +1,4 @@
 import traceback
-import numpy as np
 import multiprocessing as mp
 import time
 import git

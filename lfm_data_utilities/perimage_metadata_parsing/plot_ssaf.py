@@ -24,10 +24,10 @@ def run(file_dir, txtfile_dir=None, output=None):
         adjusted = data["focus_adjustment"].to_numpy(na_value=0).astype(bool)
 
         filtered_available = True
-        err_label = "Raw error"
+        # err_label = "Raw error"
     except KeyError:
         filtered_available = False
-        err_label = "Batched error"
+        # err_label = "Batched error"
     if txtfile_dir is not None:
         txt_data = load_txtfile(txtfile_dir)
 

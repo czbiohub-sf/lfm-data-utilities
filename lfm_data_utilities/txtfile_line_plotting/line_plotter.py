@@ -2,7 +2,6 @@ import os
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from lfm_data_utilities.utils import load_txtfile, get_rms
 

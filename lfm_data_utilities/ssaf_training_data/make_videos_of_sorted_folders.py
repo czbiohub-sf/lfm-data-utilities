@@ -57,7 +57,7 @@ if __name__ == "__main__":
             f"usage: {sys.argv[0]} <path of folder (or folder of folders)> <path to save videos (note: folder will be created if it doesn't exist already)>"
         )
         print(
-            f"Example: python3 make_videos_of_sorted_folders.py dir_containing_folders_of_images/ save_folder/"
+            "Example: python3 make_videos_of_sorted_folders.py dir_containing_folders_of_images/ save_folder/"
         )
         sys.exit(1)
 
