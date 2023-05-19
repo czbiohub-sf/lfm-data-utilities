@@ -1,0 +1,6 @@
+dataset_split_fractions:
+  train: 1
+  test: 0
+  val: 0
+dataset_paths:
+  AVT_1104: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/sorted-human-verified/AVT_04112022/training_data

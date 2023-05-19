@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from lfm_data_utilities.utils import load_txtfile, get_rms
 
-def run(file_dir, txtfile_dir=None):
+FONTSIZE = 20
+
+def run(file_dir, txtfile_dir=None, output=None):
     # Get folder name
     basename = pathlib.Path(file_dir).parent.stem
 
@@ -44,6 +47,7 @@ def run(file_dir, txtfile_dir=None):
     throttle = frame_index[1][0] - frame_index[0][0]
 
     # Plot
+    plt.figure(figsize=(16, 12))
     if txtfile_dir is not None:
         plt.plot(txt_data,  label="Post-processed", alpha=0.5, color="gold")
 
@@ -59,12 +63,25 @@ def run(file_dir, txtfile_dir=None):
         )
 
     # Labels
-    plt.xlabel(f"Measurement (every {throttle} frames)")
-    plt.ylabel("SSAF error [motor steps]")
-    plt.title(f"{basename}: SSAF measured every {throttle} frames")
+    plt.xlabel(f"Measurement (every {throttle} frames)", fontsize=FONTSIZE)
+    plt.ylabel("SSAF error [motor steps]", fontsize=FONTSIZE)
+    plt.xticks(fontsize=FONTSIZE)
+    plt.yticks(fontsize=FONTSIZE)
+    if txtfile_dir is not None:
+        plt.title(
+            f"{basename}: SSAF measured every {throttle} frames (RMS = {get_rms(txt_data)})",
+            fontsize=FONTSIZE,
+        )
+    else:
+        plt.title(
+            f"{basename}: SSAF measured every {throttle} frames (RMS = {get_rms(raw)})",
+            fontsize=FONTSIZE,
+        )
 
     # Display
-    plt.legend()
+    plt.legend(fontsize=FONTSIZE)
+    if args.output is not None:
+        plt.savefig(output)
     plt.show()
 
 
@@ -78,6 +95,9 @@ if __name__ == "__main__":
         "--txt",
         help="Path to txtfile with SSAF data for every frame",
     )
+    argparser.add_argument(
+        "-o", "--output", help="Path to output file"
+    )
 
     args = argparser.parse_args()
-    run(args.file, txtfile_dir=args.txt)
+    run(args.file, txtfile_dir=args.txt, output=args.output)

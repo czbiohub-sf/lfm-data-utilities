@@ -1,6 +1,9 @@
 #! /usr/bin/env python3
 
+from __future__ import annotations
+
 import os
+import heapq
 import argparse
 
 from pathlib import Path
@@ -11,9 +14,11 @@ import torch
 import autofocus as af
 
 from tqdm import tqdm
+from typing import Tuple, List
 from ruamel.yaml import YAML
 from collections import defaultdict
 
+from filepath_dataloader import get_dataloader
 from lfm_data_utilities import utils
 
 
@@ -62,6 +67,13 @@ if __name__ == "__main__":
         default="./ssaf_output",
         help="path to output directory (default ./ssaf_output)",
     )
+    parser.add_argument(
+        "-N",
+        "--N",
+        type=int,
+        default=32,
+        help="number of best and worst images (by loss) that will be saved (default 32)",
+    )
 
     args = parser.parse_args()
 
@@ -79,7 +91,7 @@ if __name__ == "__main__":
     net.to(device)
     net = torch.jit.script(net)
 
-    dataloaders = af.dataloader.get_dataloader(
+    dataloaders = get_dataloader(
         args.dataset_description_file,
         img_size=(300, 400),
         batch_size=32,
@@ -87,12 +99,37 @@ if __name__ == "__main__":
         augmentation_split_fraction_name="",
     )
 
+    loss_fn = torch.nn.MSELoss(reduction="none")
+    loss_fn.to(device)
+
+    # Could make these `heapq` heaps for performance, but then we have to implement the maxsize
+    min_pq: List[Tuple[float, float, float, torch.Tensor, str]] = []
+    max_pq: List[Tuple[float, float, float, torch.Tensor, str]] = []
+    all_losses: List[float] = []
+
     results: DefaultDict[int, list] = defaultdict(list)
     with torch.no_grad():
-        for imgs, labels in tqdm(dataloaders["eval"]):
+        for imgs, labels, paths in tqdm(dataloaders["eval"]):
             imgs = imgs.to(device, dtype=torch.float, non_blocking=True)
             labels = labels.to(device, dtype=torch.float, non_blocking=True)
             preds = net(imgs).view(-1)
+            loss = loss_fn(preds, labels)
+
+            preds = preds.cpu()
+            labels = labels.cpu()
+            imgs = imgs.cpu()
+            for l, pred, label, img, path in zip(loss, preds, labels, imgs, paths):
+                all_losses.append(l.item())
+
+                if len(min_pq) < args.N:
+                    heapq.heappush(min_pq, (-l, pred, label, img, path))
+                else:
+                    heapq.heapreplace(min_pq, (-l, pred, label, img, path))
+
+                if len(max_pq) < args.N:
+                    heapq.heappush(max_pq, (l, pred, label, img, path))
+                else:
+                    heapq.heapreplace(max_pq, (l, pred, label, img, path))
 
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
@@ -100,6 +137,45 @@ if __name__ == "__main__":
     # plot results
     import matplotlib.pyplot as plt
     import numpy as np
+
+    ii = 0
+    for el in tqdm(max_pq, desc="max pq plotting"):
+        loss, pred, label, img, path = el
+        # fix -los setting for max heap
+        plt.imshow(img[0, ...].numpy(), cmap="gray")
+        plt.title(
+            f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
+            fontsize=7,
+        )
+        plt.savefig(
+            f"{(args.output_dir / ('max_' + str(ii))).with_suffix('.png')}", dpi=150
+        )
+        plt.clf()
+        plt.cla()
+        ii += 1
+
+    ii = 0
+    for el in tqdm(min_pq, desc="min pq plotting"):
+        loss, pred, label, img, path = el
+        loss = -loss
+        plt.imshow(img[0, ...].numpy(), cmap="gray")
+        plt.title(
+            f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
+            fontsize=7,
+        )
+        plt.savefig(
+            f"{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=150
+        )
+        plt.clf()
+        plt.cla()
+        ii += 1
+
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(16, 12))
+    ax.hist(all_losses, bins=50, log=True)
+    ax.set_title("loss histogram")
+    ax.set_xlabel("loss")
+    ax.set_ylabel("Frequency")
+    plt.savefig(f"{args.output_dir / 'loss_hist.png'}", dpi=150)
 
     write_metadata(
         args.output_dir,
@@ -114,7 +190,6 @@ if __name__ == "__main__":
 
     mini, maxi = min(results.keys()), max(results.keys())
     with utils.timing_context_manager("plotting"):
-        plt.tight_layout()
         fig, (whole_range_ax, tight_range_ax) = plt.subplots(1, 2, figsize=(16, 12))
         whole_range_ax.set_facecolor((0.95, 0.95, 0.95))
         fig.suptitle(
@@ -165,7 +240,7 @@ if __name__ == "__main__":
         tight_range_ax.set_xlabel("label")
         tight_range_ax.set_ylabel("autofocus output")
 
-        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=300)
+        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=150)
 
     # it takes maybe 15 seconds to shut down dataloader workers,
     # so just let the user know
