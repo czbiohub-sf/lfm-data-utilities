@@ -28,9 +28,6 @@ def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
     height, width = imgs[0].shape
     output_path = Path(save_dir) / Path(folder_path.stem + ".mp4")
 
-    if not os.path.isdir(output_path):
-        os.mkdir(output_path)
-
     writer = cv2.VideoWriter(
         f"{output_path}",
         fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
@@ -56,6 +53,9 @@ if __name__ == "__main__":
     path_to_runset = Path(sys.argv[1])
     path_to_save = Path(sys.argv[2])
     folders = [f for f in path_to_runset.glob("*/") if f.name[0] != "."]
+
+    if not os.path.isdir(path_to_save):
+        os.mkdir(path_to_save)
 
     print("Generating videos...")
     with mp.Pool() as pool:
