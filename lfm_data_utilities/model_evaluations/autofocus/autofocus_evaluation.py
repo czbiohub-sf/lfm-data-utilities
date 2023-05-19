@@ -122,14 +122,14 @@ if __name__ == "__main__":
                 all_losses.append(l.item())
 
                 if len(min_pq) < args.N:
-                    heapq.heappush(min_pq, (l, pred, label, img, path))
+                    heapq.heappush(min_pq, (-l, pred, label, img, path))
                 else:
-                    heapq.heapreplace(min_pq, (l, pred, label, img, path))
+                    heapq.heapreplace(min_pq, (-l, pred, label, img, path))
 
                 if len(max_pq) < args.N:
-                    heapq.heappush(max_pq, (-l, pred, label, img, path))
+                    heapq.heappush(max_pq, (l, pred, label, img, path))
                 else:
-                    heapq.heapreplace(max_pq, (-l, pred, label, img, path))
+                    heapq.heapreplace(max_pq, (l, pred, label, img, path))
 
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
