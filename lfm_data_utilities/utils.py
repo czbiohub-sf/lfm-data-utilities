@@ -96,32 +96,6 @@ def timing_context_manager(
         )
 
 
-def make_video_from_pngs(folder_path: PathLike, save_dir: PathLike, framerate=30):
-    """Generate a video (mp4) from a folder of pngs.
-
-    Parameters
-    ----------
-    folder_path: Path of folder of pngs
-    save_dir: Path to save video
-    """
-
-    imgs = load_imgs_threaded(get_list_of_img_paths_in_folder(folder_path))
-    height, width = imgs[0].shape
-    output_path = Path(save_dir) / Path(folder_path.stem + ".mp4")
-
-    writer = cv2.VideoWriter(
-        f"{output_path}",
-        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
-        fps=framerate,
-        frameSize=(width, height),
-        isColor=False,
-    )
-
-    for img in imgs:
-        writer.write(img)
-    writer.release()
-
-
 def make_video(dataset: Dataset, save_dir: PathLike):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata

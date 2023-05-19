@@ -8,8 +8,38 @@ import multiprocessing as mp
 from pathlib import Path
 
 from tqdm import tqdm
+import cv2
 
-from lfm_data_utilities.utils import make_video_from_pngs
+from lfm_data_utilities.utils import get_list_of_img_paths_in_folder, load_imgs_threaded
+
+
+def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
+    """Generate a video (mp4) from a folder of pngs.
+
+    Parameters
+    ----------
+    folder_path: Path of folder of pngs
+    save_dir: Path to save video
+    """
+
+    img_paths = get_list_of_img_paths_in_folder(folder_path)
+    imgs = load_imgs_threaded(img_paths)
+    height, width = imgs[0].shape
+    output_path = Path(save_dir) / Path(folder_path.stem + ".mp4")
+
+    writer = cv2.VideoWriter(
+        f"{output_path}",
+        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
+        fps=framerate,
+        frameSize=(width, height),
+        isColor=False,
+    )
+
+    for path, img in zip(img_paths, imgs):
+        filename = path.name
+        img = cv2.putText(img, filename, bottomLeftOrigin=(height, 0))
+        writer.write(img)
+    writer.release()
 
 
 if __name__ == "__main__":
