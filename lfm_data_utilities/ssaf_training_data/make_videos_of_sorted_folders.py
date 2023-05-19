@@ -39,7 +39,13 @@ def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
     for path, img in zip(img_paths, imgs):
         filename = path.name
         img = cv2.putText(
-            img, filename, org=(height, 0), fontFace=cv2.FONT_HERSHEY_SIMPLEX
+            img,
+            filename,
+            org=(height, 0),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=1,
+            color=(0, 0, 0),
+            thickness=2,
         )
         writer.write(img)
     writer.release()
