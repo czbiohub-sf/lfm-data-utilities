@@ -50,6 +50,7 @@ def extractor(folder):
 
     return datasets, files, legend
 
+
 def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""
     datasets, names, legend = extractor(folder)

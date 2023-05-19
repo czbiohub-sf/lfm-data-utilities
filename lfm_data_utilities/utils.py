@@ -96,6 +96,7 @@ def timing_context_manager(
             f"{str(description) + ' ' if post_print else ''}{end_time - start_time:.{precision}f} s"
         )
 
+
 def get_rms(data: List[float]):
     """Compute root mean square (rms)"""
     ms = 0
@@ -105,6 +106,7 @@ def get_rms(data: List[float]):
         ms += val**2
 
     return np.sqrt(ms / N)
+
 
 def make_video(dataset: Dataset, save_dir: PathLike):
     zf = dataset.zarr_file
