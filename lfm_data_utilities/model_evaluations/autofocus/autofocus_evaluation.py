@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-import queue
+import heapq
 import argparse
 
 from pathlib import Path
@@ -68,10 +68,11 @@ if __name__ == "__main__":
         help="path to output directory (default ./ssaf_output)",
     )
     parser.add_argument(
+        "-N",
         "--N",
         type=int,
         default=32,
-        help="number of best and worst images (by loss) that will be saved (default 32)"
+        help="number of best and worst images (by loss) that will be saved (default 32)",
     )
 
     args = parser.parse_args()
@@ -101,12 +102,9 @@ if __name__ == "__main__":
     loss_fn = torch.nn.MSELoss(reduction="none")
     loss_fn.to(device)
 
-    min_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
-        maxsize=args.N
-    )
-    max_pq: queue.PriorityQueue[Tuple[float, float, float, torch.Tensor, str]] = queue.PriorityQueue(
-        maxsize=args.N
-    )
+    # Could make these `heapq` heaps for performance, but then we have to implement the maxsize
+    min_pq: List[Tuple[float, float, float, torch.Tensor, str]] = []
+    max_pq: List[Tuple[float, float, float, torch.Tensor, str]] = []
     all_losses: List[float] = []
 
     results: DefaultDict[int, list] = defaultdict(list)
@@ -117,23 +115,21 @@ if __name__ == "__main__":
             preds = net(imgs).view(-1)
             loss = loss_fn(preds, labels)
 
+            preds = preds.cpu()
+            labels = labels.cpu()
+            imgs = imgs.cpu()
             for l, pred, label, img, path in zip(loss, preds, labels, imgs, paths):
                 all_losses.append(l.item())
-                try:
-                    min_pq.put_nowait((-l, pred, label, img.cpu(), path))
-                    max_pq.put_nowait((l, pred, label, img.cpu(), path))
-                except queue.Full:
-                    lpli = max_pq.get()
-                    if lpli[0] < l:
-                        max_pq.put((l, pred, label, img.cpu(), path))
-                    else:
-                        max_pq.put(lpli)
 
-                    lpli = min_pq.get()
-                    if lpli[0] < l:
-                        min_pq.put((l, pred, label, img.cpu(), path))
-                    else:
-                        min_pq.put(lpli)
+                if len(min_pq) < args.N:
+                    heapq.heappush(min_pq, (l, pred, label, img, path))
+                else:
+                    heapq.heapreplace(min_pq, (l, pred, label, img, path))
+
+                if len(max_pq) < args.N:
+                    heapq.heappush(max_pq, (-l, pred, label, img, path))
+                else:
+                    heapq.heapreplace(max_pq, (-l, pred, label, img, path))
 
             for i, label in enumerate(labels):
                 results[label.item()].append(preds[i].item())
@@ -143,33 +139,43 @@ if __name__ == "__main__":
     import numpy as np
 
     ii = 0
-    while not max_pq.empty():
-        loss, pred, label, img, path = max_pq.get()
+    for el in tqdm(max_pq, desc="max pq plotting"):
+        loss, pred, label, img, path = el
+        # fix -los setting for max heap
+        loss = -loss
         plt.imshow(img[0, ...].numpy(), cmap="gray")
         plt.title(
             f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
-            fontsize=7
+            fontsize=7,
         )
-        plt.savefig(f"{(args.output_dir / ('max_' + str(ii))).with_suffix('.png')}", dpi=300)
+        plt.savefig(
+            f"{(args.output_dir / ('max_' + str(ii))).with_suffix('.png')}", dpi=150
+        )
+        plt.clf()
+        plt.cla()
         ii += 1
 
     ii = 0
-    while not min_pq.empty():
-        loss, pred, label, img, path = min_pq.get()
+    for el in tqdm(min_pq, desc="min pq plotting"):
+        loss, pred, label, img, path = el
         plt.imshow(img[0, ...].numpy(), cmap="gray")
         plt.title(
             f"loss {loss.item():.3f}, pred {pred.item():.3f}, lbl {label.item():.3f}\n{'/'.join(Path(path).parts[-5:])}",
-            fontsize=7
+            fontsize=7,
         )
-        plt.savefig(f"{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=300)
+        plt.savefig(
+            f"{(args.output_dir / ('min_' + str(ii))).with_suffix('.png')}", dpi=150
+        )
+        plt.clf()
+        plt.cla()
         ii += 1
 
-    fig,ax = plt.subplots(constrained_layout=True, figsize=(16, 12))
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(16, 12))
     ax.hist(all_losses, bins=50, log=True)
     ax.set_title("loss histogram")
     ax.set_xlabel("loss")
     ax.set_ylabel("Frequency")
-    plt.savefig(f"{args.output_dir / 'loss_hist.png'}", dpi=300)
+    plt.savefig(f"{args.output_dir / 'loss_hist.png'}", dpi=150)
 
     write_metadata(
         args.output_dir,
@@ -234,7 +240,7 @@ if __name__ == "__main__":
         tight_range_ax.set_xlabel("label")
         tight_range_ax.set_ylabel("autofocus output")
 
-        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=300)
+        fig.savefig(f"{args.output_dir / 'autofocus_output.png'}", dpi=150)
 
     # it takes maybe 15 seconds to shut down dataloader workers,
     # so just let the user know
