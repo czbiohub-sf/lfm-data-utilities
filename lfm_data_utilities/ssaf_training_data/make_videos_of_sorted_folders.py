@@ -54,13 +54,19 @@ def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print(
-            f"usage: {sys.argv[0]} <path folders> <path to save videos (note: folder will be created if it doesn't exist already)>"
+            f"usage: {sys.argv[0]} <path of folder (or folder of folders)> <path to save videos (note: folder will be created if it doesn't exist already)>"
+        )
+        print(
+            f"Example: python3 make_videos_of_sorted_folders.py dir_containing_folders_of_images/ save_folder/"
         )
         sys.exit(1)
 
     path_to_runset = Path(sys.argv[1])
     path_to_save = Path(sys.argv[2])
-    folders = [f for f in path_to_runset.glob("*/") if f.name[0] != "."]
+    folders = [f for f in path_to_runset.glob("*/") if f.name[0] != "." and f.is_dir()]
+    print(folders)
+    if len(folders) == 0:
+        folders = [path_to_runset]
 
     if not os.path.isdir(path_to_save):
         os.mkdir(path_to_save)
