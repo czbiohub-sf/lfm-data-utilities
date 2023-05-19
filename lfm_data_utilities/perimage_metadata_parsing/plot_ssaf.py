@@ -9,6 +9,7 @@ from lfm_data_utilities.utils import load_txtfile, get_rms
 
 FONTSIZE = 20
 
+
 def run(file_dir, txtfile_dir=None, output=None):
     # Get folder name
     basename = pathlib.Path(file_dir).parent.stem
@@ -23,10 +24,10 @@ def run(file_dir, txtfile_dir=None, output=None):
         adjusted = data["focus_adjustment"].to_numpy(na_value=0).astype(bool)
 
         filtered_available = True
-        err_label = "Raw error"
+        # err_label = "Raw error"
     except KeyError:
         filtered_available = False
-        err_label = "Batched error"
+        # err_label = "Batched error"
     if txtfile_dir is not None:
         txt_data = load_txtfile(txtfile_dir)
 
@@ -41,7 +42,7 @@ def run(file_dir, txtfile_dir=None, output=None):
     # Get frame index
     frame_index = np.transpose(np.nonzero(non_nan))
     if filtered_available:
-        adjusted_index = np.transpose(np.nonzero(adjusted)) 
+        adjusted_index = np.transpose(np.nonzero(adjusted))
 
     # Get throttle
     throttle = frame_index[1][0] - frame_index[0][0]
@@ -49,12 +50,14 @@ def run(file_dir, txtfile_dir=None, output=None):
     # Plot
     plt.figure(figsize=(16, 12))
     if txtfile_dir is not None:
-        plt.plot(txt_data,  label="Post-processed", alpha=0.5, color="gold")
+        plt.plot(txt_data, label="Post-processed", alpha=0.5, color="gold")
 
     plt.plot(frame_index, raw, label="Raw error", alpha=0.5, color="brown")
 
     if filtered_available:
-        plt.plot(frame_index, filtered, label="Filtered error", alpha=0.5, color="green")
+        plt.plot(
+            frame_index, filtered, label="Filtered error", alpha=0.5, color="green"
+        )
         plt.scatter(
             adjusted_index,
             filtered_w_nan[adjusted],
@@ -95,9 +98,7 @@ if __name__ == "__main__":
         "--txt",
         help="Path to txtfile with SSAF data for every frame",
     )
-    argparser.add_argument(
-        "-o", "--output", help="Path to output file"
-    )
+    argparser.add_argument("-o", "--output", help="Path to output file")
 
     args = argparser.parse_args()
     run(args.file, txtfile_dir=args.txt, output=args.output)

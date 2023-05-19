@@ -2,7 +2,6 @@ import os
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from lfm_data_utilities.utils import load_txtfile, get_rms
 
@@ -49,6 +48,7 @@ def extractor(folder):
     datasets = [load_txtfile(os.path.join(folder, file)) for file in files]
 
     return datasets, files, legend
+
 
 def run(folder, title, ylabel, output=None):
     """Run all the steps to extract and plot the data"""

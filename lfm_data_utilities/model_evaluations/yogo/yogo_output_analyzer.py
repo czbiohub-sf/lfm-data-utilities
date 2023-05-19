@@ -23,13 +23,7 @@ def set_universal_fig_settings_(fig, img_shape, prediction_shape, scale=0.8):
         xaxis_visible=False,
         xaxis_showticklabels=False,
         coloraxis_showscale=False,
-        width=int(
-            (
-                prediction_shape[1]
-                * (img_shape[0] / prediction_shape[0])
-            )
-            * scale
-        ),
+        width=int((prediction_shape[1] * (img_shape[0] / prediction_shape[0])) * scale),
         height=int(772 * scale),
         margin=dict(l=20, r=20, t=20, b=20),
     )
