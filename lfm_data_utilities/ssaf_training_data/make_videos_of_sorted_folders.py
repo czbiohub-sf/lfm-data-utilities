@@ -3,6 +3,7 @@ Point to some training data folders (i.e a folder which contains folders of ...,
 This tool will create a video for each of those folders that you can then scrub through to try to spot outliers.
 """
 
+import os
 import sys
 import multiprocessing as mp
 from pathlib import Path
@@ -26,6 +27,9 @@ def make_video_from_pngs(folder_path: Path, save_dir: Path, framerate=30):
     imgs = load_imgs_threaded(img_paths)
     height, width = imgs[0].shape
     output_path = Path(save_dir) / Path(folder_path.stem + ".mp4")
+
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
 
     writer = cv2.VideoWriter(
         f"{output_path}",
