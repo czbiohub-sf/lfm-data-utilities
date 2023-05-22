@@ -42,7 +42,7 @@ def save_slices(
     save_loc: Path,
 ) -> None:
     for segment, slice in zip(segments, slices):
-        cell_type = segment.classification
+        cell_type = int(segment.classification)
         tl, br = segment.top_left, segment.bottom_right
 
         if cell_type in ALLOWABLE_LABELS:
