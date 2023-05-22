@@ -17,14 +17,10 @@ import cv2
 import zarr
 import numpy as np
 
+from lfm_data_utilities.malaria_labelling.visualize_boxes import find_label_file
+
 
 PathLike = Union[str, Path]
-
-
-@dataclass
-class ImageAndLabelPathPair:
-    img_path: Path
-    lbl_path: Path
 
 
 @dataclass
@@ -63,6 +59,25 @@ class Dataset:
                 self.successfully_loaded = False
         else:
             self.successfully_loaded = True
+
+
+@dataclass
+class ImageAndLabelPathPair:
+    img_path: Path
+    lbl_path: Path
+
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+
+@dataclass
+class Segment:
+    classification: int
+    top_left: Point
+    bottom_right: Point
 
 
 def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
@@ -235,16 +250,6 @@ def get_all_dataset_paths(
                 print(f"missing files in {per_img.parent}: {missing_files}")
 
     return dataset_paths
-
-
-def find_label_file(label_dir: Path, image_path: Path) -> Path:
-    extensions = (".txt", ".csv", ".tsv", "")
-    for ext in extensions:
-        label_path = label_dir / image_path.with_suffix(ext).name
-        if label_path.exists():
-            return label_path
-
-    raise FileNotFoundError(f"label file not found for {str(image_path)}")
 
 
 def get_img_and_label_paths(
@@ -876,3 +881,25 @@ def load_imgs_threaded(img_paths: List[Path]) -> List[np.ndarray]:
     with ThreadPoolExecutor() as executor:
         images = executor.map(load_img, img_paths)
     return list(images)
+
+
+def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Segment]:
+    with open(lbl_path, "r") as f:
+        lines = f.readlines()
+
+    values = [[float(x) for x in v.strip().split(" ")] for v in lines]
+
+    segments = [
+        Segment(
+            classification=i[0],
+            top_left=Point(
+                x=int(i[1] - i[3] * img_width), y=int(i[2] - i[4] * img_height)
+            ),
+            bottom_right=Point(
+                x=int(i[1] + i[3] * img_width), y=int(i[2] + i[4] * img_height)
+            ),
+        )
+        for i in values
+    ]
+
+    return segments
