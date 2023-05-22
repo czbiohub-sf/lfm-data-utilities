@@ -46,7 +46,7 @@ def save_slices(
         tl, br = segment.top_left, segment.bottom_right
         fc = segment.frame_count
 
-        if cell_type in ALLOWABLE_LABELS:
+        if cell_type in ALLOWABLE_LABELS and all(slice.shape):
             save_slice(slice, cell_type, tl, br, fc, dataset_path, save_loc)
 
 
