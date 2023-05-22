@@ -23,7 +23,7 @@ from lfm_data_utilities.utils import (
 ALLOWABLE_LABELS = [0, 1, 2, 3, 4, 5]
 
 
-def get_cell_thumbnails_from_dataset(dataset: Dataset) -> None:
+def get_cell_thumbnails_from_dataset(dataset: Dataset, save_loc: Path) -> None:
     if dataset.img_and_label_paths is None:
         return
 
@@ -32,7 +32,7 @@ def get_cell_thumbnails_from_dataset(dataset: Dataset) -> None:
         w, h = img.shape
         segments = load_label_file(lbl_path, h, w)
         slices = get_img_slices(img, segments)
-        save_slices(segments, slices, dataset.dp.root_dir)
+        save_slices(segments, slices, dataset.dp.root_dir, save_loc)
 
 
 def save_slices(
@@ -134,4 +134,4 @@ if __name__ == "__main__":
         Path.mkdir(save_loc)
 
     for d in datasets:
-        get_cell_thumbnails_from_dataset(d)
+        get_cell_thumbnails_from_dataset(d, save_loc)
