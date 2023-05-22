@@ -17,8 +17,6 @@ import cv2
 import zarr
 import numpy as np
 
-from lfm_data_utilities.malaria_labelling.visualize_boxes import find_label_file
-
 
 PathLike = Union[str, Path]
 
@@ -250,6 +248,16 @@ def get_all_dataset_paths(
                 print(f"missing files in {per_img.parent}: {missing_files}")
 
     return dataset_paths
+
+
+def find_label_file(label_dir: Path, image_path: Path) -> Path:
+    extensions = (".txt", ".csv", ".tsv", "")
+    for ext in extensions:
+        label_path = label_dir / image_path.with_suffix(ext).name
+        if label_path.exists():
+            return label_path
+
+    raise FileNotFoundError(f"label file not found for {str(image_path)}")
 
 
 def get_img_and_label_paths(
