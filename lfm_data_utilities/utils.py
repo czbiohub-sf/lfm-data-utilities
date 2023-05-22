@@ -79,6 +79,7 @@ class Segment:
     classification: int
     top_left: Point
     bottom_right: Point
+    frame_count = int
 
 
 def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
@@ -898,6 +899,7 @@ def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Seg
     with open(lbl_path, "r") as f:
         lines = f.readlines()
 
+    frame_count = int(lbl_path.name.split("_")[1])
     values = [[float(x) for x in v.strip().split(" ")] for v in lines]
 
     segments = [
@@ -911,6 +913,7 @@ def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Seg
                 x=int((i[1] + i[3] / 2) * img_width),
                 y=int((i[2] + i[4] / 2) * img_height),
             ),
+            frame_count = frame_count
         )
         for i in values
     ]

@@ -44,9 +44,10 @@ def save_slices(
     for segment, slice in zip(segments, slices):
         cell_type = int(segment.classification)
         tl, br = segment.top_left, segment.bottom_right
+        fc = segment.frame_count
 
         if cell_type in ALLOWABLE_LABELS:
-            save_slice(slice, cell_type, tl, br, dataset_path, save_loc)
+            save_slice(slice, cell_type, tl, br, fc, dataset_path, save_loc)
 
 
 def save_slice(
@@ -54,6 +55,7 @@ def save_slice(
     type: int,
     tl: Point,
     br: Point,
+    frame_count: int,
     dataset_path: Path,
     save_loc: Path,
 ) -> None:
@@ -61,8 +63,13 @@ def save_slice(
 
     The filename of the thumbnail is in the following format. Metadata is delinated by underscores.
 
-        {cell type} _ {original dataset name} _ {top left bounding box x coordinate} _ (continued on next line)
-        {top left bounding box y coordinate) _ {bottom right bb x coordinate} _ {bottom right bb y coordinate}
+        {cell type} _
+        {original dataset name} _
+        {top left bounding box x coordinate} _
+        {frame count} _
+        {top left bounding box y coordinate) _
+        {bottom right bb x coordinate} _
+        {bottom right bb y coordinate}
 
     Parameters
     ----------
@@ -74,12 +81,16 @@ def save_slice(
         Top left of the bounding box
     br: Point
         Bottom right of the bounding box
+    frame_count: int
+        Which frame this image / set of labels is from
     dataset_path: Path
     save_loc: Path
     """
 
     ds_name = dataset_path.name
-    slice_filename = Path(f"{type}_{ds_name}_{tl.x}_{tl.y}_{br.x}_{br.y}.png")
+    slice_filename = Path(
+        f"{type}_{ds_name}_{frame_count}_{tl.x}_{tl.y}_{br.x}_{br.y}.png"
+    )
     cv2.imwrite(str(save_loc / slice_filename), slice)
 
 
