@@ -80,7 +80,7 @@ def save_slice(
 
     ds_name = dataset_path.name
     slice_filename = Path(f"{type}_{ds_name}_{tl.x}_{tl.y}_{br.x}_{br.y}.png")
-    cv2.imwrite(save_loc / slice_filename, slice)
+    cv2.imwrite(str(save_loc / slice_filename), slice)
 
 
 def get_img_slices(img: np.ndarray, segments: List[Segment]) -> List[np.ndarray]:
