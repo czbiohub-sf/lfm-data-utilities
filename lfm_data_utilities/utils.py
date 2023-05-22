@@ -22,6 +22,12 @@ PathLike = Union[str, Path]
 
 
 @dataclass
+class ImageAndLabelPathPair:
+    img_path: Path
+    lbl_path: Path
+
+
+@dataclass
 class DatasetPaths:
     zarr_path: Path
     per_img_csv_path: Path
@@ -48,6 +54,7 @@ class Dataset:
             self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
             self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
             self.experiment_metadata = load_csv(dp.experiment_csv_path)
+            self.img_and_label_paths = get_img_and_label_paths(dp.root_dir)
         except Exception as e:
             print(f"Error loading dataset {dp.zarr_path}: {e}")
             if not fail_silently:
@@ -228,6 +235,56 @@ def get_all_dataset_paths(
                 print(f"missing files in {per_img.parent}: {missing_files}")
 
     return dataset_paths
+
+
+def find_label_file(label_dir: Path, image_path: Path) -> Path:
+    extensions = (".txt", ".csv", ".tsv", "")
+    for ext in extensions:
+        label_path = label_dir / image_path.with_suffix(ext).name
+        if label_path.exists():
+            return label_path
+
+    raise FileNotFoundError(f"label file not found for {str(image_path)}")
+
+
+def get_img_and_label_paths(
+    top_level_dir: PathLike,
+) -> Optional[List[ImageAndLabelPathPair]]:
+    """Given a directory of an experiment, check to see if a folder
+    of images have been created from the zarr, and corresponding labels (for classification) and bounding boxes. If yes, return
+    the image and label filepath pairs.
+
+    Parameters
+    ----------
+    top_level_dir: PathLike
+        Top level directory path to search
+
+    Returns
+    -------
+    Optional[ List[ImageAndLabelPathPair] ]
+        A list of image and label pairs. Get the image path with x.img_path, the label path with x.lbl_path
+        May return none if either the image or label files are not present.
+    """
+
+    img_dir = Path(top_level_dir / "images")
+    label_dir = Path(top_level_dir / "labels")
+
+    img_label_path_pairs: List[ImageAndLabelPathPair] = []
+
+    if img_dir.exists() and label_dir.exists():
+        img_paths = sorted(img_dir.glob("*.png"))
+        for img_path in img_paths:
+            try:
+                lbl_path = find_label_file(label_dir, img_path)
+                img_label_path_pairs.append(ImageAndLabelPathPair(img_path, lbl_path))
+            except FileNotFoundError as e:
+                print(f"no label file: {e}")
+                print("continuing...")
+                continue
+
+        return img_label_path_pairs
+    else:
+        return None
 
 
 def get_list_of_txt_files(
