@@ -904,10 +904,12 @@ def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Seg
         Segment(
             classification=i[0],
             top_left=Point(
-                x=int(i[1] - i[3] * img_width), y=int(i[2] - i[4] * img_height)
+                x=int((i[1] - i[3]) / 2 * img_width),
+                y=int((i[2] - i[4]) / 2 * img_height),
             ),
             bottom_right=Point(
-                x=int(i[1] + i[3] * img_width), y=int(i[2] + i[4] * img_height)
+                x=int((i[1] + i[3]) / 2 * img_width),
+                y=int((i[2] + i[4]) / 2 * img_height),
             ),
         )
         for i in values
