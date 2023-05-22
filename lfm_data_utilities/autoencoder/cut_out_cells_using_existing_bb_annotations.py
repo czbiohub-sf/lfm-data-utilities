@@ -102,7 +102,7 @@ def get_img_slices(img: np.ndarray, segments: List[Segment]) -> List[np.ndarray]
         tl_x, tl_y = s.top_left.x, s.top_left.y
         br_x, br_y = s.bottom_right.x, s.bottom_right.y
 
-        slices.append(img[tl_x:br_x, tl_y:br_y])
+        slices.append(img[tl_y:br_y, tl_x:br_x])
 
     return slices
 
