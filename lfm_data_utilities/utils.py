@@ -64,6 +64,9 @@ class ImageAndLabelPathPair:
     img_path: Path
     lbl_path: Path
 
+    def __iter__(self):
+        return iter((self.img_path, self.lbl_path))
+
 
 @dataclass
 class Point:
