@@ -79,7 +79,7 @@ class Segment:
     classification: int
     top_left: Point
     bottom_right: Point
-    frame_count = int
+    frame_count: int
 
 
 def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
