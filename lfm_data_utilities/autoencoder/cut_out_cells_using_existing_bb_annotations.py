@@ -5,6 +5,7 @@ crop out cells and put them into a folder.
 
 from typing import List
 from pathlib import Path
+import os
 
 import numpy as np
 import cv2
@@ -126,7 +127,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     dataset_paths = get_all_dataset_paths(args.path_to_experiments)
+    save_loc = args.save_loc_path
     datasets = [Dataset(dp) for dp in dataset_paths]
+
+    if not Path(save_loc).exists():
+        Path.mkdir(save_loc)
 
     for d in datasets:
         get_cell_thumbnails_from_dataset(d)
