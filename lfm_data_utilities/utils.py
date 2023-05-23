@@ -264,7 +264,7 @@ def find_label_file(label_dir: Path, image_path: Path) -> Path:
     raise FileNotFoundError(f"label file not found for {str(image_path)}")
 
 
-def get_img_and_label_paths(
+def get_img_and_label_pairs(
     img_dir: PathLike, label_dir: PathLike
 ) -> Optional[List[ImageAndLabelPathPair]]:
     """Given a directory of an experiment, check to see if a folder
@@ -900,7 +900,7 @@ def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Seg
 
     segments = [
         Segment(
-            classification=i[0],
+            classification=int(i[0]),
             top_left=Point(
                 x=int((i[1] - i[3] / 2) * img_width),
                 y=int((i[2] - i[4] / 2) * img_height),
