@@ -43,7 +43,7 @@ def get_cell_thumbnails_from_dataset(
 
     for img_path, lbl_path in img_label_pair:
         img = load_img(img_path)
-        w, h = img.shape
+        h, w = img.shape
         segments = load_label_file(lbl_path, h, w)
         slices = get_img_slices(img, segments)
         save_slices(segments, slices, img_path.parent.parent, save_loc)
