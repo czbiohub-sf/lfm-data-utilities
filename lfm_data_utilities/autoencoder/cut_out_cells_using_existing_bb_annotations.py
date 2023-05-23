@@ -205,13 +205,13 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    img_paths = list(Path(args.path_to_experiments).rglob("images/"))
-    dataset_paths = [x.parent for x in img_paths]
     search_dir = Path(args.label_path)
     save_loc = args.save_loc_path
 
     if not Path(save_loc).exists():
         Path.mkdir(save_loc)
 
-    for dp in dataset_paths:
+    img_gen = Path(args.path_to_experiments).rglob("images/")
+    for img_path in img_gen:
+        dp = img_path.parent
         save_thumbnails_from_dataset(dp, search_dir, save_loc)
