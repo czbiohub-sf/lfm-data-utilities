@@ -64,7 +64,7 @@ class ImageAndLabelPathPair:
     img_path: Path
     lbl_path: Path
 
-    def __iter__(self):
+    def __iter__(self) -> Tuple[Path, Path]:
         return iter((self.img_path, self.lbl_path))
 
 
@@ -287,7 +287,6 @@ def get_img_and_label_paths(
     label_dir = Path(top_level_dir / "labels")
 
     img_label_path_pairs: List[ImageAndLabelPathPair] = []
-
     if img_dir.exists() and label_dir.exists():
         img_paths = sorted(img_dir.glob("*.png"))
         for img_path in img_paths:
