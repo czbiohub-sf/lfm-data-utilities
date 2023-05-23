@@ -11,6 +11,7 @@ from PIL import Image
 from label_studio_ml.model import LabelStudioMLBase
 
 from yogo.model import YOGO
+from yogo.utils.utils import format_preds
 
 
 def url_to_img(url: str, normalize_images: bool = False) -> torch.Tensor:
@@ -39,8 +40,29 @@ class YOGOTrainInfer(LabelStudioMLBase):
         self.to_name = schema["to_name"][0]
         self.labels = schema["labels"]
 
+        """
+        print(self.parsed_label_config)
+        {
+            'label': {
+                'type': 'RectangleLabels',
+                'to_name': ['image'],
+                'inputs': [{'type': 'Image', 'value': 'image'}],
+                'labels': ['healthy', 'ring', 'trophozoite', 'schizont', 'gametocyte', 'wbc', 'misc'],
+                'labels_attrs': {
+                    'healthy': {'value': 'healthy', 'background': '#27b94c', 'category': '1'},
+                    'ring': {'value': 'ring', 'background': 'rgba(250, 100, 150, 1)', 'category': '2'},
+                    'trophozoite': {'value': 'trophozoite', 'background': '#eebd68', 'category': '3'},
+                    'schizont': {'value': 'schizont', 'background': 'rgba(100, 180, 255, 1)', 'category': '4'},
+                    'gametocyte': {'value': 'gametocyte', 'background': 'rgba(255, 200, 255, 1)', 'category': '5'},
+                    'wbc': {'value': 'wbc', 'background': '#9cf2ec', 'category': '6'},
+                    'misc': {'value': 'misc', 'background': 'rgba(100, 100, 100, 1)', 'category': '7'}
+                }
+            }
+        }
+        """
+
     def predict(self, tasks, **kwargs):
-        print("A PREDICT CALL", tasks, kwargs)
+        self.model.inference = True
         predictions = []
         for task in tasks:
             img_url = task["data"]["image"]
@@ -48,25 +70,34 @@ class YOGOTrainInfer(LabelStudioMLBase):
 
             with torch.no_grad():
                 pred = self.model(img_ten.to(self.device))
-                print(format_preds(pred))
 
-            predictions.append(
-                {
-                    "score": 0.987,  # prediction overall score, visible in the data manager columns
-                    "model_version": "delorean-20151021",  # all predictions will be differentiated by model version
-                    "result": [
-                        {
-                            "from_name": self.from_name,
-                            "to_name": self.to_name,
-                            "type": "choices",
-                            "score": 0.5,  # per-region score, visible in the editor
-                            "value": {"choices": [self.labels[0]]},
-                        }
-                    ],
-                }
-            )
+            results = []
+            for bbox_pred in format_preds(pred[0,...]):
+                class_pred = torch.argmax(bbox_pred[5:])
+                class_confidence = bbox_pred[class_pred]
+                obj_confidence = bbox_pred[4]
+
+                results.append([
+                    {
+                        "from_name": self.from_name,
+                        "to_name": self.to_name,
+                        "type": "rectanglelabels",
+                        "score": float(class_confidence * obj_confidence),
+                        "value": {
+                            "x": float(bbox_pred[0]),
+                            "y": float(bbox_pred[1]),
+                            "width": float(bbox_pred[2]),
+                            "height": float(bbox_pred[3]),
+                            "rotation": 0,
+                            "rectanglelabels": [self.labels[class_pred]]
+                        },
+                    }
+                ])
+
+        predictions.append({"result": results})
+
+        self.model.inference = False
         return predictions
 
     def fit(self, tasks, workdir=None, **kwargs):
-        print(tasks, workdir, kwargs)
         return self.pth_path
