@@ -3,9 +3,8 @@ Using existing bounding box annotations (stored in label files),
 crop out cells and put them into a folder.
 """
 
-from typing import List
+from typing import List, Optional
 from pathlib import Path
-import os
 
 import numpy as np
 import cv2
@@ -17,22 +16,38 @@ from lfm_data_utilities.utils import (
     load_label_file,
     Segment,
     Point,
+    ImageAndLabelPathPair,
 )
 
 # healthy / ring / troph / schizont / gametocyte / wbc
 ALLOWABLE_LABELS = [0, 1, 2, 3, 4, 5]
 
 
-def get_cell_thumbnails_from_dataset(dataset: Dataset, save_loc: Path) -> None:
-    if dataset.img_and_label_paths is None:
+def get_corresponding_label_dir(
+    img_dir: Path, search_dir: Path
+) -> Optional[ImageAndLabelPathPair]:
+    dataset_dir = img_dir.parent.name
+    try:
+        lbl_dir_parent = next(search_dir.rglob(f"{dataset_dir}*"))
+        return ImageAndLabelPathPair(img_dir, Path(lbl_dir_parent / "labels"))
+    except:
+        print(f"Label dir not found in {search_dir} for directory: {img_dir.parent}")
+        print("Continuing...")
+        return None
+
+
+def get_cell_thumbnails_from_dataset(
+    img_label_pair: ImageAndLabelPathPair, save_loc: Path
+) -> None:
+    if img_label_pair is None:
         return
 
-    for img_path, lbl_path in dataset.img_and_label_paths:
+    for img_path, lbl_path in img_label_pair:
         img = load_img(img_path)
         w, h = img.shape
         segments = load_label_file(lbl_path, h, w)
         slices = get_img_slices(img, segments)
-        save_slices(segments, slices, dataset.dp.root_dir, save_loc)
+        save_slices(segments, slices, img_path.parent, save_loc)
 
 
 def save_slices(
@@ -131,18 +146,26 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "label_path", type=Path, help="Top level dir for where to search for labels"
+    )
+
+    parser.add_argument(
         "save_loc_path",
         type=Path,
         help="Path to save thumbnails. Folder will be made if it doesn't exist already",
     )
 
     args = parser.parse_args()
-    dataset_paths = get_all_dataset_paths(args.path_to_experiments)
+    img_paths = list(Path(args.path_to_experiments).rglob("images/"))
+    search_dir = Path(args.label_path)
     save_loc = args.save_loc_path
-    datasets = [Dataset(dp) for dp in dataset_paths]
+
+    img_label_path_pairs = [
+        get_corresponding_label_dir(x, search_dir) for x in img_paths
+    ]
 
     if not Path(save_loc).exists():
         Path.mkdir(save_loc)
 
-    for d in datasets:
-        get_cell_thumbnails_from_dataset(d, save_loc)
+    for pair in img_label_path_pairs:
+        get_cell_thumbnails_from_dataset(pair, save_loc)
