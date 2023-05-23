@@ -72,16 +72,19 @@ class YOGOTrainInfer(LabelStudioMLBase):
                 pred = self.model(img_ten.to(self.device))
 
             results = []
-            for bbox_pred in format_preds(pred[0,...]):
+            for i, bbox_pred in enumerate(format_preds(pred[0,...])):
                 class_pred = torch.argmax(bbox_pred[5:])
                 class_confidence = bbox_pred[class_pred]
                 obj_confidence = bbox_pred[4]
 
-                results.append([
+                results.append(
                     {
+                        "id": f"result_{i}",
                         "from_name": self.from_name,
                         "to_name": self.to_name,
-                        "type": "rectanglelabels",
+                        "original_height": 772,
+                        "original_width": 1032,
+                        "type": "RectangleLabels",
                         "score": float(class_confidence * obj_confidence),
                         "value": {
                             "x": float(bbox_pred[0]),
@@ -89,15 +92,18 @@ class YOGOTrainInfer(LabelStudioMLBase):
                             "width": float(bbox_pred[2]),
                             "height": float(bbox_pred[3]),
                             "rotation": 0,
-                            "rectanglelabels": [self.labels[class_pred]]
+                            "RectangleLabels": [self.labels[class_pred]]
                         },
                     }
-                ])
+                )
 
-        predictions.append({"result": results})
+            predictions.append({
+                "result": results,
+            })
 
         self.model.inference = False
         return predictions
 
-    def fit(self, tasks, workdir=None, **kwargs):
+    def fit(self, *args, **kwargs):
+        print(f"{args=}, {kwargs=}")
         return self.pth_path
