@@ -166,6 +166,7 @@ if __name__ == "__main__":
     img_and_labels = [
         get_img_and_label_paths(x.img_path, x.lbl_path)
         for x in img_folder_and_label_folder
+        if x is not None
     ]
 
     if not Path(save_loc).exists():
