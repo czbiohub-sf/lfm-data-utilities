@@ -7,7 +7,7 @@ import subprocess
 
 from pathlib import Path
 from multiprocessing import Process
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from labelling_constants import FLEXO_DATA_DIR, IMAGE_SERVER_PORT
 
@@ -42,7 +42,7 @@ def run_server(directory: Path):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(directory), **kwargs)
 
-    httpd = HTTPServer(server_addy, Handler)
+    httpd = ThreadingHTTPServer(server_addy, Handler)
 
     print(
         f"serving your files, Hot n' Fresh, on http://localhost:{IMAGE_SERVER_PORT} "
