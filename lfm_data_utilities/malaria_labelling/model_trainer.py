@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import io
 import requests
 
@@ -23,6 +24,10 @@ def url_to_img(url: str, normalize_images: bool = False) -> torch.Tensor:
     return torch.from_numpy(img[None, None, ...])
 
 
+# magic to make it work
+os.environ["LABEL_STUDIO_ML_BACKEND_V2"] = "true"
+
+
 class YOGOTrainInfer(LabelStudioMLBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -39,27 +44,6 @@ class YOGOTrainInfer(LabelStudioMLBase):
         self.from_name = from_name
         self.to_name = schema["to_name"][0]
         self.labels = schema["labels"]
-
-        """
-        print(self.parsed_label_config)
-        {
-            'label': {
-                'type': 'RectangleLabels',
-                'to_name': ['image'],
-                'inputs': [{'type': 'Image', 'value': 'image'}],
-                'labels': ['healthy', 'ring', 'trophozoite', 'schizont', 'gametocyte', 'wbc', 'misc'],
-                'labels_attrs': {
-                    'healthy': {'value': 'healthy', 'background': '#27b94c', 'category': '1'},
-                    'ring': {'value': 'ring', 'background': 'rgba(250, 100, 150, 1)', 'category': '2'},
-                    'trophozoite': {'value': 'trophozoite', 'background': '#eebd68', 'category': '3'},
-                    'schizont': {'value': 'schizont', 'background': 'rgba(100, 180, 255, 1)', 'category': '4'},
-                    'gametocyte': {'value': 'gametocyte', 'background': 'rgba(255, 200, 255, 1)', 'category': '5'},
-                    'wbc': {'value': 'wbc', 'background': '#9cf2ec', 'category': '6'},
-                    'misc': {'value': 'misc', 'background': 'rgba(100, 100, 100, 1)', 'category': '7'}
-                }
-            }
-        }
-        """
 
     def predict(self, tasks, **kwargs):
         self.model.inference = True
@@ -79,7 +63,6 @@ class YOGOTrainInfer(LabelStudioMLBase):
 
                 results.append(
                     {
-                        "id": f"result_{i}",
                         "from_name": self.from_name,
                         "to_name": self.to_name,
                         "original_height": 772,
@@ -87,10 +70,10 @@ class YOGOTrainInfer(LabelStudioMLBase):
                         "type": "RectangleLabels",
                         "score": float(class_confidence * obj_confidence),
                         "value": {
-                            "x": float(bbox_pred[0]),
-                            "y": float(bbox_pred[1]),
-                            "width": float(bbox_pred[2]),
-                            "height": float(bbox_pred[3]),
+                            "x": float(bbox_pred[0]) * 1032,
+                            "y": float(bbox_pred[1]) * 772,
+                            "width": float(bbox_pred[2]) * 1032,
+                            "height": float(bbox_pred[3]) * 772,
                             "rotation": 0,
                             "RectangleLabels": [self.labels[class_pred]]
                         },
@@ -105,5 +88,4 @@ class YOGOTrainInfer(LabelStudioMLBase):
         return predictions
 
     def fit(self, *args, **kwargs):
-        print(f"{args=}, {kwargs=}")
-        return self.pth_path
+        return {"checkpoint": self.pth_path}
