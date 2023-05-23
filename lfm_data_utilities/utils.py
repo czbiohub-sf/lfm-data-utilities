@@ -265,7 +265,7 @@ def find_label_file(label_dir: Path, image_path: Path) -> Path:
 
 
 def get_img_and_label_paths(
-    top_level_dir: PathLike,
+    img_dir: PathLike, label_dir: PathLike
 ) -> Optional[List[ImageAndLabelPathPair]]:
     """Given a directory of an experiment, check to see if a folder
     of images have been created from the zarr, and corresponding labels (for classification) and bounding boxes. If yes, return
@@ -282,9 +282,6 @@ def get_img_and_label_paths(
         A list of image and label pairs. Get the image path with x.img_path, the label path with x.lbl_path
         May return none if either the image or label files are not present.
     """
-
-    img_dir = Path(top_level_dir / "images")
-    label_dir = Path(top_level_dir / "labels")
 
     img_label_path_pairs: List[ImageAndLabelPathPair] = []
     if img_dir.exists() and label_dir.exists():

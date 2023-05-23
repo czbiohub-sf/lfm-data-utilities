@@ -10,13 +10,12 @@ import numpy as np
 import cv2
 
 from lfm_data_utilities.utils import (
-    get_all_dataset_paths,
-    Dataset,
     load_img,
     load_label_file,
     Segment,
     Point,
     ImageAndLabelPathPair,
+    get_img_and_label_paths,
 )
 
 # healthy / ring / troph / schizont / gametocyte / wbc
@@ -42,13 +41,12 @@ def get_cell_thumbnails_from_dataset(
     if img_label_pair is None:
         return
 
-    img_path = img_label_pair.img_path
-    lbl_path = img_label_pair.lbl_path
-    img = load_img(img_path)
-    w, h = img.shape
-    segments = load_label_file(lbl_path, h, w)
-    slices = get_img_slices(img, segments)
-    save_slices(segments, slices, img_path.parent, save_loc)
+    for img_path, lbl_path in img_label_pair:
+        img = load_img(img_path)
+        w, h = img.shape
+        segments = load_label_file(lbl_path, h, w)
+        slices = get_img_slices(img, segments)
+        save_slices(segments, slices, img_path.parent, save_loc)
 
 
 def save_slices(
@@ -161,12 +159,17 @@ if __name__ == "__main__":
     search_dir = Path(args.label_path)
     save_loc = args.save_loc_path
 
-    img_label_path_pairs = [
+    img_folder_and_label_folder = [
         get_corresponding_label_dir(x, search_dir) for x in img_paths
+    ]
+
+    img_and_labels = [
+        get_img_and_label_paths(x.img_path, x.lbl_path)
+        for x in img_folder_and_label_folder
     ]
 
     if not Path(save_loc).exists():
         Path.mkdir(save_loc)
 
-    for pair in img_label_path_pairs:
+    for pair in img_and_labels:
         get_cell_thumbnails_from_dataset(pair, save_loc)
