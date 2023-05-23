@@ -91,11 +91,14 @@ def save_thumbnails_from_dataset(
     image_label_pairs = get_img_and_label_pairs(imgs_folder_path, labels_path)
 
     for img_path, lbl_path in image_label_pairs:
-        img = load_img(img_path)
-        h, w = img.shape
-        segments = load_label_file(lbl_path, h, w)
-        slices = get_img_slices(img, segments)  # Cropped regions for each cell
-        save_slices(segments, slices, dataset_path, class_map, save_loc)
+        try:
+            img = load_img(img_path)
+            h, w = img.shape
+            segments = load_label_file(lbl_path, h, w)
+            slices = get_img_slices(img, segments)  # Cropped regions for each cell
+            save_slices(segments, slices, dataset_path, class_map, save_loc)
+        except:
+            print(f"Errored on {img_path, lbl_path}")
 
 
 def save_slices(
