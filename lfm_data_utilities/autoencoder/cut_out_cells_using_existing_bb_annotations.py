@@ -111,6 +111,7 @@ def save_slices(
         except Exception as e:
             print("Error when performing class map.")
             print(f"Dataset: {dataset_path}")
+            print(f"Frame: {segment.frame_count}")
             print(f"Class map: {class_map}")
             print(f"Received classification integer: {int(segment.classification)}")
             print(e)
