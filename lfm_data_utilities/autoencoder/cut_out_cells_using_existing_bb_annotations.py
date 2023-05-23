@@ -106,7 +106,15 @@ def save_slices(
     save_loc: Path,
 ) -> None:
     for segment, slice in zip(segments, slices):
-        cell_type = class_map[int(segment.classification)]
+        try:
+            cell_type = class_map[int(segment.classification)]
+        except Exception as e:
+            print("Error when performing class map.")
+            print(f"Dataset: {dataset_path}")
+            print(f"Class map: {class_map}")
+            print(f"Received classification integer: {int(segment.classification)}")
+            print(e)
+            raise
         tl, br = segment.top_left, segment.bottom_right
         fc = segment.frame_count
 
