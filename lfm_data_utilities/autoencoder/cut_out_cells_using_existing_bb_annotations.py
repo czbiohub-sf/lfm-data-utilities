@@ -3,8 +3,9 @@ Using existing bounding box annotations (stored in label files),
 crop out cells and put them into a folder.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from pathlib import Path
+import json
 
 import numpy as np
 import cv2
@@ -14,7 +15,6 @@ from lfm_data_utilities.utils import (
     load_label_file,
     Segment,
     Point,
-    ImageAndLabelPathPair,
     get_img_and_label_pairs,
 )
 
@@ -41,14 +41,14 @@ def get_class_map(dataset_dir: Path) -> dict:
         Integer id to string (i.e healthy / ring / troph / etc.)
     """
 
-    classes_file = dataset_dir / "classes.txt"
+    classes_file = dataset_dir / "notes.json"
     if not classes_file.exists():
         raise ValueError(f"No classes file exists for this directory: {dataset_dir}")
 
     try:
         with open(classes_file.absolute(), "r") as f:
-            vals = f.readlines()
-            d = {i: x for i, x in enumerate([y.strip() for y in vals])}
+            vals = json.load(f)
+            d = {x["id"]: x["name"] for x in vals["categories"]}
         return d
     except Exception as e:
         raise
@@ -99,6 +99,7 @@ def save_thumbnails_from_dataset(
             save_slices(segments, slices, dataset_path, class_map, save_loc)
         except:
             print(f"Errored on {img_path, lbl_path}")
+            quit()
 
 
 def save_slices(
