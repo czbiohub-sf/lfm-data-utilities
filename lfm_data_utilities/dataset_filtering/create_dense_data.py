@@ -14,6 +14,7 @@ import warnings
 import traceback
 
 from pathlib import Path
+from dataclasses import dataclass
 from itertools import cycle, chain
 from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
@@ -24,11 +25,16 @@ import torch
 import yogo
 import autofocus
 
+from yogo.model import YOGO
+from yogo.yogo_loss import YOGOLoss
 from yogo import infer as yogo_infer
+
 from autofocus import infer as autofocus_infer
 
 from tqdm import tqdm
 from ruamel.yaml import YAML
+
+from filepath_dataset import get_dataloader
 
 from lfm_data_utilities import utils
 from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
@@ -68,7 +74,28 @@ def write_metadata_for_dataset_path(
         yaml.dump(meta, f)
 
 
+@dataclass
+class YOGOFolderResult:
+    predictions: torch.Tensor
+    losses: Optional[torch.Tensor]
+
+
 def calculate_yogo_summary(
+    yogo_results: YOGOFolderResult,
+    threshold_class_probabilities: bool = True,
+    objectness_threshold: float = 0.5,
+)-> Tuple[List[float],List[float]]:
+    prediction_summary = calculate_yogo_prediction_summary(
+        yogo_results.predictions,
+        threshold_class_probabilities=threshold_class_probabilities,
+        objectness_threshold=objectness_threshold,
+    )
+    if yogo_results.losses is not None:
+        return prediction_summary, yogo_results.losses.tolist()
+    return prediction_summary, []
+
+
+def calculate_yogo_prediction_summary(
     pred: torch.Tensor,
     threshold_class_probabilities: bool = True,
     objectness_threshold: float = 0.5,
@@ -105,6 +132,49 @@ def calculate_yogo_summary(
         result = predicted_cells.sum(dim=0)
 
     return cast(List[float], result.tolist())
+
+
+def yogo_analysis(
+    calculate_yogo_loss,
+    path_to_pth,
+    path_to_zarr,
+    device="cpu"
+) -> YOGOFolderResult:
+    if calculate_yogo_loss:
+        mdl, cfg = YOGO.from_pth(path_to_pth)
+        Sx, Sy = mdl.get_grid_size()
+
+        image_path = path_to_zarr.parent / "images"
+        label_path = path_to_zarr.parent / "labels"
+        dataloader = get_dataloader(
+            image_path, label_path, normalize_images=cfg["normalize_images"], batch_size=1, Sx=Sx, Sy=Sy
+        )
+        y_loss = YOGOLoss()
+
+        results = torch.zeros((len(dataloader), len(CLASSES) + 5, Sy, Sx))
+        losses = torch.zeros(len(dataloader))
+        for i, (img, label, path) in dataloader:
+            img = img.to(device)
+            label = label.to(device)
+            with torch.no_grad():
+                pred = mdl(img)
+                loss, per_component_loss = y_loss(pred, label)
+                # TODO include per-component loss
+                results[i : i + pred.shape[0], ...] = pred.cpu()
+                losses[i] = loss.cpu()
+        return YOGOFolderResult(
+            predictions=results,
+            losses=losses,
+        )
+    else:
+        return YOGOFolderResult(
+            predictions=yogo.predict(
+                path_to_pth=path_to_pth,
+                path_to_zarr=path_to_zarr,
+                device=device
+            ),
+            losses=None,
+        )
 
 
 def write_results(
@@ -196,6 +266,14 @@ if __name__ == "__main__":
         default=0.5,
         help="threshold for objectness - class statistics are calculated given this threshold is met (default 0.5)",
     )
+    parser.add_argument(
+        "--calculate-yogo-loss",
+        action="store_true",
+        default=True,
+        help=(
+            "calculate loss across dataset"
+        )
+    )
 
     args = parser.parse_args()
 
@@ -233,7 +311,8 @@ if __name__ == "__main__":
                 device=next(devices),
             )
             yogo_future = pool.submit(
-                yogo_infer.predict,
+                yogo_analysis,
+                args.calculate_yogo_loss,
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
