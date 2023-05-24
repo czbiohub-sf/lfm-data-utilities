@@ -83,7 +83,7 @@ def save_thumbnails_from_dataset(
 
     # Get class mapping for this dataset
     try:
-        class_map = get_class_map(dataset_path)
+        class_map = get_class_map(corresponding_dataset_in_labels_dir)
     except Exception as e:
         print(f"Error reading classes.txt for {dataset_path}. Error: {e}")
         return
