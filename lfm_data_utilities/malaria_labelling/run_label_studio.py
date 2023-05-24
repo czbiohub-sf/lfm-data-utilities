@@ -3,6 +3,7 @@
 
 import os
 import argparse
+import warnings
 import subprocess
 
 from pathlib import Path
@@ -70,8 +71,8 @@ if __name__ == "__main__":
             f"path and mounted flexo, got path {path_to_run_folder}"
         )
     elif path_to_run_folder.name == "run-sets":
-        print(
-            "warning: you provided the path to `run-sets`, not `LFM_scope`. If you're "
+        warnings.warn(
+            "you provided the path to `run-sets`, not `LFM_scope`. If you're "
             "annotating a LabelStudio tasks file with `run-sets` as the serving dir, "
             "this is fine. Otherwise, if you're loading a new tasks file, you should "
             "restart with the path to `LFM_scope`."
