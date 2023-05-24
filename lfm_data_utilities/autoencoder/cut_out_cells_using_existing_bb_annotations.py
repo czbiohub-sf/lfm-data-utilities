@@ -84,6 +84,10 @@ def save_thumbnails_from_dataset(
     # Get class mapping for this dataset
     try:
         class_map = get_class_map(corresponding_dataset_in_labels_dir)
+        for c in class_map.values():
+            if not Path(save_loc / c).exists():
+                Path.mkdir(Path(save_loc / c))
+
     except Exception as e:
         print(f"Error reading classes.txt for {dataset_path}. Error: {e}")
         return
@@ -168,7 +172,7 @@ def save_slice(
     slice_filename = Path(
         f"{type}_{ds_name}_{frame_count}_{tl.x}_{tl.y}_{br.x}_{br.y}.png"
     )
-    cv2.imwrite(str(save_loc / slice_filename), slice)
+    cv2.imwrite(str(save_loc / type / slice_filename), slice)
 
 
 def get_img_slices(img: np.ndarray, segments: List[Segment]) -> List[np.ndarray]:
@@ -219,9 +223,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     search_dir = Path(args.label_path)
-    save_loc = args.save_loc_path
+    save_loc = Path(args.save_loc_path)
 
-    if not Path(save_loc).exists():
+    if not save_loc.exists():
         Path.mkdir(save_loc)
 
     img_gen = Path(args.path_to_experiments).rglob("images/")
