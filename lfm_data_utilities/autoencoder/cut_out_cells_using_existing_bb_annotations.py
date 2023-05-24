@@ -48,7 +48,7 @@ def get_class_map(dataset_dir: Path) -> dict:
     try:
         with open(classes_file.absolute(), "r") as f:
             vals = json.load(f)
-            d = {x["id"]: x["name"] for x in vals["categories"]}
+            d = {int(x["id"]): x["name"] for x in vals["categories"]}
         return d
     except Exception as e:
         raise
