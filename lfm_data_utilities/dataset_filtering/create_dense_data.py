@@ -19,6 +19,7 @@ from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
+import pandas as pd
 
 # import these so we can get the package version identifiers (commit or __version__)
 import yogo
@@ -68,7 +69,7 @@ def write_metadata_for_dataset_path(
         yaml.dump(meta, f)
 
 
-def calculate_yogo_summary(
+def calculate_yogo_prediction_summary(
     pred: torch.Tensor,
     threshold_class_probabilities: bool = True,
     objectness_threshold: float = 0.5,
@@ -78,10 +79,7 @@ def calculate_yogo_summary(
     if t0_i is the objectness of grid cell i and C_ij is the probability
     that grid cell i has class j, then we return
 
-        if threshold_class_probabilities:
-            sum over all grid cells i (argmax(C_ij) | t0_i > 0.5)
-        else:
-            sum over all grid cells i (C_ij | t0_i > 0.5)
+        sum over all grid cells i (argmax(C_ij) | t0_i > 0.5)
 
     threshold_class_probabilities=True will give the class with the highest probability for each grid cell,
     which we use in practice. threshold_class_probabilities=False will give expected number of cells of
@@ -93,16 +91,13 @@ def calculate_yogo_summary(
     objectness_threshold_mask = reformatted[:, 4] > objectness_threshold
     predicted_cells = reformatted[objectness_threshold_mask, 5:]
 
-    if threshold_class_probabilities:
-        result = (
-            torch.nn.functional.one_hot(
-                torch.argmax(predicted_cells, dim=1), num_classes=num_classes
-            )
-            .sum(dim=0)
-            .float()
+    result = (
+        torch.nn.functional.one_hot(
+            torch.argmax(predicted_cells, dim=1), num_classes=num_classes
         )
-    else:
-        result = predicted_cells.sum(dim=0)
+        .sum(dim=0)
+        .float()
+    )
 
     return cast(List[float], result.tolist())
 
@@ -119,48 +114,61 @@ def write_results(
     columns are:
         img_idx flowrate_dx flowrate_dy flowrate_confidence focus *calculated_yogo_summary
     """
-    # flowrate of 1st frame can't be calculated, so set to 0
-    flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
-    with open(output_dir / "data.csv", "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(
-            [
-                "img_idx",
-                "flowrate_dx",
-                "flowrate_dy",
-                "flowrate_confidence",
-                "autofocus",
-                *CLASSES,
-            ]
+
+    flowrate_dx = [0] + flowrate_results[0]
+    flowrate_dy = [0] + flowrate_results[1]
+    flowrate_confidence = [0] + flowrate_results[2]
+
+    yogo_class_predictions = [
+        calculate_yogo_prediction_summary(
+            yogo_res,
+            threshold_class_probabilities=threshold_class_probabilities,
+            objectness_threshold=0.5,
         )
-        for i, results in enumerate(
-            zip(flowrate_iterable, autofocus_results, yogo_results)
-        ):
-            (
-                flowrate_dx,
-                flowrate_dy,
-                flowrate_confidence,
-            ) = results[0]
-            (
-                autofocus_res,
-                yogo_res,
-            ) = results[1:]
-            writer.writerow(
-                [
-                    str(r)
-                    for r in [
-                        i,
-                        flowrate_dx,
-                        flowrate_dy,
-                        flowrate_confidence,
-                        autofocus_res.item(),
-                        *calculate_yogo_summary(
-                            yogo_res,
-                            threshold_class_probabilities=threshold_class_probabilities,
-                        ),
-                    ]
-                ]
-            )
+        for yogo_res in yogo_results
+    ]
+    (
+        num_healthy,
+        num_ring,
+        num_troph,
+        num_schiz,
+        num_gametocyte,
+        num_wbc,
+        num_misc,
+    ) = zip(*yogo_class_predictions)
+    assert (
+        len(num_healthy)
+        == len(num_ring)
+        == len(num_troph)
+        == len(num_schiz)
+        == len(num_gametocyte)
+        == len(num_wbc)
+        == len(num_misc)
+    )
+
+    df = pd.DataFrame(
+        {
+            "flowrate_dx": flowrate_dx,
+            "flowrate_dy": flowrate_dy,
+            "flowrate_confidence": flowrate_confidence,
+            "autofocus": autofocus_results.tolist(),
+            "healthy": num_healthy,
+            "ring": num_ring,
+            "trophozoite": num_troph,
+            "schizont": num_schiz,
+            "gametocyte": num_gametocyte,
+            "wbc": num_wbc,
+            "misc": num_misc,
+        },
+        columns=[
+            "flowrate_dx",
+            "flowrate_dy",
+            "flowrate_confidence",
+            "autofocus",
+            *CLASSES,
+        ],
+    )
+    df.to_csv(output_dir / "data.csv", index_label="img_idx")
 
 
 if __name__ == "__main__":
@@ -270,6 +278,7 @@ if __name__ == "__main__":
                 print(f"error calculating results for {dataset_path_dir.name}: {e}")
                 traceback.print_exc()
             else:
+                torch.save(yogo_results, str(dataset_path_dir / "yogo_predictions.pt"))
                 write_results(
                     output_dir=dataset_path_dir,
                     flowrate_results=flowrate_results,
