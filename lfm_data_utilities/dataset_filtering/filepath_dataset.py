@@ -5,9 +5,12 @@ import torch
 import numpy as np
 
 from pathlib import Path
+from functools import partial
 from collections import defaultdict
 
 import torchvision.ops as ops
+
+from torch.utils.data import DataLoader
 
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
@@ -236,7 +239,7 @@ class FilePathObjectDetectionDataset(datasets.VisionDataset):
         # maps file name to a list of tuples of bounding boxes + classes
         paths: List[str] = []
         tensors: List[torch.Tensor] = []
-        for label_file_path in self.label_folder_path.glob("*"):
+        for label_file_path in sorted(self.label_folder_path.glob("*")):
             # ignore (*nix convention) hidden files
             if label_file_path.name.startswith("."):
                 continue

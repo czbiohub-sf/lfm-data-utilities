@@ -15,11 +15,12 @@ import traceback
 
 from pathlib import Path
 from dataclasses import dataclass
-from itertools import cycle, chain
+from itertools import cycle
 from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 import torch
+import pandas as pd
 
 # import these so we can get the package version identifiers (commit or __version__)
 import yogo
@@ -27,9 +28,9 @@ import autofocus
 
 from yogo.model import YOGO
 from yogo.yogo_loss import YOGOLoss
-from yogo import infer as yogo_infer
 
 from autofocus import infer as autofocus_infer
+from yogo import infer as yogo_infer
 
 from tqdm import tqdm
 from ruamel.yaml import YAML
@@ -77,22 +78,11 @@ def write_metadata_for_dataset_path(
 @dataclass
 class YOGOFolderResult:
     predictions: torch.Tensor
-    losses: Optional[torch.Tensor]
-
-
-def calculate_yogo_summary(
-    yogo_results: YOGOFolderResult,
-    threshold_class_probabilities: bool = True,
-    objectness_threshold: float = 0.5,
-)-> Tuple[List[float],List[float]]:
-    prediction_summary = calculate_yogo_prediction_summary(
-        yogo_results.predictions,
-        threshold_class_probabilities=threshold_class_probabilities,
-        objectness_threshold=objectness_threshold,
-    )
-    if yogo_results.losses is not None:
-        return prediction_summary, yogo_results.losses.tolist()
-    return prediction_summary, []
+    losses: Optional[torch.Tensor] = None
+    iou_loss: Optional[torch.Tensor] = None
+    objectnes_loss_no_obj: Optional[torch.Tensor] = None
+    objectnes_loss_obj: Optional[torch.Tensor] = None
+    classification_loss: Optional[torch.Tensor] = None
 
 
 def calculate_yogo_prediction_summary(
@@ -135,45 +125,58 @@ def calculate_yogo_prediction_summary(
 
 
 def yogo_analysis(
-    calculate_yogo_loss,
-    path_to_pth,
-    path_to_zarr,
-    device="cpu"
+    calculate_yogo_loss, path_to_pth, path_to_zarr, device="cpu"
 ) -> YOGOFolderResult:
     if calculate_yogo_loss:
         mdl, cfg = YOGO.from_pth(path_to_pth)
+        mdl.to(device)
         Sx, Sy = mdl.get_grid_size()
 
         image_path = path_to_zarr.parent / "images"
         label_path = path_to_zarr.parent / "labels"
         dataloader = get_dataloader(
-            image_path, label_path, normalize_images=cfg["normalize_images"], batch_size=1, Sx=Sx, Sy=Sy
+            image_path,
+            label_path,
+            normalize_images=cfg["normalize_images"],
+            batch_size=1,
+            Sx=Sx,
+            Sy=Sy,
         )
         y_loss = YOGOLoss()
 
         results = torch.zeros((len(dataloader), len(CLASSES) + 5, Sy, Sx))
         losses = torch.zeros(len(dataloader))
-        for i, (img, label, path) in dataloader:
+        iou_loss = torch.zeros(len(dataloader))
+        objectnes_loss_no_obj = torch.zeros(len(dataloader))
+        objectnes_loss_obj = torch.zeros(len(dataloader))
+        classification_loss = torch.zeros(len(dataloader))
+        for i, (img, label, path) in enumerate(dataloader):
             img = img.to(device)
             label = label.to(device)
             with torch.no_grad():
                 pred = mdl(img)
                 loss, per_component_loss = y_loss(pred, label)
-                # TODO include per-component loss
+
                 results[i : i + pred.shape[0], ...] = pred.cpu()
                 losses[i] = loss.cpu()
+                iou_loss[i] = per_component_loss["iou_loss"]
+                objectnes_loss_no_obj[i] = per_component_loss["objectnes_loss_no_obj"]
+                objectnes_loss_obj[i] = per_component_loss["objectnes_loss_obj"]
+                classification_loss[i] = per_component_loss["classification_loss"]
+
         return YOGOFolderResult(
             predictions=results,
             losses=losses,
+            iou_loss=iou_loss,
+            objectnes_loss_no_obj=objectnes_loss_no_obj,
+            objectnes_loss_obj=objectnes_loss_obj,
+            classification_loss=classification_loss,
         )
     else:
         return YOGOFolderResult(
-            predictions=yogo.predict(
-                path_to_pth=path_to_pth,
-                path_to_zarr=path_to_zarr,
-                device=device
-            ),
-            losses=None,
+            predictions=yogo_infer.predict(
+                path_to_pth=path_to_pth, path_to_zarr=path_to_zarr, device=device
+            )
         )
 
 
@@ -181,8 +184,9 @@ def write_results(
     output_dir: Path,
     flowrate_results: Tuple[List[float], List[float], List[float]],
     autofocus_results: torch.Tensor,
-    yogo_results: torch.Tensor,
+    yogo_results: YOGOFolderResult,
     threshold_class_probabilities: bool = True,
+    objectness_threshold: float = 0.5,
 ) -> None:
     """Write results to csv file
 
@@ -190,47 +194,71 @@ def write_results(
         img_idx flowrate_dx flowrate_dy flowrate_confidence focus *calculated_yogo_summary
     """
     # flowrate of 1st frame can't be calculated, so set to 0
-    flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
-    with open(output_dir / "data.csv", "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(
-            [
-                "img_idx",
-                "flowrate_dx",
-                "flowrate_dy",
-                "flowrate_confidence",
-                "autofocus",
-                *CLASSES,
-            ]
+    # flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
+    flowrate_dx = [0] + flowrate_results[0]
+    flowrate_dy = [0] + flowrate_results[1]
+    flowrate_confidence = [0] + flowrate_results[2]
+
+    yogo_class_predictions = [
+        calculate_yogo_prediction_summary(
+            yogo_res,
+            threshold_class_probabilities=threshold_class_probabilities,
+            objectness_threshold=0.5,
         )
-        for i, results in enumerate(
-            zip(flowrate_iterable, autofocus_results, yogo_results)
-        ):
-            (
-                flowrate_dx,
-                flowrate_dy,
-                flowrate_confidence,
-            ) = results[0]
-            (
-                autofocus_res,
-                yogo_res,
-            ) = results[1:]
-            writer.writerow(
-                [
-                    str(r)
-                    for r in [
-                        i,
-                        flowrate_dx,
-                        flowrate_dy,
-                        flowrate_confidence,
-                        autofocus_res.item(),
-                        *calculate_yogo_summary(
-                            yogo_res,
-                            threshold_class_probabilities=threshold_class_probabilities,
-                        ),
-                    ]
-                ]
-            )
+        for yogo_res in yogo_results.predictions
+    ]
+    (
+        num_healthy,
+        num_ring,
+        num_troph,
+        num_schiz,
+        num_gametocyte,
+        num_wbc,
+        num_misc,
+    ) = zip(*yogo_class_predictions)
+    assert (
+        len(num_healthy)
+        == len(num_ring)
+        == len(num_troph)
+        == len(num_schiz)
+        == len(num_gametocyte)
+        == len(num_wbc)
+        == len(num_misc)
+    )
+
+    df = pd.DataFrame(
+        {
+            "flowrate_dx": flowrate_dx,
+            "flowrate_dy": flowrate_dy,
+            "flowrate_confidence": flowrate_confidence,
+            "autofocus": autofocus_results.tolist(),
+            "healthy": num_healthy,
+            "ring": num_ring,
+            "trophozoite": num_troph,
+            "schizont": num_schiz,
+            "gametocyte": num_gametocyte,
+            "wbc": num_wbc,
+            "misc": num_misc,
+            "loss": yogo_results.losses,
+            "iou_loss": yogo_results.iou_loss,
+            "objectnes_loss_no_obj": yogo_results.objectnes_loss_no_obj,
+            "objectnes_loss_obj": yogo_results.objectnes_loss_obj,
+            "classification_loss": yogo_results.classification_loss,
+        },
+        columns=[
+            "flowrate_dx",
+            "flowrate_dy",
+            "flowrate_confidence",
+            "autofocus",
+            *CLASSES,
+            "loss",
+            "iou_loss",
+            "objectnes_loss_no_obj",
+            "objectnes_loss_obj",
+            "classification_loss",
+        ],
+    )
+    df.to_csv(output_dir / "data.csv", index_label="img_idx")
 
 
 if __name__ == "__main__":
@@ -270,9 +298,7 @@ if __name__ == "__main__":
         "--calculate-yogo-loss",
         action="store_true",
         default=True,
-        help=(
-            "calculate loss across dataset"
-        )
+        help=("calculate loss across dataset"),
     )
 
     args = parser.parse_args()
@@ -354,5 +380,6 @@ if __name__ == "__main__":
                     flowrate_results=flowrate_results,
                     autofocus_results=autofocus_results,
                     yogo_results=yogo_results,
-                    threshold_class_probabilities=False,
+                    threshold_class_probabilities=not args.expected_class_probabilities,
+                    objectness_threshold=args.objectness_threshold,
                 )
