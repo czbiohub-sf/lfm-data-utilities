@@ -15,5 +15,5 @@ ulimit -H -c unlimited
 conda run ./create_dense_data.py \
   /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets \
   /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/dense-data \
-  /home/axel.jacobsen/celldiagnosis/yogo/trained_models/volcanic-sweep-69/best.pth \
-  /home/axel.jacobsen/autofocus/ulc-malaria-autofocus/trained_models/noble-deluge-171/best.pth
+  ~/celldiagnosis/yogo/trained_models/old-transport-1520/best.pth \
+  ~/autofocus/ulc-malaria-autofocus/trained_models/valiant-disco-119/best.pth
