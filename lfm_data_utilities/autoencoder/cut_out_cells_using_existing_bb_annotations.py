@@ -35,7 +35,7 @@ def get_corresponding_dataset_dir_in_search_dir(
         ds_dir_in_search = next(search_dir.rglob(f"{dataset_dir_search_string}*"))
         return Path(ds_dir_in_search)
     except StopIteration:
-        print(f"Could not find {dataset_dir_search_string} in {search_dir}")
+        print(f"Couldn't find {dataset_dir_search_string} in {search_dir.stem}")
         return None
 
 
