@@ -58,7 +58,7 @@ def get_class_map(dataset_dir: Path) -> dict:
             vals = json.load(f)
             d = {int(x["id"]): x["name"] for x in vals["categories"]}
         return d
-    except Exception as e:
+    except Exception:
         raise
 
 
