@@ -15,7 +15,9 @@ setup(
         "matplotlib==3.7.0",
         "opencv-python>=4.7.0.72",
         # "autofocus @ git+https://github.com/czbiohub/ulc-malaria-autofocus@main",
-        "torch>=1.13.1",
         "zarr",
     ],
+    extras_require={
+        "torch": "torch>=1.13.1",
+    },
 )
