@@ -268,7 +268,7 @@ if __name__ == "__main__":
     print(f"Searching for labels in: {search_dir}")
     print(f"{'='*10}")
 
-    img_paths = get_img_paths(args.path_to_experiments)
+    img_paths = [x.parent for x in get_img_paths(args.path_to_experiments)]
 
     with Pool() as p:
         tqdm(
