@@ -3,6 +3,8 @@ Using existing bounding box annotations (stored in label files),
 crop out cells and put them into a folder.
 """
 
+from functools import partial
+from multiprocessing import Pool
 import os
 from typing import List, Optional
 from pathlib import Path
@@ -10,6 +12,7 @@ import json
 
 import numpy as np
 import cv2
+from tqdm import tqdm
 
 from lfm_data_utilities.utils import (
     load_img,
@@ -266,8 +269,18 @@ if __name__ == "__main__":
     print(f"{'='*10}")
 
     img_paths = get_img_paths(args.path_to_experiments)
-    for img_path in img_paths:
-        dp = img_path.parent
-        save_thumbnails_from_dataset(dp, search_dir, save_loc)
+
+    with Pool() as p:
+        tqdm(
+            p.imap(
+                partial(
+                    save_thumbnails_from_dataset,
+                    label_search_dir=search_dir,
+                    save_loc=save_loc,
+                ),
+                img_paths,
+            ),
+            total=len(img_paths),
+        )
 
     print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
