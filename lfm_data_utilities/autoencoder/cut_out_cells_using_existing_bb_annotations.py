@@ -270,17 +270,10 @@ if __name__ == "__main__":
 
     img_paths = [x.parent for x in get_img_paths(args.path_to_experiments)]
 
-    with Pool() as p:
-        tqdm(
-            p.imap(
-                partial(
-                    save_thumbnails_from_dataset,
-                    label_search_dir=search_dir,
-                    save_loc=save_loc,
-                ),
-                img_paths,
-            ),
-            total=len(img_paths),
-        )
+    f = partial(
+        save_thumbnails_from_dataset, label_search_dir=search_dir, save_loc=save_loc
+    )
+    for img_path in tqdm(img_paths):
+        f(img_path)
 
     print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
