@@ -3,6 +3,7 @@ Using existing bounding box annotations (stored in label files),
 crop out cells and put them into a folder.
 """
 
+import os
 from typing import List, Optional
 from pathlib import Path
 import json
@@ -16,6 +17,10 @@ from lfm_data_utilities.utils import (
     Segment,
     Point,
     get_img_and_label_pairs,
+)
+
+DEFAULT_LABELS_SEARCH_DIR = (
+    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels"
 )
 
 
@@ -55,10 +60,11 @@ def get_class_map(dataset_dir: Path) -> dict:
 
 
 def save_thumbnails_from_dataset(
-    dataset_path: Path, label_search_dir: Path, save_loc: Path
+    dataset_path: Path, label_search_dir: Path, save_loc: Path, quiet: bool = True
 ) -> None:
     # Get images folder path
     imgs_folder_path = dataset_path / "images"
+
     if not imgs_folder_path.exists():
         print(f"{imgs_folder_path} does not exist.")
         return
@@ -77,8 +83,15 @@ def save_thumbnails_from_dataset(
         if not labels_path.exists():
             print(f"{labels_path} does not exist.")
             return
+        else:
+            # Inform user
+            print(f"Working on: {dataset_path.name}")
+            print(
+                f"Corresponding labels folder found in: {corresponding_dataset_in_labels_dir}"
+            )
     else:
-        print("No corresponding labels folder found in the search directory.")
+        if not quiet:
+            print("No corresponding labels folder found in the search directory.")
         return
 
     # Get class mapping for this dataset
@@ -199,6 +212,16 @@ def get_img_slices(img: np.ndarray, segments: List[Segment]) -> List[np.ndarray]
     return slices
 
 
+def get_img_paths(main_dir) -> List[Path]:
+    img_paths: List[Path] = []
+    for main_path, directories, _ in os.walk(main_dir):
+        for d in directories:
+            if "images" == d:
+                img_paths.append(Path(os.path.join(main_path, d)))
+
+    return img_paths
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -208,11 +231,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "path_to_experiments",
         type=Path,
-        help="Provide the top-level directory (a folder containing oracle runs)",
+        help=(
+            "Provide the top-level directory (a folder containing oracle runs).\n ",
+            "Can be a single folder containing an images/ folder or a high-level folder\n "
+            "containing multiple folders which themselves contain images/ directories (or whose\n"
+            "subfolders contain images/ directories).",
+        ),
     )
 
     parser.add_argument(
-        "label_path", type=Path, help="Top level dir for where to search for labels"
+        "--label_path",
+        type=Path,
+        help="Top level dir for where to search for labels",
+        default=DEFAULT_LABELS_SEARCH_DIR,
+        required=False,
     )
 
     parser.add_argument(
@@ -228,7 +260,14 @@ if __name__ == "__main__":
     if not save_loc.exists():
         Path.mkdir(save_loc)
 
-    img_gen = Path(args.path_to_experiments).rglob("images/")
-    for img_path in img_gen:
+    print(f"{'='*10}")
+    print(f"Searching for experiments in: {args.path_to_experiments}")
+    print(f"Searching for labels in: {search_dir}")
+    print(f"{'='*10}")
+
+    img_paths = get_img_paths(args.path_to_experiments)
+    for img_path in img_paths:
         dp = img_path.parent
         save_thumbnails_from_dataset(dp, search_dir, save_loc)
+
+    print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
