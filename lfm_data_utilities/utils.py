@@ -9,7 +9,7 @@ from functools import partial
 from dataclasses import dataclass
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
+from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence, TypeVar
 from pathlib import Path
 
 from tqdm import tqdm
@@ -642,18 +642,16 @@ def protected_fcn(f, *args):
 # TODO convert two following functions to have arg ordering (fn, argument_list)
 # instead of (argument_list, fn), to match other higher-ordered python funcs like
 # map
+T = TypeVar("T")
+G = TypeVar("G")
+
 def multithread_map_unordered(
-    argument_list: Sequence[Any],
-    fn: Callable[
-        [
-            Any,
-        ],
-        Any,
-    ],
+    argument_list: Sequence[T],
+    fn: Callable[[T,], G],
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
-) -> List[Any]:
+) -> Sequence[G]:
     protected_fcn_partial = partial(protected_fcn, fn)
     try:
         argument_list_len = len(argument_list)
@@ -676,16 +674,11 @@ def multithread_map_unordered(
 
 
 def multiprocess_fn(
-    argument_list: List[Any],
-    fn: Callable[
-        [
-            Any,
-        ],
-        Any,
-    ],
+    argument_list: Sequence[T],
+    fn: Callable[[T,], G],
     ordered: bool = True,
     verbose: bool = True,
-) -> List[Any]:
+) -> List[G]:
     """Wraps any function invocation in multiprocessing, with optional TQDM for progress.
 
     Takes a list of arguments for fn, which takes one input. Note that you can use
