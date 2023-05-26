@@ -3,11 +3,12 @@
 
 import os
 import argparse
+import warnings
 import subprocess
 
 from pathlib import Path
 from multiprocessing import Process
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from labelling_constants import FLEXO_DATA_DIR, IMAGE_SERVER_PORT
 
@@ -42,7 +43,7 @@ def run_server(directory: Path):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(directory), **kwargs)
 
-    httpd = HTTPServer(server_addy, Handler)
+    httpd = ThreadingHTTPServer(server_addy, Handler)
 
     print(
         f"serving your files, Hot n' Fresh, on http://localhost:{IMAGE_SERVER_PORT} "
@@ -70,8 +71,8 @@ if __name__ == "__main__":
             f"path and mounted flexo, got path {path_to_run_folder}"
         )
     elif path_to_run_folder.name == "run-sets":
-        print(
-            "warning: you provided the path to `run-sets`, not `LFM_scope`. If you're "
+        warnings.warn(
+            "you provided the path to `run-sets`, not `LFM_scope`. If you're "
             "annotating a LabelStudio tasks file with `run-sets` as the serving dir, "
             "this is fine. Otherwise, if you're loading a new tasks file, you should "
             "restart with the path to `LFM_scope`."

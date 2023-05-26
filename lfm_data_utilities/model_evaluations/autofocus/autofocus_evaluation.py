@@ -5,10 +5,8 @@ from __future__ import annotations
 import os
 import heapq
 import argparse
-import warnings
 
 from pathlib import Path
-from itertools import cycle
 from typing import DefaultDict
 
 import torch
@@ -18,7 +16,7 @@ import autofocus as af
 from tqdm import tqdm
 from ruamel.yaml import YAML
 from collections import defaultdict
-from typing import Tuple, List, Union
+from typing import Tuple, List
 
 from filepath_dataloader import get_dataloader
 from lfm_data_utilities import utils
