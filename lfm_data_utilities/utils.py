@@ -48,7 +48,6 @@ class Dataset:
             self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
             self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
             self.experiment_metadata = load_csv(dp.experiment_csv_path)
-            self.img_and_label_paths = get_img_and_label_paths(dp.root_dir)
         except Exception as e:
             print(f"Error loading dataset {dp.zarr_path}: {e}")
             if not fail_silently:
