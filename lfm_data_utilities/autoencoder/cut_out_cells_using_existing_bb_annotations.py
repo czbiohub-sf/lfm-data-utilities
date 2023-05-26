@@ -273,7 +273,8 @@ if __name__ == "__main__":
     f = partial(
         save_thumbnails_from_dataset, label_search_dir=search_dir, save_loc=save_loc
     )
-    for img_path in tqdm(img_paths):
-        f(img_path)
+
+    with Pool() as p:
+        list(tqdm(p.imap(f, img_paths), total=len(img_paths)))
 
     print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
