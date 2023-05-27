@@ -39,6 +39,8 @@ Three levels of reductions:
     3. per-run-set reduction over per-run reductions
 
 
+In this file for shape documentation, pred-size is the size of the prediction dimension.
+That is, pred-size == 12, since len(xc, yc, w, h, t0, prob_healthy, prob_ring, ...) = 12 (since we have 7 classes)
 """
 
 
@@ -78,8 +80,7 @@ def load_predictions_into_memory(
 
 
 def nonzero_mean(ten: torch.Tensor, dim=0, nan=0.0) -> torch.Tensor:
-    """ mean of non-zero elements along dimension dim.
-    """
+    """mean of non-zero elements along dimension dim."""
     sum_ = ten.sum(dim=dim)
     nonzero = (ten != 0).sum(dim=dim)
     return torch.nan_to_num(sum_ / nonzero, nan=nan)
@@ -88,6 +89,27 @@ def nonzero_mean(ten: torch.Tensor, dim=0, nan=0.0) -> torch.Tensor:
 class PerImgReduction:
     @staticmethod
     def predicted_confidence(prediction):
+        """
+        given a (N, pred-size) tensor of YOGO predictions, return a tensor of shape
+        (N, num-classes) with all values that aren't the max for each row set to 0.
+
+        If the class-component* of the prediction tensor is
+
+        [[0.6, 0.2],
+         [0.2, 0.8],
+         [0.1, 0.9]]
+
+         this returns
+
+        [[0.6, 0.0],
+         [0.0, 0.8],
+         [0.0, 0.9]]
+
+         * the class-component is pred[:, 5:], if pred.shape == (N, pred-size)
+        """
+        assert (
+            prediction.ndim == 2
+        ), f"prediction tensor must be 2-dimensional, got {prediction.ndim}"
         num_classes = prediction.shape[1] - 5
         class_probabilities = prediction[:, 5:]
         class_predictions = class_probabilities.argmax(dim=1)
@@ -97,13 +119,32 @@ class PerImgReduction:
 
     @staticmethod
     def mean_predicted_confidence(prediction):
-        return nonzero_mean(
-            PerImgReduction.predicted_confidence(prediction)
-        )
+        """
+        given a (N, pred-size) tensor of YOGO predictions, return a tensor of shape
+        (1, num_classes) with each value being the mean of predicted classes. So, if
+        the prediction tensor is
+
+        [[0.6, 0.2],
+         [0.2, 0.8],
+         [0.1, 0.9]]
+
+        this returns
+
+        [0.6, 0.85]
+
+        since the mean of the first column (ignoring values that are not the best prediction)
+        is 0.6, and the mean of the second column is 0.85.
+        """
+        return nonzero_mean(PerImgReduction.predicted_confidence(prediction))
 
     @staticmethod
     def count_class(prediction):
-        return PerImgReduction.predicted_confidence(prediction).sum(dim=0)
+        """
+        given a (N, pred-size) tensor of YOGO predictions, return a tensor of shape
+        (1, num_classes) with each value being the number of times that class was predicted.
+        Easy, eh!
+        """
+        return PerImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
 
 
 class PerRunReduction:
