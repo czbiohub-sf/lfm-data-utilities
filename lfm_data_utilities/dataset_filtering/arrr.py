@@ -339,7 +339,7 @@ class ARRRShell(cmd.Cmd):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Ask Me Anything*")
+    parser = argparse.ArgumentParser("ARRR")
     parser.add_argument(
         "dense_data_dir",
         help="path to 'dense data' dir - ie dir that has directories  with 'yogo_predictions.pt'",
