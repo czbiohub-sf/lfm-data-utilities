@@ -14,7 +14,7 @@ import warnings
 import traceback
 
 from pathlib import Path
-from itertools import cycle, chain
+from itertools import cycle
 from typing import List, Tuple, Dict, Optional, cast
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
