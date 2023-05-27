@@ -9,7 +9,7 @@ from functools import partial
 from dataclasses import dataclass
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence, TypeVar
+from typing import List, Dict, Tuple, Optional, Callable, Union, Sequence, TypeVar
 from pathlib import Path
 
 from tqdm import tqdm
@@ -645,9 +645,15 @@ def protected_fcn(f, *args):
 T = TypeVar("T")
 G = TypeVar("G")
 
+
 def multithread_map_unordered(
     argument_list: Sequence[T],
-    fn: Callable[[T,], G],
+    fn: Callable[
+        [
+            T,
+        ],
+        G,
+    ],
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
@@ -675,7 +681,12 @@ def multithread_map_unordered(
 
 def multiprocess_fn(
     argument_list: Sequence[T],
-    fn: Callable[[T,], G],
+    fn: Callable[
+        [
+            T,
+        ],
+        G,
+    ],
     ordered: bool = True,
     verbose: bool = True,
 ) -> List[G]:
