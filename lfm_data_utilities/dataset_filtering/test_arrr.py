@@ -69,6 +69,13 @@ class TestPerImgReduction(unittest.TestCase):
             )
         )
 
+    def test_class_count_mini(self):
+        test_mini_gt = [1, 2]
+        self.assertEqual(
+            arrr.PerImgReduction.count_class(self.test_mini_prediction).tolist(),
+            test_mini_gt,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -122,7 +122,7 @@ class PerImgReduction:
         """
         given a (N, pred-size) tensor of YOGO predictions, return a tensor of shape
         (1, num_classes) with each value being the mean of predicted classes. So, if
-        the prediction tensor is
+        the class-component of the prediction tensor is
 
         [[0.6, 0.2],
          [0.2, 0.8],
@@ -143,6 +143,17 @@ class PerImgReduction:
         given a (N, pred-size) tensor of YOGO predictions, return a tensor of shape
         (1, num_classes) with each value being the number of times that class was predicted.
         Easy, eh!
+
+        If the class-component of the prediction tensor is
+
+        [[0.6, 0.2],
+         [0.2, 0.8],
+         [0.1, 0.9]]
+
+        this returns
+
+        [1, 2]
+
         """
         return PerImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
 
