@@ -77,6 +77,14 @@ def load_predictions_into_memory(
     return dict(path_prediction_pairs)
 
 
+def nonzero_mean(ten: torch.Tensor, dim=0, nan=0.0) -> torch.Tensor:
+    """ mean of non-zero elements along dimension dim.
+    """
+    sum_ = ten.sum(dim=dim)
+    nonzero = (ten != 0).sum(dim=dim)
+    return torch.nan_to_num(sum_ / nonzero, nan=nan)
+
+
 class PerImgReduction:
     @staticmethod
     def predicted_confidence(prediction):
@@ -89,16 +97,13 @@ class PerImgReduction:
 
     @staticmethod
     def mean_predicted_confidence(prediction):
-        return PerImgReduction.predicted_confidence(prediction).mean(dim=0)
+        return nonzero_mean(
+            PerImgReduction.predicted_confidence(prediction)
+        )
 
     @staticmethod
     def count_class(prediction):
-        num_classes = prediction.shape[1] - 5
-        class_probabilities = prediction[:, 5:]
-        class_predictions = class_probabilities.argmax(dim=1)
-        return torch.nn.functional.one_hot(
-            class_predictions, num_classes=num_classes
-        ).sum(dim=0)
+        return PerImgReduction.predicted_confidence(prediction).sum(dim=0)
 
 
 class PerRunReduction:
@@ -109,14 +114,6 @@ class PerRunReduction:
     @staticmethod
     def mean(values: List[torch.Tensor]) -> torch.Tensor:
         return torch.stack(values).mean(dim=0)
-
-    @staticmethod
-    def nonzero_mean(values: List[torch.Tensor]) -> torch.Tensor:
-        stack = torch.stack(values)
-        N, n_classes = stack.shape
-        sum_ = stack.sum(dim=0)
-        nonzero = (stack != 0).sum(dim=0)
-        return sum_ / nonzero
 
     @staticmethod
     def median(values: List[torch.Tensor]) -> torch.Tensor:
@@ -151,6 +148,7 @@ class RunSetReduction:
         )
 
 
+# geez! the autoformatting of callables is brutal
 def execute_arrr(
     path_tensor_map: Dict[Path, List[torch.Tensor]],
     per_img_reduction: Callable[
@@ -272,7 +270,7 @@ class ARRRShell(cmd.Cmd):
             execute_arrr(
                 path_tensor_map=self.path_tensor_map,
                 per_img_reduction=PerImgReduction.mean_predicted_confidence,
-                per_run_reduction=PerRunReduction.nonzero_mean,
+                per_run_reduction=PerRunReduction.mean,
                 per_run_set_reduction=RunSetReduction.id,
             )
         )
