@@ -22,12 +22,6 @@ PathLike = Union[str, Path]
 
 
 @dataclass
-class ImageAndLabelPathPair:
-    img_path: Path
-    lbl_path: Path
-
-
-@dataclass
 class DatasetPaths:
     zarr_path: Path
     per_img_csv_path: Path
@@ -54,7 +48,6 @@ class Dataset:
             self.zarr_file = load_read_only_zarr(str(dp.zarr_path))
             self.per_img_metadata = load_per_img_csv(dp.per_img_csv_path)
             self.experiment_metadata = load_csv(dp.experiment_csv_path)
-            self.img_and_label_paths = get_img_and_label_paths(dp.root_dir)
         except Exception as e:
             print(f"Error loading dataset {dp.zarr_path}: {e}")
             if not fail_silently:
@@ -63,6 +56,29 @@ class Dataset:
                 self.successfully_loaded = False
         else:
             self.successfully_loaded = True
+
+
+@dataclass
+class ImageAndLabelPathPair:
+    img_path: Path
+    lbl_path: Path
+
+    def __iter__(self) -> Tuple[Path, Path]:
+        return iter((self.img_path, self.lbl_path))
+
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+
+@dataclass
+class Segment:
+    classification: int
+    top_left: Point
+    bottom_right: Point
+    frame_count: int
 
 
 def try_get_package_version_identifier(package: types.ModuleType) -> Optional[str]:
@@ -247,8 +263,8 @@ def find_label_file(label_dir: Path, image_path: Path) -> Path:
     raise FileNotFoundError(f"label file not found for {str(image_path)}")
 
 
-def get_img_and_label_paths(
-    top_level_dir: PathLike,
+def get_img_and_label_pairs(
+    img_dir: PathLike, label_dir: PathLike, quiet: bool = True
 ) -> Optional[List[ImageAndLabelPathPair]]:
     """Given a directory of an experiment, check to see if a folder
     of images have been created from the zarr, and corresponding labels (for classification) and bounding boxes. If yes, return
@@ -266,11 +282,7 @@ def get_img_and_label_paths(
         May return none if either the image or label files are not present.
     """
 
-    img_dir = Path(top_level_dir / "images")
-    label_dir = Path(top_level_dir / "labels")
-
     img_label_path_pairs: List[ImageAndLabelPathPair] = []
-
     if img_dir.exists() and label_dir.exists():
         img_paths = sorted(img_dir.glob("*.png"))
         for img_path in img_paths:
@@ -278,8 +290,9 @@ def get_img_and_label_paths(
                 lbl_path = find_label_file(label_dir, img_path)
                 img_label_path_pairs.append(ImageAndLabelPathPair(img_path, lbl_path))
             except FileNotFoundError as e:
-                print(f"no label file: {e}")
-                print("continuing...")
+                if not quiet:
+                    print(f"no label file: {e}")
+                    print("continuing...")
                 continue
 
         return img_label_path_pairs
@@ -876,3 +889,29 @@ def load_imgs_threaded(img_paths: List[Path]) -> List[np.ndarray]:
     with ThreadPoolExecutor() as executor:
         images = executor.map(load_img, img_paths)
     return list(images)
+
+
+def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Segment]:
+    with open(lbl_path, "r") as f:
+        lines = f.readlines()
+
+    frame_count = int(lbl_path.stem.split("_")[1])
+    values = [[float(x) for x in v.strip().split(" ")] for v in lines]
+
+    segments = [
+        Segment(
+            classification=int(i[0]),
+            top_left=Point(
+                x=int((i[1] - i[3] / 2) * img_width),
+                y=int((i[2] - i[4] / 2) * img_height),
+            ),
+            bottom_right=Point(
+                x=int((i[1] + i[3] / 2) * img_width),
+                y=int((i[2] + i[4] / 2) * img_height),
+            ),
+            frame_count=frame_count,
+        )
+        for i in values
+    ]
+
+    return segments
