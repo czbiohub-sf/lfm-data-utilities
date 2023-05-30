@@ -3,31 +3,21 @@
 
 import cmd
 import argparse
-import operator
 
 import torch
 
+from tqdm import tqdm
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple, Callable, Any, Optional
 
 from yogo.utils import format_preds
+
 from lfm_data_utilities import utils
 
 
 """
 This is a tool specifically built for map-reducing over a large number
 of large tensors.
-
-Types of questions I can answer!
-
-(notation: map is "->", reduce is "|->")
-
-- find min 100 images ranked by mean class confidence
-    - map: tensor |-> predictions -> class confidences |-> mean
-    - reduce: mean |-> min
-- rank all runs by mean class confidence
-    - map: tensor |-> predictions -> class confidences |-> mean
-    - reduce: mean |-> rank
 
 
 Array Reduce Reduce Reduce
@@ -70,7 +60,7 @@ def load_predictions_into_memory(
         )
 
     path_prediction_pairs = utils.multithread_map_unordered(
-        list(prediction_tensor_paths)[:5],
+        list(prediction_tensor_paths)[:2],
         fn=load_tensor,
         verbose=True,
         realize=True,
@@ -189,7 +179,7 @@ class RunReduction:
 
     @staticmethod
     def median(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).median(dim=0)
+        return torch.stack(values).median(dim=0).values()
 
     @staticmethod
     def min(values: List[torch.Tensor]) -> torch.Tensor:
@@ -218,13 +208,19 @@ class RunSetReduction:
         return values
 
     @staticmethod
-    def min_n(values: Dict[Path, torch.Tensor], n: int) -> Dict[Path, torch.Tensor]:
-        return dict(sorted(values.items(), key=operator.itemgetter(1))[:n])
+    def min_n(
+        values: Dict[Path, torch.Tensor], n: int, class_idx: int = 0
+    ) -> Dict[Path, torch.Tensor]:
+        return dict(sorted(values.items(), key=lambda v: v[1][class_idx].item())[:n])
 
     @staticmethod
-    def max_n(values: Dict[Path, torch.Tensor], n: int) -> Dict[Path, torch.Tensor]:
+    def max_n(
+        values: Dict[Path, torch.Tensor], n: int, class_idx: int = 0
+    ) -> Dict[Path, torch.Tensor]:
         return dict(
-            sorted(values.items(), key=operator.itemgetter(1), reverse=True)[:n]
+            sorted(values.items(), key=lambda v: v[1][class_idx].item(), reverse=True)[
+                :n
+            ]
         )
 
 
@@ -237,9 +233,13 @@ def execute_arrr(
     """execute array reduce reduce reduce. lots of parallelization opportunity here."""
     path_modified_tensor_map = {
         path: run_reduction([img_reduction(img_tensor) for img_tensor in run_tensor])
-        for path, run_tensor in path_tensor_map.items()
+        for path, run_tensor in tqdm(path_tensor_map.items())
     }
     return run_set_reduction(path_modified_tensor_map)
+
+
+def get_user_defined_methods(class_):
+    return [method for method in class_.__dict__ if callable(getattr(class_, method))]
 
 
 class ARRRShell(cmd.Cmd):
@@ -256,6 +256,7 @@ class ARRRShell(cmd.Cmd):
         self.path_tensor_map = path_tensor_map
         self.objectness_threshold = objectness_threshold
         self.iou_threshold = iou_threshold
+        self.prev_results: Dict[str, torch.Tensor] = dict()
 
     def parse_to_float(self, arg: Any) -> Optional[float]:
         try:
@@ -265,7 +266,6 @@ class ARRRShell(cmd.Cmd):
 
     def emptyline(self):
         "on empty line, do nothing"
-        pass
 
     def pretty_print_dict(self, d: Dict[Any, Any]):
         for k, v in d.items():
@@ -328,24 +328,94 @@ class ARRRShell(cmd.Cmd):
 
     def do_dataset_mean_class_probability(self, arg):
         "print the mean per-class confidence for each dataset"
-        self.pretty_print_dict(
-            execute_arrr(
-                path_tensor_map=self.path_tensor_map,
-                img_reduction=ImgReduction.mean_predicted_confidence,
-                run_reduction=RunReduction.nonzero_mean,
-                run_set_reduction=RunSetReduction.id,
-            )
+        self.prev_results = execute_arrr(
+            path_tensor_map=self.path_tensor_map,
+            img_reduction=ImgReduction.mean_predicted_confidence,
+            run_reduction=RunReduction.nonzero_mean,
+            run_set_reduction=RunSetReduction.id,
         )
+        self.pretty_print_dict(self.prev_results)
 
     def do_dataset_class_count(self, arg):
-        self.pretty_print_dict(
-            execute_arrr(
-                path_tensor_map=self.path_tensor_map,
-                img_reduction=ImgReduction.count_class,
-                run_reduction=RunReduction.sum,
-                run_set_reduction=RunSetReduction.id,
-            )
+        """
+        print the number of cells per class for each dataset
+        """
+        self.prev_results = execute_arrr(
+            path_tensor_map=self.path_tensor_map,
+            img_reduction=ImgReduction.count_class,
+            run_reduction=RunReduction.sum,
+            run_set_reduction=RunSetReduction.id,
         )
+        self.pretty_print_dict(self.prev_results)
+
+    def do_query(self, arg):
+        maybe_methods = self._parse_args(arg)
+        if maybe_methods is None:
+            return
+
+        (
+            img_reduction_method,
+            run_reduction_method,
+            run_set_reduction_method,
+        ) = maybe_methods
+
+        self.prev_results = execute_arrr(
+            path_tensor_map=self.path_tensor_map,
+            img_reduction=img_reduction_method,
+            run_reduction=run_reduction_method,
+            run_set_reduction=run_set_reduction_method,
+        )
+        self.pretty_print_dict(self.prev_results)
+
+    do_query.__doc__ = f"""
+        general query
+
+        format is:
+            <img reduction> <run reduction> <run set reduction>
+
+        options for img_reduction are
+            {get_user_defined_methods(ImgReduction)}
+
+        options for run_reduction are
+            {get_user_defined_methods(RunReduction)}
+
+        options for run_set_reduction are
+            {get_user_defined_methods(RunSetReduction)}
+        """
+
+    def _parse_args(
+        self, arg
+    ) -> Optional[Tuple[ImgReductionType, RunReductionType, RunSetReductionType]]:
+        """
+        format of args is expected to be
+
+            <img reduction> <run reduction> <run set reduction>
+        """
+        arguments = [arg.strip() for arg in arg.split(" ") if arg.strip()]
+        if len(arguments) != 3:
+            print("invalid number of arguments")
+            return None
+
+        img_reduction_method = getattr(ImgReduction, arguments[0], None)
+        if img_reduction_method is None:
+            print(f"invalid img reduction method {arguments[0]}")
+            return None
+
+        run_reduction_method = getattr(RunReduction, arguments[1], None)
+        if run_reduction_method is None:
+            print(f"invalid run reduction method {arguments[1]}")
+            return None
+
+        run_set_reduction_method = getattr(RunSetReduction, arguments[2], None)
+        if run_set_reduction_method is None:
+            print(f"invalid run set reduction method {arguments[2]}")
+            return None
+
+        return img_reduction_method, run_reduction_method, run_set_reduction_method
+
+    def do_quit(self, arg):
+        "quit the program"
+        return True
 
 
 if __name__ == "__main__":
