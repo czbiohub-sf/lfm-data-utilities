@@ -180,6 +180,10 @@ class RunReduction:
         return torch.stack(values)
 
     @staticmethod
+    def nonzero_mean(values: List[torch.Tensor]) -> torch.Tensor:
+        return nonzero_mean(torch.stack(values))
+
+    @staticmethod
     def mean(values: List[torch.Tensor]) -> torch.Tensor:
         return torch.stack(values).mean(dim=0)
 
@@ -224,7 +228,6 @@ class RunSetReduction:
         )
 
 
-# geez! the autoformatting of callables is brutal
 def execute_arrr(
     path_tensor_map: Dict[Path, List[torch.Tensor]],
     img_reduction: ImgReductionType,
@@ -329,7 +332,7 @@ class ARRRShell(cmd.Cmd):
             execute_arrr(
                 path_tensor_map=self.path_tensor_map,
                 img_reduction=ImgReduction.mean_predicted_confidence,
-                run_reduction=RunReduction.mean,
+                run_reduction=RunReduction.nonzero_mean,
                 run_set_reduction=RunSetReduction.id,
             )
         )
