@@ -20,18 +20,14 @@ class TestImgReduction(unittest.TestCase):
         gt = torch.zeros(5, 7)
         gt[:, :5] = torch.eye(5)
         self.assertEqual(
-            arrr.ImgReduction.predicted_confidence(
-                self.test_img_prediction
-            ).tolist(),
+            arrr.ImgReduction.predicted_confidence(self.test_img_prediction).tolist(),
             gt.tolist(),
         )
 
     def test_predicted_confidence_mini(self):
         test_mini_gt = torch.tensor([[0.6, 0.0], [0.0, 0.8], [0.0, 0.9]])
         self.assertEqual(
-            arrr.ImgReduction.predicted_confidence(
-                self.test_mini_prediction
-            ).tolist(),
+            arrr.ImgReduction.predicted_confidence(self.test_mini_prediction).tolist(),
             test_mini_gt.tolist(),
         )
 
@@ -42,9 +38,7 @@ class TestImgReduction(unittest.TestCase):
         # shouldn't do anything, since 1 > 0.5, the 0.5 will be masked out
         self.test_img_prediction[:, -1] = 0.5
         self.assertEqual(
-            arrr.ImgReduction.predicted_confidence(
-                self.test_img_prediction
-            ).tolist(),
+            arrr.ImgReduction.predicted_confidence(self.test_img_prediction).tolist(),
             gt.tolist(),
         )
 
@@ -62,9 +56,7 @@ class TestImgReduction(unittest.TestCase):
         test_mini_gt = torch.tensor([0.6, 0.85])
         self.assertTrue(
             torch.allclose(
-                arrr.ImgReduction.mean_predicted_confidence(
-                    self.test_mini_prediction
-                ),
+                arrr.ImgReduction.mean_predicted_confidence(self.test_mini_prediction),
                 test_mini_gt,
             )
         )

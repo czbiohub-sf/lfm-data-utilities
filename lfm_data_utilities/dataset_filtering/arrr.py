@@ -86,7 +86,13 @@ def nonzero_mean(ten: torch.Tensor, dim=0, nan=0.0) -> torch.Tensor:
     return torch.nan_to_num(sum_ / nonzero, nan=nan)
 
 
-ImgReductionType = Callable[[torch.Tensor,], torch.Tensor]
+ImgReductionType = Callable[
+    [
+        torch.Tensor,
+    ],
+    torch.Tensor,
+]
+
 
 class ImgReduction:
     @staticmethod
@@ -160,7 +166,13 @@ class ImgReduction:
         return ImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
 
 
-RunReductionType = Callable[[List[torch.Tensor],], torch.Tensor]
+RunReductionType = Callable[
+    [
+        List[torch.Tensor],
+    ],
+    torch.Tensor,
+]
+
 
 class RunReduction:
     @staticmethod
@@ -188,7 +200,12 @@ class RunReduction:
         return torch.stack(values).sum(dim=0)
 
 
-RunSetReductionType = Callable[[Dict[Path, torch.Tensor],], Any]
+RunSetReductionType = Callable[
+    [
+        Dict[Path, torch.Tensor],
+    ],
+    Any,
+]
 
 
 class RunSetReduction:
@@ -216,9 +233,7 @@ def execute_arrr(
 ) -> Any:
     """execute array reduce reduce reduce. lots of parallelization opportunity here."""
     path_modified_tensor_map = {
-        path: run_reduction(
-            [img_reduction(img_tensor) for img_tensor in run_tensor]
-        )
+        path: run_reduction([img_reduction(img_tensor) for img_tensor in run_tensor])
         for path, run_tensor in path_tensor_map.items()
     }
     return run_set_reduction(path_modified_tensor_map)
