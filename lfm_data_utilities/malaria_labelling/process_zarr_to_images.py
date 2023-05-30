@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 from functools import partial
 
-from lfm_data_utilities.utils import multithread_map_unordered, get_list_of_zarr_files
+from lfm_data_utilities.utils import multiprocess_fn, multithread_map_unordered, get_list_of_zarr_files
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
@@ -34,9 +34,11 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
 
     N = int(math.log(data_len, 10) + 1)
 
-    for i in range(data_len):
+    def cp_img_i(i):
         img = data[:, :, i] if isinstance(data, zarr.Array) else data[i][:]
         Image.fromarray(img).save(image_dir / f"img_{i:0{N}}.png")
+
+    multithread_map_unordered(range(data_len), cp_img_i, verbose=False)
 
 
 def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Optional[Path]:
@@ -108,14 +110,14 @@ if __name__ == "__main__":
                 ),
             )
         )
-        multithread_map_unordered(
+        multiprocess_fn(
             files_to_fix,
             partial(convert_zarr_to_image_folder, skip=False),
-            max_num_threads=4,
+            ordered=False,
         )
     elif args.check:
         multithread_map_unordered(files, check_num_imgs_is_num_zarr_imgs, verbose=False)
     else:
-        multithread_map_unordered(
-            files, partial(convert_zarr_to_image_folder, skip=skip)
+        multiprocess_fn(
+            files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False,
         )
