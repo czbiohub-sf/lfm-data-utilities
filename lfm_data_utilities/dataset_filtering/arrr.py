@@ -6,6 +6,8 @@ import argparse
 
 import torch
 
+import pandas as pd
+
 from tqdm import tqdm
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple, Callable, Any, Optional
@@ -13,6 +15,7 @@ from typing import Dict, List, Sequence, Tuple, Callable, Any, Optional
 from yogo.utils import format_preds
 
 from lfm_data_utilities import utils
+from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 
 
 """
@@ -256,25 +259,11 @@ class ARRRShell(cmd.Cmd):
         self.path_tensor_map = path_tensor_map
         self.objectness_threshold = objectness_threshold
         self.iou_threshold = iou_threshold
-        self.prev_results: Dict[str, torch.Tensor] = dict()
 
-    def parse_to_float(self, arg: Any) -> Optional[float]:
-        try:
-            return float(arg)
-        except ValueError:
-            return None
+        self.prev_results: Optional[Dict[str, torch.Tensor]] = dict()
+        self.prev_op_name: Optional[str] = None
 
-    def emptyline(self):
-        "on empty line, do nothing"
-
-    def pretty_print_dict(self, d: Dict[Any, Any]):
-        for k, v in d.items():
-            if isinstance(v, torch.Tensor):
-                v = v.tolist()
-                if not isinstance(v[0], int):
-                    v = [round(x, 2) for x in v]
-
-            print(f"{k}: {v}")
+        self._df = pd.DataFrame(index=self.path_tensor_map.keys())
 
     def do_why(self, _):
         "why is this called ARRR?"
@@ -286,6 +275,20 @@ class ARRRShell(cmd.Cmd):
             "    2. per-run reduction over per-image reductions\n"
             "    3. per-run-set reduction over per-run reductions\n"
         )
+
+    def do_append_cols(self, arg):
+        "append previous results to save"
+        if self.prev_results is None:
+            print("no previous results to append")
+            return
+
+        multi_index = pd.MultiIndex.from_product([[self.prev_op_name], CLASSES])
+        formatted_results = {k: {(self.prev_op_name, clss): clss_val} for k, v in self.prev_results.items() for clss, clss_val in zip(CLASSES, v)}
+        df_new = pd.DataFrame.from_dict(formatted_results).T
+        self._df = pd.concat([self._df, df_new], axis=1, join="inner")
+
+    def do_show_df(self, _):
+        print(self._df.head())
 
     def do_set_objectness(self, arg):
         """
@@ -326,7 +329,7 @@ class ARRRShell(cmd.Cmd):
             iou_threshold=self.iou_threshold,
         )
 
-    def do_dataset_mean_class_probability(self, arg):
+    def do_mean_class_probability(self, arg):
         "print the mean per-class confidence for each dataset"
         self.prev_results = execute_arrr(
             path_tensor_map=self.path_tensor_map,
@@ -334,9 +337,10 @@ class ARRRShell(cmd.Cmd):
             run_reduction=RunReduction.nonzero_mean,
             run_set_reduction=RunSetReduction.id,
         )
+        self.prev_op_name = "mean_class_probability"
         self.pretty_print_dict(self.prev_results)
 
-    def do_dataset_class_count(self, arg):
+    def do_class_count(self, arg):
         """
         print the number of cells per class for each dataset
         """
@@ -346,6 +350,7 @@ class ARRRShell(cmd.Cmd):
             run_reduction=RunReduction.sum,
             run_set_reduction=RunSetReduction.id,
         )
+        self.prev_op_name = "class_count"
         self.pretty_print_dict(self.prev_results)
 
     def do_query(self, arg):
@@ -383,6 +388,10 @@ class ARRRShell(cmd.Cmd):
             {get_user_defined_methods(RunSetReduction)}
         """
 
+    def do_quit(self, arg):
+        "quit the program"
+        return True
+
     def _parse_args(
         self, arg
     ) -> Optional[Tuple[ImgReductionType, RunReductionType, RunSetReductionType]]:
@@ -413,9 +422,23 @@ class ARRRShell(cmd.Cmd):
 
         return img_reduction_method, run_reduction_method, run_set_reduction_method
 
-    def do_quit(self, arg):
-        "quit the program"
-        return True
+    def parse_to_float(self, arg: Any) -> Optional[float]:
+        try:
+            return float(arg)
+        except ValueError:
+            return None
+
+    def emptyline(self):
+        "on empty line, do nothing"
+
+    def pretty_print_dict(self, d: Dict[Any, Any]):
+        for k, v in d.items():
+            if isinstance(v, torch.Tensor):
+                v = v.tolist()
+                if not isinstance(v[0], int):
+                    v = [round(x, 2) for x in v]
+
+            print(f"{k}: {v}")
 
 
 if __name__ == "__main__":
