@@ -86,7 +86,9 @@ def nonzero_mean(ten: torch.Tensor, dim=0, nan=0.0) -> torch.Tensor:
     return torch.nan_to_num(sum_ / nonzero, nan=nan)
 
 
-class PerImgReduction:
+ImgReductionType = Callable[[torch.Tensor,], torch.Tensor]
+
+class ImgReduction:
     @staticmethod
     def predicted_confidence(prediction):
         """
@@ -135,7 +137,7 @@ class PerImgReduction:
         since the mean of the first column (ignoring values that are not the best prediction)
         is 0.6, and the mean of the second column is 0.85.
         """
-        return nonzero_mean(PerImgReduction.predicted_confidence(prediction))
+        return nonzero_mean(ImgReduction.predicted_confidence(prediction))
 
     @staticmethod
     def count_class(prediction):
@@ -155,10 +157,12 @@ class PerImgReduction:
         [1, 2]
 
         """
-        return PerImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
+        return ImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
 
 
-class PerRunReduction:
+RunReductionType = Callable[[List[torch.Tensor],], torch.Tensor]
+
+class RunReduction:
     @staticmethod
     def stack(values: List[torch.Tensor]) -> torch.Tensor:
         return torch.stack(values)
@@ -184,6 +188,9 @@ class PerRunReduction:
         return torch.stack(values).sum(dim=0)
 
 
+RunSetReductionType = Callable[[Dict[Path, torch.Tensor],], Any]
+
+
 class RunSetReduction:
     @staticmethod
     def id(values: Dict[Path, torch.Tensor]) -> Dict[Path, torch.Tensor]:
@@ -203,33 +210,18 @@ class RunSetReduction:
 # geez! the autoformatting of callables is brutal
 def execute_arrr(
     path_tensor_map: Dict[Path, List[torch.Tensor]],
-    per_img_reduction: Callable[
-        [
-            torch.Tensor,
-        ],
-        torch.Tensor,
-    ],
-    per_run_reduction: Callable[
-        [
-            List[torch.Tensor],
-        ],
-        torch.Tensor,
-    ],
-    per_run_set_reduction: Callable[
-        [
-            Dict[Path, torch.Tensor],
-        ],
-        Any,
-    ],
+    img_reduction: ImgReductionType,
+    run_reduction: RunReductionType,
+    run_set_reduction: RunSetReductionType,
 ) -> Any:
     """execute array reduce reduce reduce. lots of parallelization opportunity here."""
     path_modified_tensor_map = {
-        path: per_run_reduction(
-            [per_img_reduction(img_tensor) for img_tensor in run_tensor]
+        path: run_reduction(
+            [img_reduction(img_tensor) for img_tensor in run_tensor]
         )
         for path, run_tensor in path_tensor_map.items()
     }
-    return per_run_set_reduction(path_modified_tensor_map)
+    return run_set_reduction(path_modified_tensor_map)
 
 
 class ARRRShell(cmd.Cmd):
@@ -316,24 +308,24 @@ class ARRRShell(cmd.Cmd):
             iou_threshold=self.iou_threshold,
         )
 
-    def do_per_dataset_mean_class_probability(self, arg):
+    def do_dataset_mean_class_probability(self, arg):
         "print the mean per-class confidence for each dataset"
         self.pretty_print_dict(
             execute_arrr(
                 path_tensor_map=self.path_tensor_map,
-                per_img_reduction=PerImgReduction.mean_predicted_confidence,
-                per_run_reduction=PerRunReduction.mean,
-                per_run_set_reduction=RunSetReduction.id,
+                img_reduction=ImgReduction.mean_predicted_confidence,
+                run_reduction=RunReduction.mean,
+                run_set_reduction=RunSetReduction.id,
             )
         )
 
-    def do_per_dataset_class_count(self, arg):
+    def do_dataset_class_count(self, arg):
         self.pretty_print_dict(
             execute_arrr(
                 path_tensor_map=self.path_tensor_map,
-                per_img_reduction=PerImgReduction.count_class,
-                per_run_reduction=PerRunReduction.sum,
-                per_run_set_reduction=RunSetReduction.id,
+                img_reduction=ImgReduction.count_class,
+                run_reduction=RunReduction.sum,
+                run_set_reduction=RunSetReduction.id,
             )
         )
 
