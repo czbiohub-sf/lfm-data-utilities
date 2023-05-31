@@ -2,6 +2,7 @@
 
 
 import cmd
+import IPython
 import argparse
 
 import torch
@@ -136,7 +137,9 @@ class ImgReduction:
         since the mean of the first column (ignoring values that are not the best prediction)
         is 0.6, and the mean of the second column is 0.85.
         """
-        return nonzero_mean(ImgReduction.predicted_confidence(prediction))
+        return nonzero_mean(ImgReduction.predicted_confidence(prediction)).unsqueeze(
+            dim=0
+        )
 
     @staticmethod
     def count_class(prediction):
@@ -156,7 +159,12 @@ class ImgReduction:
         [1, 2]
 
         """
-        return ImgReduction.predicted_confidence(prediction).ceil().sum(dim=0)
+        return (
+            ImgReduction.predicted_confidence(prediction)
+            .ceil()
+            .sum(dim=0)
+            .unsqueeze(dim=0)
+        )
 
 
 RunReductionType = Callable[
@@ -169,32 +177,32 @@ RunReductionType = Callable[
 
 class RunReduction:
     @staticmethod
-    def stack(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values)
+    def cat(values: List[torch.Tensor]) -> torch.Tensor:
+        return torch.cat(values)
 
     @staticmethod
     def nonzero_mean(values: List[torch.Tensor]) -> torch.Tensor:
-        return nonzero_mean(torch.stack(values))
+        return nonzero_mean(torch.cat(values))
 
     @staticmethod
     def mean(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).mean(dim=0)
+        return torch.cat(values).mean(dim=0)
 
     @staticmethod
     def median(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).median(dim=0).values()
+        return torch.cat(values).median(dim=0).values
 
     @staticmethod
     def min(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).min(dim=0)
+        return torch.cat(values).min(dim=0).values
 
     @staticmethod
     def max(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).max(dim=0)
+        return torch.cat(values).max(dim=0).values
 
     @staticmethod
     def sum(values: List[torch.Tensor]) -> torch.Tensor:
-        return torch.stack(values).sum(dim=0)
+        return torch.cat(values).sum(dim=0)
 
 
 RunSetReductionType = Callable[
@@ -264,6 +272,7 @@ class ARRRShell(cmd.Cmd):
         self.prev_op_name: Optional[str] = None
 
         self._df = pd.DataFrame(index=self.path_tensor_map.keys())
+        self._df.index.name = "path"
 
     def do_why(self, _):
         "why is this called ARRR?"
@@ -276,18 +285,38 @@ class ARRRShell(cmd.Cmd):
             "    3. per-run-set reduction over per-run reductions\n"
         )
 
-    def do_append_cols(self, arg):
-        "append previous results to save"
+    def do_append(self, arg):
+        "append previous results to the internal dataframe (to be saved later with the `save` command)"
         if self.prev_results is None:
             print("no previous results to append")
             return
 
-        multi_index = pd.MultiIndex.from_product([[self.prev_op_name], CLASSES])
-        formatted_results = {k: {(self.prev_op_name, clss): clss_val} for k, v in self.prev_results.items() for clss, clss_val in zip(CLASSES, v)}
-        df_new = pd.DataFrame.from_dict(formatted_results).T
+        mi = pd.MultiIndex.from_product([[self.prev_op_name], CLASSES])
+        df_new = pd.DataFrame(columns=mi, index=self.path_tensor_map.keys())
+
+        # probably can set this without a loop, but I have no clue how to do it
+        for path, tensor in self.prev_results.items():
+            for class_idx, class_name in enumerate(CLASSES):
+                df_new.loc[path, (self.prev_op_name, class_name)] = tensor[
+                    class_idx
+                ].item()
+
         self._df = pd.concat([self._df, df_new], axis=1, join="inner")
 
+    def do_save(self, arg):
+        """
+        save results to csv
+
+        usage: save <filename>
+        """
+        if arg == "":
+            print("usage: save <filename>")
+            return
+
+        self._df.to_csv(arg)
+
     def do_show_df(self, _):
+        "show the first several rows of the dataframe"
         print(self._df.head())
 
     def do_set_objectness(self, arg):
@@ -340,7 +369,7 @@ class ARRRShell(cmd.Cmd):
         self.prev_op_name = "mean_class_probability"
         self.pretty_print_dict(self.prev_results)
 
-    def do_class_count(self, arg):
+    def do_count_class(self, arg):
         """
         print the number of cells per class for each dataset
         """
@@ -350,7 +379,7 @@ class ARRRShell(cmd.Cmd):
             run_reduction=RunReduction.sum,
             run_set_reduction=RunSetReduction.id,
         )
-        self.prev_op_name = "class_count"
+        self.prev_op_name = "count_class"
         self.pretty_print_dict(self.prev_results)
 
     def do_query(self, arg):
@@ -364,12 +393,16 @@ class ARRRShell(cmd.Cmd):
             run_set_reduction_method,
         ) = maybe_methods
 
-        self.prev_results = execute_arrr(
-            path_tensor_map=self.path_tensor_map,
-            img_reduction=img_reduction_method,
-            run_reduction=run_reduction_method,
-            run_set_reduction=run_set_reduction_method,
-        )
+        try:
+            self.prev_results = execute_arrr(
+                path_tensor_map=self.path_tensor_map,
+                img_reduction=img_reduction_method,
+                run_reduction=run_reduction_method,
+                run_set_reduction=run_set_reduction_method,
+            )
+        except Exception as e:
+            print(f"error executing arrr: {e}")
+            return
         self.pretty_print_dict(self.prev_results)
 
     do_query.__doc__ = f"""
@@ -386,11 +419,22 @@ class ARRRShell(cmd.Cmd):
 
         options for run_set_reduction are
             {get_user_defined_methods(RunSetReduction)}
-        """
+
+        some options for each reduction won't mix - let axel know if there
+        are any specific operations you want to do that aren't supported
+    """
 
     def do_quit(self, arg):
         "quit the program"
         return True
+
+    def do_embed(self, _):
+        """
+        embed into an ipython shell - note, you can break things here, but it will
+        be useful for e.g. plotting results from the dataframe
+        """
+
+        IPython.embed()
 
     def _parse_args(
         self, arg
