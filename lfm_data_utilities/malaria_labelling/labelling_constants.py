@@ -5,4 +5,12 @@ IMAGE_SERVER_PORT = 8081
 
 FLEXO_DATA_DIR = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING as CLASSES
+CLASSES = [
+    "healthy",
+    "ring",
+    "trophozoite",
+    "schizont",
+    "gametocyte",
+    "wbc",
+    "misc",
+]
