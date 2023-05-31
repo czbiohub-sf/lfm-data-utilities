@@ -253,7 +253,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--label-override",
         default=None,
-        choices=YOGO_CLASS_ORDERING,
+        choices=CLASSES,
         help="override for YOGO labels - e.g. label every bbox as healthy"
     )
 
