@@ -3,6 +3,7 @@
 import cv2
 import time
 import torch
+import traceback
 
 
 import numpy as np
@@ -17,7 +18,6 @@ from cellpose.utils import (
 from typing import Optional, Literal, List, Tuple
 
 from labelling_constants import CLASSES
-from generate_dataset_def import gen_dataset_def
 from generate_labelstudio_tasks import generate_tasks_for_runset
 from utils import convert_coords
 
@@ -145,7 +145,7 @@ def label_folder_with_yogo(
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         thresh=0.5,
-        label_override=label
+        label_override=label,
     )
 
 
@@ -185,35 +185,38 @@ def label_runset(
         good_run_folders.append(path_to_images.parent)
 
         if model == "cellpose":
-            label_fn = label_folder_with_cellpose
-            args = (path_to_images,)
-            kwargs = {
-                "chunksize": chunksize,
-                "label": CLASSES.index('healthy'),
-                "label_dir_name": label_dir_name,
-            }
+            try:
+                label_folder_with_cellpose(
+                    path_to_images,
+                    chunksize=chunksize,
+                    label=CLASSES.index("healthy"),
+                    label_dir_name=label_dir_name,
+                )
+            except Exception:
+                traceback.print_exc()
+
         elif model == "yogo":
-            label_fn = label_folder_with_yogo
-            args = (
-                path_to_images,
-                path_to_pth,
-            )
-            kwargs = {
-                "chunksize": chunksize,
-                "label": label,
-                "label_dir_name": label_dir_name,
-            }
+            if path_to_pth is None:
+                raise ValueError(
+                    "you must provide a path to the YOGO pth file in order "
+                    "to label with YOGO"
+                )
+
+            try:
+                label_folder_with_yogo(
+                    path_to_images,
+                    path_to_pth,
+                    chunksize=chunksize,
+                    label=label,
+                    label_dir_name=label_dir_name,
+                )
+            except Exception:
+                traceback.print_exc()
+
         else:
             raise ValueError(
                 f"only valid options for model is 'cellpose' or 'yogo': got {model}"
             )
-
-        try:
-            label_fn(*args, **kwargs)
-        except Exception:
-            import traceback
-
-            traceback.print_exc()
 
         print(f"{time.perf_counter() - t0:.0f}s")
 
@@ -257,7 +260,7 @@ if __name__ == "__main__":
         "--label-override",
         default=None,
         choices=CLASSES,
-        help="override for YOGO labels - e.g. label every bbox as healthy"
+        help="override for YOGO labels - e.g. label every bbox as healthy",
     )
 
     args = parser.parse_args()
