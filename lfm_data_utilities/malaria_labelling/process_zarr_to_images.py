@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Optional
 from functools import partial
 
-from lfm_data_utilities.utils import multiprocess_fn, multithread_map_unordered, get_list_of_zarr_files
+from lfm_data_utilities.utils import (
+    multiprocess_fn,
+    multithread_map_unordered,
+    get_list_of_zarr_files,
+)
 
 
 def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
@@ -119,5 +123,7 @@ if __name__ == "__main__":
         multithread_map_unordered(files, check_num_imgs_is_num_zarr_imgs, verbose=False)
     else:
         multiprocess_fn(
-            files, partial(convert_zarr_to_image_folder, skip=skip), ordered=False,
+            files,
+            partial(convert_zarr_to_image_folder, skip=skip),
+            ordered=False,
         )
