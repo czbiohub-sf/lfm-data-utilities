@@ -37,10 +37,7 @@ def get_corresponding_dataset_dir_in_search_dir(
         if dataset_dir_search_string in search_dir.parent.name:
             return search_dir.parent
         else:
-            print(
-                f"WARNING: {search_dir} was passed in which doesn't seem to match {dataset_dir}. Making thumbnails anyway but this seems weird..."
-            )
-            return search_dir.parent
+            return None
 
     # If a single experiment folder was passed
     if "labels" in os.listdir(search_dir):

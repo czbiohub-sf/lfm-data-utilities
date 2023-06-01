@@ -29,4 +29,4 @@ One optional, explicit argument
 `python3 cut_out_cells_using_existing_bb_annotations.py scope-parasite-data/run-sets/specific_experiments/images biohub-labels/vetted/specific_folder/labels`
 
 - In this case, a single experiment images folder was passed in along with its corresponding labels folder.
-- **NOTE**: The script will check that the passed in `images/` and `labels/` folder correspond based on the their parent folder names. **If they don't match, it will warn you that something is amiss but will still generate thumbnails.**
+- **NOTE**: The script will check that the passed in `images/` and `labels/` folder correspond based on the their parent folder names.
