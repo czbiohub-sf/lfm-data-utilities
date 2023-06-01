@@ -4,11 +4,10 @@ import sys
 
 from tqdm import tqdm
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 from ruamel import yaml
 
-from labelling_constants import CLASSES
 
 """
 This file will scan through the labeled data and create the data set definition file.
@@ -28,7 +27,10 @@ dataset_paths:
 
 
 def gen_dataset_def(
-    path_to_runset_folder: Path, label_dir_name="labels", verbose=False, dataset_def_name="dataset_defs"
+    path_to_runset_folder: Path,
+    label_dir_name="labels",
+    verbose=False,
+    dataset_def_name="dataset_defs",
 ):
     folders = [Path(p).parent for p in path_to_runset_folder.glob("./**/images")]
 
@@ -78,10 +80,16 @@ if __name__ == "__main__":
         "path_to_runset", type=Path, help="Path to runset folder"
     )
     generate_subparser.add_argument(
-        "--label-dir-name", type=str, help="label dir name (defaults to `labels`)", default="labels"
+        "--label-dir-name",
+        type=str,
+        help="label dir name (defaults to `labels`)",
+        default="labels",
     )
     generate_subparser.add_argument(
-        "--dataset-def-name", type=str, help="dataset definition file name (defaults to `dataset_defs.yml`)", default="labels"
+        "--dataset-def-name",
+        type=str,
+        help="dataset definition file name (defaults to `dataset_defs.yml`)",
+        default="labels",
     )
 
     verify_subparser.add_argument(
@@ -100,7 +108,7 @@ if __name__ == "__main__":
             args.path_to_runset,
             verbose=True,
             label_dir_name=args.label_dir_name,
-            dataset_def_name=args.dataset_def_name
+            dataset_def_name=args.dataset_def_name,
         )
     elif args.subparser == "verify":
         try:
