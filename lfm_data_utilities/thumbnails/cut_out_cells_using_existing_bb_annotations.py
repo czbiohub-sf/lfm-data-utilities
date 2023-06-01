@@ -6,7 +6,7 @@ crop out cells and put them into a folder.
 from functools import partial
 from multiprocessing import Pool
 import os
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from pathlib import Path
 import json
 
@@ -62,13 +62,13 @@ def get_corresponding_dataset_dir_in_search_dir(
         return None
 
 
-def get_class_map(dataset_dir: Path) -> dict:
+def get_class_map(dataset_dir: Path) -> Dict[int, str]:
     """Each dataset might have its own order for classes. This function returns the mapping
     from this dataset's order to the 'general' order.
 
     Returns
     -------
-    dict [int, str]:
+    Dict [int, str]:
         Integer id to string (i.e healthy / ring / troph / etc.)
     """
 
@@ -149,7 +149,7 @@ def save_crops(
     segments: List[Segment],
     crops: List[np.ndarray],
     dataset_path: Path,
-    class_map: dict[str, str],
+    class_map: Dict[str, str],
     save_loc: Path,
 ) -> None:
     segs_and_crops: List[Tuple[Segment, np.ndarray]] = zip(segments, crops)
