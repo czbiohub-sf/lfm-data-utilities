@@ -124,7 +124,7 @@ def label_folder_with_yogo(
     path_to_pth: Path,
     label_dir_name="labels",
     chunksize=32,
-    label=0,
+    label_override: Optional[str] = None,
     **kwargs,
 ):
     # Write classes.txt for label studio
@@ -140,6 +140,7 @@ def label_folder_with_yogo(
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         thresh=0.5,
+        label_override=label_override
     )
 
 
@@ -151,6 +152,7 @@ def label_runset(
     chunksize=32,
     label=0,
     skip=True,
+    label_override: Optional[str] = None,
 ) -> List[Path]:
     print(
         f"starting to label run set; {'skipping' if skip else 'overwritting'} existing labels"
@@ -196,6 +198,7 @@ def label_runset(
                 "chunksize": chunksize,
                 "label": label,
                 "label_dir_name": label_dir_name,
+                "label_override": label_override,
             }
         else:
             raise ValueError(
@@ -247,8 +250,15 @@ if __name__ == "__main__":
         default="tasks",
         help="name for label studio tasks file - defaults to tasks.json",
     )
+    parser.add_argument(
+        "--label-override",
+        default=None,
+        choices=CLASSES,
+        help="override for YOGO labels - e.g. label every bbox as healthy"
+    )
 
     args = parser.parse_args()
+
     path_to_runset = args.path_to_runset
 
     if not path_to_runset.exists():
@@ -268,24 +278,20 @@ if __name__ == "__main__":
         label=CLASSES.index("healthy"),
         label_dir_name=args.label_dir_name,
         skip=args.existing_label_action == "skip",
+        label_override=args.label_override,
     )
     print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
 
-    print("generating dataset defs...")
-    t0 = time.perf_counter()
-    gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
-    print(f"dataset defs generated: {time.perf_counter() - t0:.3f} s")
-
     print("generating tasks files for Label Studio...")
 
-    parasite_data_runset_path = Path(
+    img_server_root = Path(
         "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
     )
 
     t0 = time.perf_counter()
     generate_tasks_for_runset(
         labelled_run_paths,
-        parasite_data_runset_path,
+        img_server_root,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
