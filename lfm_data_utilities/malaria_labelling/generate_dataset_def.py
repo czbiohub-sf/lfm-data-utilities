@@ -15,7 +15,6 @@ This file will scan through the labeled data and create the data set definition 
 Here is an example format!
 
 ```
-class_names: ["healthy", "ring", "schizont", "troph"]
 dataset_split_fractions:
   train: 0.70
   test:  0.25
@@ -28,13 +27,8 @@ dataset_paths:
 """
 
 
-def class_names_from_classes_dot_txt(path_to_classes_dot_txt: Path) -> List[str]:
-    with open(str(path_to_classes_dot_txt), "r") as f:
-        return [s.strip() for s in f.readlines() if s != ""]
-
-
 def gen_dataset_def(
-    path_to_runset_folder: Path, label_dir_name="labels", verbose=False
+    path_to_runset_folder: Path, label_dir_name="labels", verbose=False, dataset_def_name="dataset_defs"
 ):
     folders = [Path(p).parent for p in path_to_runset_folder.glob("./**/images")]
 
@@ -58,7 +52,6 @@ def gen_dataset_def(
         }
 
     dataset_defs = {
-        "class_names": CLASSES,
         "dataset_split_fractions": {"train": 0.75, "test": 0.20, "val": 0.05},
         "dataset_paths": dataset_paths,
     }
@@ -66,9 +59,9 @@ def gen_dataset_def(
     yml = yaml.YAML()
     yml.indent(mapping=5, sequence=5, offset=3)
 
-    with open("dataset_defs.yml", "w") as f:
+    with open(Path(dataset_def_name).with_suffix(".yml"), "w") as f:
         yml.dump(dataset_defs, f)
-        print("dumped to dataset_defs.yml")
+        print(f"dumped to {str(Path(dataset_def_name).with_suffix('.yml'))}")
 
 
 if __name__ == "__main__":
@@ -84,6 +77,13 @@ if __name__ == "__main__":
     generate_subparser.add_argument(
         "path_to_runset", type=Path, help="Path to runset folder"
     )
+    generate_subparser.add_argument(
+        "--label-dir-name", type=str, help="label dir name (defaults to `labels`)", default="labels"
+    )
+    generate_subparser.add_argument(
+        "--dataset-def-name", type=str, help="dataset definition file name (defaults to `dataset_defs.yml`)", default="labels"
+    )
+
     verify_subparser.add_argument(
         "path_to_dataset_defn_file",
         type=Path,
@@ -96,7 +96,12 @@ if __name__ == "__main__":
         if not args.path_to_runset.exists():
             raise ValueError(f"{str(args.path_to_runset)} doesn't exist")
 
-        gen_dataset_def(args.path_to_runset, verbose=True)
+        gen_dataset_def(
+            args.path_to_runset,
+            verbose=True,
+            label_dir_name=args.label_dir_name,
+            dataset_def_name=args.dataset_def_name
+        )
     elif args.subparser == "verify":
         try:
             from yogo.data.dataloader import (
@@ -124,3 +129,5 @@ if __name__ == "__main__":
             except InvalidDatasetDescriptionFile as e:
                 print(f"{args.path_to_dataset_defn_file} is invalid: {e}")
                 sys.exit(1)
+    else:
+        parser.print_help()
