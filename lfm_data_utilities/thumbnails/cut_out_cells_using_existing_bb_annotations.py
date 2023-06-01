@@ -34,7 +34,7 @@ def get_corresponding_dataset_dir_in_search_dir(
 
     # If an images folder is passed in directly
     if search_dir.stem == "labels" and search_dir.is_dir():
-        if dataset_dir_search_string in search_dir.parent:
+        if dataset_dir_search_string in search_dir.parent.name:
             return search_dir.parent
         else:
             print(
@@ -43,9 +43,10 @@ def get_corresponding_dataset_dir_in_search_dir(
             return search_dir.parent
 
     # If a single experiment folder was passed
-    if "labels/" in os.listdir(search_dir):
-        if dataset_dir_search_string in search_dir.name:
-            return search_dir
+    if "labels" in os.listdir(search_dir):
+        if (Path(search_dir) / "labels").is_dir():
+            if dataset_dir_search_string in search_dir.name:
+                return search_dir
         else:
             print(
                 f"WARNING: {search_dir} was passed in which doesn't seem to match {dataset_dir}. Making thumbnails anyway but this seems weird..."
@@ -96,7 +97,7 @@ def save_thumbnails_from_dataset(
 
     # Attempt to find the corresponding dataset in the search directory for labels
     corresponding_dataset_in_labels_dir = get_corresponding_dataset_dir_in_search_dir(
-        dataset_path, search_dir
+        dataset_path, label_search_dir
     )
 
     # Verify that the labels folder exists in the search directory, otherwise return
@@ -110,7 +111,7 @@ def save_thumbnails_from_dataset(
             return
         else:
             # Inform user
-            print(f"Working on: {dataset_path.name}")
+            print(f"Working on: {dataset_path.parent.name}/{dataset_path.name}")
             print(
                 f"Corresponding labels folder found in: {corresponding_dataset_in_labels_dir}"
             )
@@ -244,7 +245,8 @@ def get_img_paths(main_dir: Path) -> List[Path]:
 
     # Account for the case where a specific images folder is passed in
     if main_dir.name == "images":
-        return img_paths.append(main_dir)
+        img_paths.append(main_dir)
+        return img_paths
 
     # Otherwise walk through the subdirectories and find folders containing images/ folders
     for main_path, directories, _ in os.walk(main_dir):
