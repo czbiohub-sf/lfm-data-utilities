@@ -133,7 +133,7 @@ def save_thumbnails_from_dataset(
 
     image_label_pairs = get_img_and_label_pairs(imgs_folder_path, labels_path)
 
-    for img_path, lbl_path in image_label_pairs:
+    for img_path, lbl_path in tqdm(image_label_pairs):
         try:
             img = load_img(img_path)
             h, w = img.shape
