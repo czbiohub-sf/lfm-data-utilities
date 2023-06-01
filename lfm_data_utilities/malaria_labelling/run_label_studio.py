@@ -87,6 +87,7 @@ if __name__ == "__main__":
 
     os.environ["LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED"] = "true"
     os.environ["LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT"] = str(path_to_run_folder)
+    os.environ["DATA_UPLOAD_MAX_MEMORY_SIZE"] = str(1024 * 1024 * 1024)  # 1GB
 
     proc = run_server_in_proc(path_to_run_folder)
 
