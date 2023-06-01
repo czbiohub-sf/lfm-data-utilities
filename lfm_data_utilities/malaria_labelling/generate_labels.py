@@ -135,12 +135,17 @@ def label_folder_with_yogo(
     path_to_label_dir = path_to_images.parent / label_dir_name
     path_to_label_dir.mkdir(exist_ok=True, parents=True)
 
+    try:
+        label = CLASSES.index(label_override)
+    except IndexError:
+        label = None
+
     predict(
         path_to_pth,
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         thresh=0.5,
-        label_override=label_override
+        label_override=label
     )
 
 
@@ -150,9 +155,8 @@ def label_runset(
     path_to_pth: Optional[Path] = None,
     label_dir_name: str = "labels",
     chunksize=32,
-    label=0,
+    label: Optional[str] = None,
     skip=True,
-    label_override: Optional[str] = None,
 ) -> List[Path]:
     print(
         f"starting to label run set; {'skipping' if skip else 'overwritting'} existing labels"
@@ -185,7 +189,7 @@ def label_runset(
             args = (path_to_images,)
             kwargs = {
                 "chunksize": chunksize,
-                "label": label,
+                "label": CLASSES.index('healthy'),
                 "label_dir_name": label_dir_name,
             }
         elif model == "yogo":
@@ -198,7 +202,6 @@ def label_runset(
                 "chunksize": chunksize,
                 "label": label,
                 "label_dir_name": label_dir_name,
-                "label_override": label_override,
             }
         else:
             raise ValueError(
@@ -275,10 +278,9 @@ if __name__ == "__main__":
         path_to_runset,
         model=args.model,
         path_to_pth=args.path_to_yogo_pth,
-        label=CLASSES.index("healthy"),
+        label=args.label_override,
         label_dir_name=args.label_dir_name,
         skip=args.existing_label_action == "skip",
-        label_override=args.label_override,
     )
     print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
 
