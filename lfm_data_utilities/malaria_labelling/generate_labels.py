@@ -282,21 +282,16 @@ if __name__ == "__main__":
     )
     print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
 
-    print("generating dataset defs...")
-    t0 = time.perf_counter()
-    gen_dataset_def(path_to_runset, label_dir_name=args.label_dir_name)
-    print(f"dataset defs generated: {time.perf_counter() - t0:.3f} s")
-
     print("generating tasks files for Label Studio...")
 
-    parasite_data_runset_path = Path(
+    img_server_root = Path(
         "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
     )
 
     t0 = time.perf_counter()
     generate_tasks_for_runset(
         labelled_run_paths,
-        parasite_data_runset_path,
+        img_server_root,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
