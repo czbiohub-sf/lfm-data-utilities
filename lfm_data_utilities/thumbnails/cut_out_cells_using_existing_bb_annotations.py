@@ -24,7 +24,7 @@ from lfm_data_utilities.utils import (
 )
 
 DEFAULT_LABELS_SEARCH_DIR = (
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels"
+    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted"
 )
 
 
