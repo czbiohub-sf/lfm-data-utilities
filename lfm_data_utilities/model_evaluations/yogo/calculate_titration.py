@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from ruamel import yaml
 from pathlib import Path
 from typing import Dict, List
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
 from yogo.infer import predict
 from yogo.utils import format_preds
@@ -41,7 +41,7 @@ def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
         pred = format_preds(pred)
         classes = pred[:, 5:]
         tot_class_sum += classes.sum(dim=0)
-    return tot_class_sum
+    return tot_class_sum.squeeze()
 
 
 def process_prediction(
@@ -59,19 +59,28 @@ def check_for_exceptions(futs: List[Future]):
             maybe_exc = fut.exception(timeout=0.001)
         except TimeoutError:
             pass
-        if maybe_exc is not None:
-            raise maybe_exc
+        else:
+            if maybe_exc is not None:
+                raise maybe_exc
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("calcualte a titration curve")
+    parser.add_argument("path_to_pth", type=Path, help="path to yogo pth file")
     parser.add_argument(
-        "path_to_titration_yml", help="path to a titration dataset description file"
+        "path_to_titration_yml",
+        type=Path,
+        help="path to a titration dataset description file",
     )
-    parser.add_argument("path_to_pth", help="path to yogo pth file")
+    parser.add_argument(
+        "--plot-name",
+        type=Path,
+        help="name for the resulting plot",
+        default=Path("./titration_plot.png"),
+    )
     args = parser.parse_args()
 
-    titration_points = load_titration_yml(Path(args.path_to_titration_yml))
+    titration_points = load_titration_yml(args.path_to_titration_yml)
     titration_results: Dict[str, torch.Tensor] = {}
 
     futs: List[Future] = []
@@ -97,10 +106,15 @@ if __name__ == "__main__":
         tpe.shutdown(wait=True)
         check_for_exceptions(futs)
 
-    datapoints = sorted(titration_results.keys())
+    print(titration_results)
+    datapoints = sorted(titration_results.items())
     points, counts = zip(*datapoints)
 
     fig, ax = plt.subplots(1, 2, figsize=(15, 10))
+    fig.suptitle(
+        f"{args.path_to_pth.parent} titration on {args.path_to_titration_yml}",
+        fontsize=16,
+    )
 
     ax[0].set_title("Total number of cells per titration point")
     ax[0].set_xlabel("Titration point")
@@ -116,4 +130,4 @@ if __name__ == "__main__":
         )
     ax[1].legend()
 
-    plt.show()
+    plt.savefig(f"{args.plot_name.with_suffix('.png')}")
