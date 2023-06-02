@@ -4,6 +4,7 @@ crop out cells and put them into a folder.
 """
 
 from functools import partial
+from concurrent.futures import ThreadPoolExecutor, Future
 from multiprocessing import Pool
 import os
 from typing import List, Optional, Tuple, Dict
@@ -130,16 +131,35 @@ def save_thumbnails_from_dataset(
 
     image_label_pairs = get_img_and_label_pairs(imgs_folder_path, labels_path)
 
-    for img_path, lbl_path in tqdm(image_label_pairs):
-        try:
-            img = load_img(img_path)
-            h, w = img.shape
-            segments = load_label_file(lbl_path, h, w)
-            crops = get_img_crops(img, segments)  # Cropped regions for each cell
-            save_crops(segments, crops, dataset_path, class_map, save_loc)
-        except:
-            print(f"Errored on {img_path, lbl_path}")
-            quit()
+    with ThreadPoolExecutor() as executor:
+        futures: List[Future] = []
+        for img_path, lbl_path in tqdm(image_label_pairs):
+            futures.append(
+                executor.submit(
+                    load_img_and_labels_and_crop_and_save,
+                    img_path,
+                    lbl_path,
+                    dataset_path,
+                    class_map,
+                )
+            )
+
+    # Re-raise any exceptions
+    for f in futures:
+        f.result()
+
+
+def load_img_and_labels_and_crop_and_save(
+    img_path: Path, lbl_path: Path, dataset_path: Path, class_map: Dict[int, str]
+):
+    try:
+        img = load_img(img_path)
+        h, w = img.shape
+        segments = load_label_file(lbl_path, h, w)
+        crops = get_img_crops(img, segments)  # Cropped regions for each cell
+        save_crops(segments, crops, dataset_path, class_map, save_loc)
+    except:
+        raise Exception(f"Errored on {img_path, lbl_path}")
 
 
 def save_crops(
