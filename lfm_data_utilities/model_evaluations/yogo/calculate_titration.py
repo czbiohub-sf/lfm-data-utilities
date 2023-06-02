@@ -36,11 +36,19 @@ def load_titration_yml(path_to_titration_yml: Path) -> Dict[str, Path]:
 
 
 def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
-    tot_class_sum = torch.zeros(1, len(YOGO_CLASS_ORDERING))
-    for i, pred in enumerate(predictions):
-        pred = format_preds(pred)
+    tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING))
+    for i, pred_slice in enumerate(predictions):
+        pred = format_preds(pred_slice)
+        if pred.numel() == 0:
+            continue  # ignore no predictions
         classes = pred[:, 5:]
-        tot_class_sum += classes.sum(dim=0)
+        class_predictions = classes.argmax(dim=1)
+        tot_class_sum += (
+            classes
+            * torch.nn.functional.one_hot(
+                class_predictions, num_classes=len(YOGO_CLASS_ORDERING)
+            )
+        ).sum(dim=0)
     return tot_class_sum.squeeze()
 
 
@@ -49,8 +57,7 @@ def process_prediction(
     titration_point: str,
     result_dict: Dict[str, torch.Tensor],
 ) -> None:
-    class_counts = get_prediction_class_counts(predictions)
-    result_dict[titration_point] = class_counts
+    result_dict[titration_point] = get_prediction_class_counts(predictions)
 
 
 def check_for_exceptions(futs: List[Future]):
@@ -106,7 +113,6 @@ if __name__ == "__main__":
         tpe.shutdown(wait=True)
         check_for_exceptions(futs)
 
-    print(titration_results)
     datapoints = sorted(titration_results.items())
     points, counts = zip(*datapoints)
 
@@ -119,13 +125,13 @@ if __name__ == "__main__":
     ax[0].set_title("Total number of cells per titration point")
     ax[0].set_xlabel("Titration point")
     ax[0].set_ylabel("Number of cells")
-    ax[0].scatter(points, [c.sum().item() for c in titration_results.values()])
+    ax[0].plot(points, [c.sum().item() for c in titration_results.values()])
 
     ax[1].set_title("Number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_ylabel("Number of cells")
     for i, class_name in enumerate(YOGO_CLASS_ORDERING):
-        ax[1].scatter(
+        ax[1].plot(
             points, [c[i].item() for c in titration_results.values()], label=class_name
         )
     ax[1].legend()
