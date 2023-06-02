@@ -10,3 +10,4 @@ PipFile
 metadata_compilation.txt
 lfm_data_utilities/model_evaluations/autofocus/ssaf_output
 lfm_data_utilities/model_evaluations/yogo/**/*.mp4
+lfm_data_utilities/model_evaluations/yogo/titration_plot.png
