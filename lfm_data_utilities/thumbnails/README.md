@@ -1,5 +1,8 @@
 # Description
+How to create and review thumbnails for an annotated set.
 
+
+## Script specifics
 ## cut_out_cells_using_existing_bb_annotations.py
 This script produces 
 Two required positional arguments
