@@ -36,18 +36,15 @@ def load_titration_yml(path_to_titration_yml: Path) -> Dict[str, Path]:
 
 
 def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
-    tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING))
+    tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
     for i, pred_slice in enumerate(predictions):
         pred = format_preds(pred_slice)
         if pred.numel() == 0:
             continue  # ignore no predictions
         classes = pred[:, 5:]
         class_predictions = classes.argmax(dim=1)
-        tot_class_sum += (
-            classes
-            * torch.nn.functional.one_hot(
-                class_predictions, num_classes=len(YOGO_CLASS_ORDERING)
-            )
+        tot_class_sum += torch.nn.functional.one_hot(
+            class_predictions, num_classes=len(YOGO_CLASS_ORDERING)
         ).sum(dim=0)
     return tot_class_sum.squeeze()
 
@@ -102,6 +99,7 @@ if __name__ == "__main__":
             batch_size=64,
             use_tqdm=True,
             device="cuda" if torch.cuda.is_available() else "cpu",
+            vertical_crop_height_px=round(772 * 0.25),
         )
         # and process results asynchronously
         fut = tpe.submit(process_prediction, tn, titration_point, titration_results)
