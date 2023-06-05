@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import warnings
 import argparse
 
 import torch
@@ -83,6 +84,12 @@ if __name__ == "__main__":
         default=Path("./titration_plot.png"),
     )
     args = parser.parse_args()
+
+    if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
+        warnings.warn(
+            "for best performance, we suggest running this script with 32 cpus "
+            "and a gpu"
+        )
 
     titration_points = load_titration_yml(args.path_to_titration_yml)
     titration_results: Dict[str, torch.Tensor] = {}
