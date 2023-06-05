@@ -10,6 +10,7 @@ setup(
         "matplotlib>=3.5.3",
         "tqdm>=4.64.1",
         "AllanTools==2019.9",
+        "GitPython==3.1.31",
         "numpy==1.24.2",
         "pandas>=1.5.3",
         "matplotlib==3.7.0",
