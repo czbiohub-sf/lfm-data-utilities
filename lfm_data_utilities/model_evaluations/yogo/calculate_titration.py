@@ -130,11 +130,13 @@ if __name__ == "__main__":
     ax[0].set_title("Total number of cells per titration point")
     ax[0].set_xlabel("Titration point")
     ax[0].set_ylabel("Number of cells")
+    ax[0].set_yscale('log')
     ax[0].plot(points, [c.sum().item() for c in titration_results.values()])
 
     ax[1].set_title("Number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_ylabel("Number of cells")
+    ax[1].set_yscale('log')
     for i, class_name in enumerate(YOGO_CLASS_ORDERING):
         ax[1].plot(
             points, [c[i].item() for c in titration_results.values()], label=class_name
