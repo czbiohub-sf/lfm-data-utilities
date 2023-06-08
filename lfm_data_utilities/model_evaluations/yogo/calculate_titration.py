@@ -19,11 +19,14 @@ from yogo.data.dataset import YOGO_CLASS_ORDERING
 from lfm_data_utilities import utils
 
 
-def load_titration_yml(path_to_titration_yml: Path) -> Dict[str, Path]:
+def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], float]:
     point_to_path: Dict[str, Path] = dict()
     with open(path_to_titration_yml, "r") as f:
         yaml_data = yaml.safe_load(f)
         points: Dict[str, str] = yaml_data["titration-points"]
+        initial_parasitemia: float = float(yaml_data["initial-titration-parasitemia"])
+        if not (0 <= initial_parasitemia <= 1):
+            raise ValueError(f"initial_parasitemia must be between 0 and 1; got {initial_parasitemia}")
 
         for titration_point, path in points.items():
             tpoint_path = Path(path)
@@ -33,7 +36,7 @@ def load_titration_yml(path_to_titration_yml: Path) -> Dict[str, Path]:
                 )
             point_to_path[titration_point] = tpoint_path
 
-    return point_to_path
+    return point_to_path, initial_parasitemia
 
 
 def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
@@ -91,7 +94,7 @@ if __name__ == "__main__":
             "and a gpu"
         )
 
-    titration_points = load_titration_yml(args.path_to_titration_yml)
+    titration_points, initial_parasitemia = load_titration_yml(args.path_to_titration_yml)
     titration_results: Dict[str, torch.Tensor] = {}
 
     futs: List[Future] = []
@@ -146,3 +149,22 @@ if __name__ == "__main__":
     ax[1].legend()
 
     plt.savefig(f"{args.plot_name.with_suffix('.png')}")
+
+    # now plot total parasitemia vs. titration point
+    fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+    fig.suptitle(
+        f"{args.path_to_pth.parent} titration on {args.path_to_titration_yml}",
+        fontsize=16,
+    )
+
+    ax.set_title("Total number of parasitized cells per titration point")
+    ax.set_xlabel("Titration point")
+    ax.set_xticks(points)
+    ax.set_ylabel("Number of cells")
+    ax.set_yscale('log')
+    # index ring to gametocyte
+    ax.plot(points, [c[1:6].sum().item() / c.sum().item() for c in titration_results.values()])
+    ax.plot([initial_parasitemia / 2**i for i in range(len(titration_results))])
+    ax.legend(["YOGO predictions", "Ground Truth"])
+
+    plt.savefig(f"total_{args.plot_name.with_suffix('.png')}")
