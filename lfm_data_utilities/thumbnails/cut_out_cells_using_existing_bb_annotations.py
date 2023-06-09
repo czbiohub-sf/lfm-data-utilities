@@ -106,10 +106,10 @@ def save_thumbnails_from_dataset(
             return
         else:
             # Inform user
+            print(f"{'='*10}")
             print(
-                f"Working on: {dataset_path.parent.name}/{dataset_path.name}. Label dir found: {corresponding_dataset_in_labels_dir}"
+                f"Working on: {dataset_path.parent.name}/{dataset_path.name}. Label dir found: {lb}"
             )
-
             # Get class map ping for this dataset
             try:
                 class_map = get_class_map(labels_path.parent)
