@@ -26,7 +26,9 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
         points: Dict[str, str] = yaml_data["titration-points"]
         initial_parasitemia: float = float(yaml_data["initial-titration-parasitemia"])
         if not (0 <= initial_parasitemia <= 1):
-            raise ValueError(f"initial_parasitemia must be between 0 and 1; got {initial_parasitemia}")
+            raise ValueError(
+                f"initial_parasitemia must be between 0 and 1; got {initial_parasitemia}"
+            )
 
         for titration_point, path in points.items():
             tpoint_path = Path(path)
@@ -95,7 +97,9 @@ if __name__ == "__main__":
         )
 
     try:
-        titration_points, initial_parasitemia = load_titration_yml(args.path_to_titration_yml)
+        titration_points, initial_parasitemia = load_titration_yml(
+            args.path_to_titration_yml
+        )
     except KeyError as e:
         raise RuntimeError("invalid key in titration yml file") from e
 
@@ -138,17 +142,19 @@ if __name__ == "__main__":
     ax[0].set_xlabel("Titration point")
     ax[0].set_xticks(points)
     ax[0].set_ylabel("Number of cells")
-    ax[0].set_yscale('log')
+    ax[0].set_yscale("log")
     ax[0].plot(points, [c.sum().item() for c in titration_results.values()])
 
     ax[1].set_title("Normalized number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_xticks(points)
     ax[1].set_ylabel("Number of cells")
-    ax[1].set_yscale('log')
+    ax[1].set_yscale("log")
     for i, class_name in enumerate(YOGO_CLASS_ORDERING):
         ax[1].plot(
-            points, [c[i].item() / c.sum().item() for c in titration_results.values()], label=class_name
+            points,
+            [c[i].item() / c.sum().item() for c in titration_results.values()],
+            label=class_name,
         )
     ax[1].legend()
 
@@ -165,9 +171,12 @@ if __name__ == "__main__":
     ax.set_xlabel("Titration point")
     ax.set_xticks(points)
     ax.set_ylabel("Number of cells")
-    ax.set_yscale('log')
+    ax.set_yscale("log")
     # index ring to gametocyte
-    ax.plot(points, [c[1:6].sum().item() / c.sum().item() for c in titration_results.values()])
+    ax.plot(
+        points,
+        [c[1:6].sum().item() / c.sum().item() for c in titration_results.values()],
+    )
     ax.plot([initial_parasitemia / 2**i for i in range(len(titration_results))])
     ax.legend(["YOGO predictions", "Ground Truth"])
 
