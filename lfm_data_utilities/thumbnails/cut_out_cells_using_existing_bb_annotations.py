@@ -317,6 +317,6 @@ if __name__ == "__main__":
     )
 
     with Pool() as p:
-        list(tqdm(p.imap(f, img_paths), total=len(img_paths)))
+        list(p.imap(f, img_paths))
 
     print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
