@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from ruamel import yaml
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
 from yogo.infer import predict
@@ -94,7 +94,11 @@ if __name__ == "__main__":
             "and a gpu"
         )
 
-    titration_points, initial_parasitemia = load_titration_yml(args.path_to_titration_yml)
+    try:
+        titration_points, initial_parasitemia = load_titration_yml(args.path_to_titration_yml)
+    except KeyError as e:
+        raise RuntimeError("invalid key in titration yml file") from e
+
     titration_results: Dict[str, torch.Tensor] = {}
 
     futs: List[Future] = []
