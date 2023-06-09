@@ -30,34 +30,34 @@ DEFAULT_LABELS_SEARCH_DIR = (
 
 def get_corresponding_dataset_dir_in_search_dir(
     dataset_dir: Path, search_dir: Path
-) -> Optional[Path]:
+) -> List[Optional[Path]]:
     dataset_dir_search_string = dataset_dir.name
 
     # If an images folder is passed in directly
     if search_dir.stem == "labels" and search_dir.is_dir():
         if dataset_dir_search_string in search_dir.parent.name:
-            return search_dir.parent
+            return [search_dir.parent]
         else:
-            return None
+            print(
+                f"No match: {dataset_dir_search_string} not found anywhere in {search_dir.parent.name}"
+            )
+            return []
 
     # If a single experiment folder was passed
     if "labels" in os.listdir(search_dir):
         if (Path(search_dir) / "labels").is_dir():
             if dataset_dir_search_string in search_dir.name:
-                return search_dir
+                return [search_dir]
         else:
             print(
                 f"WARNING: {search_dir} was passed in which doesn't seem to match {dataset_dir}. Making thumbnails anyway but this seems weird..."
             )
-            return search_dir
+            return [search_dir]
 
     # Recursively search multiple directories for the folder with the corresponding labels folder
-    try:
-        ds_dir_in_search = next(search_dir.rglob(f"{dataset_dir_search_string}*"))
-        return Path(ds_dir_in_search)
-    except StopIteration:
-        print(f"Couldn't find {dataset_dir_search_string} in {search_dir.stem}")
-        return None
+    return [
+        x for x in list(search_dir.rglob(f"{dataset_dir_search_string}*")) if x.is_dir()
+    ]
 
 
 def get_class_map(dataset_dir: Path) -> Dict[int, str]:
@@ -99,54 +99,46 @@ def save_thumbnails_from_dataset(
     )
 
     # Verify that the labels folder exists in the search directory, otherwise return
-    if corresponding_dataset_in_labels_dir is not None:
-        labels_path: Path = (
-            get_corresponding_dataset_dir_in_search_dir(dataset_path, label_search_dir)
-            / "labels"
-        )
+    for lb in corresponding_dataset_in_labels_dir:
+        labels_path: Path = lb / "labels"
         if not labels_path.exists():
             print(f"{labels_path} does not exist.")
             return
         else:
             # Inform user
-            print(f"Working on: {dataset_path.parent.name}/{dataset_path.name}")
+            print(f"{'='*10}")
             print(
-                f"Corresponding labels folder found in: {corresponding_dataset_in_labels_dir}"
+                f"Working on: {dataset_path.parent.name}/{dataset_path.name}. Label dir found: {lb}"
             )
-    else:
-        if not quiet:
-            print("No corresponding labels folder found in the search directory.")
-        return
+            # Get class map ping for this dataset
+            try:
+                class_map = get_class_map(labels_path.parent)
+                for c in class_map.values():
+                    if not Path(save_loc / c).exists():
+                        Path.mkdir(Path(save_loc / c))
 
-    # Get class mapping for this dataset
-    try:
-        class_map = get_class_map(corresponding_dataset_in_labels_dir)
-        for c in class_map.values():
-            if not Path(save_loc / c).exists():
-                Path.mkdir(Path(save_loc / c))
+            except Exception as e:
+                print(f"Error reading classes.txt for {dataset_path}. Error: {e}")
+                return
 
-    except Exception as e:
-        print(f"Error reading classes.txt for {dataset_path}. Error: {e}")
-        return
+            image_label_pairs = get_img_and_label_pairs(imgs_folder_path, labels_path)
 
-    image_label_pairs = get_img_and_label_pairs(imgs_folder_path, labels_path)
+            with ThreadPoolExecutor() as executor:
+                futures: List[Future] = []
+                for img_path, lbl_path in tqdm(image_label_pairs):
+                    futures.append(
+                        executor.submit(
+                            load_img_and_labels_and_crop_and_save,
+                            img_path,
+                            lbl_path,
+                            dataset_path,
+                            class_map,
+                        )
+                    )
 
-    with ThreadPoolExecutor() as executor:
-        futures: List[Future] = []
-        for img_path, lbl_path in tqdm(image_label_pairs):
-            futures.append(
-                executor.submit(
-                    load_img_and_labels_and_crop_and_save,
-                    img_path,
-                    lbl_path,
-                    dataset_path,
-                    class_map,
-                )
-            )
-
-    # Re-raise any exceptions
-    for f in futures:
-        f.result()
+            # Re-raise any exceptions
+            for f in futures:
+                f.result()
 
 
 def load_img_and_labels_and_crop_and_save(
@@ -325,6 +317,6 @@ if __name__ == "__main__":
     )
 
     with Pool() as p:
-        list(tqdm(p.imap(f, img_paths), total=len(img_paths)))
+        list(p.imap(f, img_paths))
 
     print(f"Done! Take a look at: {save_loc} to view the thumbnails.")
