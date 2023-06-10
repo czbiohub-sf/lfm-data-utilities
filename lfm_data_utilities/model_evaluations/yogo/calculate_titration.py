@@ -117,7 +117,6 @@ if __name__ == "__main__":
             batch_size=64,
             use_tqdm=True,
             device="cuda" if torch.cuda.is_available() else "cpu",
-            vertical_crop_height_px=round(772 * 0.25),
         )
         # and process results asynchronously
         fut = tpe.submit(process_prediction, tn, titration_point, titration_results)
