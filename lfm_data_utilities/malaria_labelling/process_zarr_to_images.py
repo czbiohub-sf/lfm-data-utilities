@@ -13,13 +13,41 @@ from lfm_data_utilities.utils import (
     multiprocess_fn,
     multithread_map_unordered,
     get_list_of_zarr_files,
+    path_relative_to,
 )
 
 
-def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
+def convert_zarr_to_image_folder(
+    path_to_zarr_zip: Path,
+    skip: bool = True,
+    image_runset_dir: Optional[Path] = None,
+    path_to_runset: Optional[Path] = None,
+):
+    """
+    this will convert the specified zarr file to a folder of images. if the
+    folder of images already exists and `skip` is true, this skips that
+    conversion.
+
+    If `image_runset_dir` is none, this will create a folder 'images' beside the
+    zarr folder. Otherwise, image_runset_dir will hold the images. The folder
+    structure of `path_to_runset` will be copied. `image_runset_dir` and `path_to_runset`
+    must both have a value or must both be None
+    """
+    paths_are_valid = (image_runset_dir is None) == (path_to_runset is None)
+    if not paths_are_valid:
+        raise ValueError(
+            "image_runset_dir and path_to_runset must both have a value or must both be None"
+        )
+
     data = zarr.open(str(path_to_zarr_zip), "r")
 
-    image_dir = path_to_zarr_zip.parent / "images"
+    if image_runset_dir is None:
+        image_dir = path_to_zarr_zip.parent / "images"
+    else:
+        assert path_to_runset is not None  # for mypy
+        image_dir = (image_runset_dir / path_relative_to(
+            path_to_zarr_zip, path_to_runset
+        )).parent / "images"
 
     if image_dir.exists() and len(list(image_dir.iterdir())) > 0 and skip:
         print(f"skipping {image_dir} because images already exist!")
@@ -29,7 +57,8 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
         for img_path in image_dir.glob("*.png"):
             img_path.unlink()  # remove file
 
-    # we converted storing data as a zarr.Group to a zarr.Array
+    # we converted storing data as a zarr.Group to a zarr.Array, so we need
+    # to manage both cases
     data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
     if data_len == 0:
         return
@@ -45,11 +74,28 @@ def convert_zarr_to_image_folder(path_to_zarr_zip: Path, skip=True):
     multithread_map_unordered(range(data_len), cp_img_i, verbose=False)
 
 
-def check_num_imgs_is_num_zarr_imgs(path_to_zarr_zip: Path) -> Optional[Path]:
+def check_num_imgs_is_num_zarr_imgs(
+    path_to_zarr_zip: Path,
+    image_runset_dir: Optional[Path] = None,
+    path_to_runset: Optional[Path] = None,
+) -> Optional[Path]:
     data = zarr.open(str(path_to_zarr_zip), "r")
     data_len = data.initialized if isinstance(data, zarr.Array) else len(data)
 
-    image_dir = path_to_zarr_zip.parent / "images"
+    paths_are_valid = (image_runset_dir is None) == (path_to_runset is None)
+    if not paths_are_valid:
+        raise ValueError(
+            "image_runset_dir and path_to_runset must both have a value or must both be None"
+        )
+
+    if image_runset_dir is None:
+        image_dir = path_to_zarr_zip.parent / "images"
+    else:
+        assert path_to_runset is not None  # for mypy
+        image_dir = (image_runset_dir / path_relative_to(
+            path_to_zarr_zip, path_to_runset
+        )).parent / "images"
+
     num_imgs = len(list(image_dir.iterdir())) if image_dir.exists() else 0
 
     if num_imgs != data_len:
@@ -74,6 +120,14 @@ if __name__ == "__main__":
         help=(
             "check if the number of images in the images folder "
             "matches the number of images in the zarr file"
+        ),
+    )
+    parser.add_argument(
+        "--image-dir",
+        type=Path,
+        help=(
+            "image directory for the folders of images - the folder structure for "
+            "path_to_runsets will be mimicked (defaults to the same directory as the zarr files)"
         ),
     )
     parser.add_argument(
@@ -105,25 +159,47 @@ if __name__ == "__main__":
     if len(files) == 0:
         raise ValueError(f"no zarr files found in directory {sys.argv[1]}")
 
+    check_fcn = partial(
+        check_num_imgs_is_num_zarr_imgs,
+        image_runset_dir=args.image_dir,
+        path_to_runset=args.path_to_runset if args.image_dir is not None else None,
+    )
+
     if args.fix:
         files_to_fix = list(
             filter(
                 bool,
-                multithread_map_unordered(
-                    files, check_num_imgs_is_num_zarr_imgs, verbose=False
-                ),
+                multithread_map_unordered(files, check_fcn, verbose=False),
             )
         )
         multiprocess_fn(
             files_to_fix,
-            partial(convert_zarr_to_image_folder, skip=False),
+            partial(
+                convert_zarr_to_image_folder,
+                image_runset_dir=args.image_dir,
+                path_to_runset=(
+                    args.path_to_runset
+                    if args.image_dir is not None
+                    else None
+                ),
+                skip=False,
+            ),
             ordered=False,
         )
     elif args.check:
-        multithread_map_unordered(files, check_num_imgs_is_num_zarr_imgs, verbose=False)
+        multithread_map_unordered(files, check_fcn, verbose=False)
     else:
         multiprocess_fn(
             files,
-            partial(convert_zarr_to_image_folder, skip=skip),
+            partial(
+                convert_zarr_to_image_folder,
+                image_runset_dir=args.image_dir,
+                path_to_runset=(
+                    args.path_to_runset
+                    if args.image_dir is not None
+                    else None
+                ),
+                skip=skip,
+            ),
             ordered=False,
         )
