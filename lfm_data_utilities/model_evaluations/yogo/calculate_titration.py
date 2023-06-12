@@ -176,7 +176,9 @@ if __name__ == "__main__":
         points,
         [c[1:6].sum().item() / c.sum().item() for c in titration_results.values()],
     )
-    ax.plot(points, [initial_parasitemia / 2**i for i in range(len(titration_results))])
+    ax.plot(
+        points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
+    )
     ax.legend(["YOGO predictions", "Ground Truth"])
 
     plt.savefig(f"total_{args.plot_name.with_suffix('.png')}")
