@@ -66,7 +66,7 @@ def process_prediction(
 def check_for_exceptions(futs: List[Future]):
     for fut in futs:
         try:
-            maybe_exc = fut.exception(timeout=0.001)
+            maybe_exc = fut.exception(timeout=1e-9)
         except TimeoutError:
             pass
         else:
