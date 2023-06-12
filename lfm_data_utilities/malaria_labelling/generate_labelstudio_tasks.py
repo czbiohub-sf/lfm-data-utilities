@@ -2,13 +2,12 @@
 
 
 from pathlib import Path
-from typing import Union, List
+from typing import List
 from urllib.request import pathname2url
 from functools import partial
 
 from lfm_data_utilities.utils import (
     multiprocess_fn,
-    path_is_relative_to,
     path_relative_to,
 )
 
