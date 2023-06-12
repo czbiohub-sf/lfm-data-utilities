@@ -4,7 +4,6 @@
 #SBATCH --time=16:00:00
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
-#SBATCH --partition=gpu
 #SBATCH --cpus-per-task=64
 #SBATCH --output=./slurm-outputs/slurm-%j.out
 
