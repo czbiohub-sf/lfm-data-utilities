@@ -6,43 +6,15 @@ from typing import Union, List
 from urllib.request import pathname2url
 from functools import partial
 
-from lfm_data_utilities.utils import multiprocess_fn
+from lfm_data_utilities.utils import (
+    multiprocess_fn,
+    path_is_relative_to,
+    path_relative_to,
+)
 
 from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
 from label_studio_converter.imports.yolo import convert_yolo_to_ls
-
-
-def path_is_relative_to(path_a: Path, path_b: Union[str, Path]) -> bool:
-    """
-    Path.is_relative_to is available in pathlib since 3.9,
-    but we are running 3.7. Copied from pathlib
-    (https://github.com/python/cpython/blob/main/Lib/pathlib.py)
-    """
-    path_b = type(path_a)(path_b)
-    return path_a == path_b or path_b in path_a.parents
-
-
-def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> Path:
-    """
-    Path.relative_to is available in pathlib since 3.9,
-    but we are running 3.7. Copied from pathlib
-    (https://github.com/python/cpython/blob/main/Lib/pathlib.py)
-    """
-    path_cls = type(path_a)
-    path_b = path_cls(path_b)
-
-    for step, path in enumerate([path_b] + list(path_b.parents)):
-        if path_is_relative_to(path_a, path):
-            break
-    else:
-        raise ValueError(f"{str(path_a)!r} and {str(path_b)!r} have different anchors")
-
-    if step and not walk_up:
-        raise ValueError(f"{str(path_a)!r} is not in the subpath of {str(path_b)!r}")
-
-    parts = ("..",) * step + path_a.parts[len(path.parts) :]
-    return path_cls(*parts)
 
 
 def generate_tasks_for_runset_by_parent_folder(

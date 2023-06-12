@@ -915,3 +915,35 @@ def load_label_file(lbl_path: Path, img_height: int, img_width: int) -> List[Seg
     ]
 
     return segments
+
+
+def path_is_relative_to(path_a: Path, path_b: Union[str, Path]) -> bool:
+    """
+    Path.is_relative_to is available in pathlib since 3.9,
+    but we are running 3.7. Copied from pathlib
+    (https://github.com/python/cpython/blob/main/Lib/pathlib.py)
+    """
+    path_b = type(path_a)(path_b)
+    return path_a == path_b or path_b in path_a.parents
+
+
+def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> Path:
+    """
+    Path.relative_to is available in pathlib since 3.9,
+    but we are running 3.7. Copied from pathlib
+    (https://github.com/python/cpython/blob/main/Lib/pathlib.py)
+    """
+    path_cls = type(path_a)
+    path_b = path_cls(path_b)
+
+    for step, path in enumerate([path_b] + list(path_b.parents)):
+        if path_is_relative_to(path_a, path):
+            break
+    else:
+        raise ValueError(f"{str(path_a)!r} and {str(path_b)!r} have different anchors")
+
+    if step and not walk_up:
+        raise ValueError(f"{str(path_a)!r} is not in the subpath of {str(path_b)!r}")
+
+    parts = ("..",) * step + path_a.parts[len(path.parts) :]
+    return path_cls(*parts)
