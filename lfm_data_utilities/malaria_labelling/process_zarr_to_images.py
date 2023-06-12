@@ -126,7 +126,7 @@ if __name__ == "__main__":
         "--image-dir",
         type=Path,
         help=(
-            "image directory for the folders of images - the folder structure for "
+            "optional image directory for the folders of images - the folder structure for "
             "path_to_runsets will be mimicked (defaults to the same directory as the zarr files)"
         ),
     )
