@@ -137,7 +137,7 @@ def label_folder_with_yogo(
 
     try:
         label = CLASSES.index(label_override)
-    except IndexError:
+    except ValueError:
         label = None
 
     predict(
