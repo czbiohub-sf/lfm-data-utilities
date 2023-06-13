@@ -43,7 +43,7 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
 
 def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
-    for i, pred_slice in enumerate(predictions):
+    for pred_slice in predictions:
         pred = format_preds(pred_slice)
         if pred.numel() == 0:
             continue  # ignore no predictions
@@ -52,7 +52,7 @@ def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
         tot_class_sum += torch.nn.functional.one_hot(
             class_predictions, num_classes=len(YOGO_CLASS_ORDERING)
         ).sum(dim=0)
-    return tot_class_sum.squeeze()
+    return tot_class_sum
 
 
 def process_prediction(
@@ -142,17 +142,17 @@ if __name__ == "__main__":
     ax[0].set_xticks(points)
     ax[0].set_ylabel("Number of cells")
     ax[0].set_yscale("log")
-    ax[0].plot(points, [c.sum().item() for c in titration_results.values()])
+    ax[0].plot(points, [c[:6].sum().item() for c in counts])
 
     ax[1].set_title("Normalized number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_xticks(points)
     ax[1].set_ylabel("Number of cells")
     ax[1].set_yscale("log")
-    for i, class_name in enumerate(YOGO_CLASS_ORDERING):
+    for i, class_name in enumerate(YOGO_CLASS_ORDERING[:6]):
         ax[1].plot(
             points,
-            [c[i].item() / c.sum().item() for c in titration_results.values()],
+            [c[i].item() / c[:6].sum().item() for c in counts],
             label=class_name,
         )
     ax[1].legend()
@@ -171,10 +171,11 @@ if __name__ == "__main__":
     ax.set_xticks(points)
     ax.set_ylabel("Number of cells")
     ax.set_yscale("log")
+
     # index ring to gametocyte
     ax.plot(
         points,
-        [c[1:6].sum().item() / c.sum().item() for c in titration_results.values()],
+        [c[1:6].sum().item() / c[:6].sum().item() for c in counts],
     )
     ax.plot(
         points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
