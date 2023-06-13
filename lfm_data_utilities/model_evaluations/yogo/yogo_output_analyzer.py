@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+import torch
+
 import argparse
 import numpy as np
 
@@ -47,8 +49,8 @@ if __name__ == "__main__":
         path_to_images=image_path,
     )
 
-    bbox_image = yogo.utils.draw_rects(
-        image_data,
+    bbox_image = yogo.utils.draw_yogo_prediction(
+        torch.tensor(image_data),
         result_tensor,
         thresh=0.5,
         labels=CLASS_LIST,
@@ -72,8 +74,8 @@ if __name__ == "__main__":
                 f"misc: {classifications[6, j, k]:.2f}<br>"
             )
     boxmap = np.array(
-        yogo.utils.draw_rects(
-            image_data, result_tensor, thresh=0.5, iou_thresh=0, objectness_opacity=1
+        yogo.utils.draw_yogo_prediction(
+            torch.tensor(image_data), result_tensor, thresh=0.5, iou_thresh=0,
         )
     )
 
