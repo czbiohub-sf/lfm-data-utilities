@@ -45,9 +45,9 @@ def convert_zarr_to_image_folder(
         image_dir = path_to_zarr_zip.parent / "images"
     else:
         assert path_to_runset is not None  # for mypy
-        image_dir = (image_runset_dir / path_relative_to(
-            path_to_zarr_zip, path_to_runset
-        )).parent / "images"
+        image_dir = (
+            image_runset_dir / path_relative_to(path_to_zarr_zip, path_to_runset)
+        ).parent / "images"
 
     if image_dir.exists() and len(list(image_dir.iterdir())) > 0 and skip:
         print(f"skipping {image_dir} because images already exist!")
@@ -92,9 +92,9 @@ def check_num_imgs_is_num_zarr_imgs(
         image_dir = path_to_zarr_zip.parent / "images"
     else:
         assert path_to_runset is not None  # for mypy
-        image_dir = (image_runset_dir / path_relative_to(
-            path_to_zarr_zip, path_to_runset
-        )).parent / "images"
+        image_dir = (
+            image_runset_dir / path_relative_to(path_to_zarr_zip, path_to_runset)
+        ).parent / "images"
 
     num_imgs = len(list(image_dir.iterdir())) if image_dir.exists() else 0
 
@@ -178,9 +178,7 @@ if __name__ == "__main__":
                 convert_zarr_to_image_folder,
                 image_runset_dir=args.image_dir,
                 path_to_runset=(
-                    args.path_to_runset
-                    if args.image_dir is not None
-                    else None
+                    args.path_to_runset if args.image_dir is not None else None
                 ),
                 skip=False,
             ),
@@ -195,9 +193,7 @@ if __name__ == "__main__":
                 convert_zarr_to_image_folder,
                 image_runset_dir=args.image_dir,
                 path_to_runset=(
-                    args.path_to_runset
-                    if args.image_dir is not None
-                    else None
+                    args.path_to_runset if args.image_dir is not None else None
                 ),
                 skip=skip,
             ),
