@@ -142,17 +142,17 @@ if __name__ == "__main__":
     ax[0].set_xticks(points)
     ax[0].set_ylabel("Number of cells")
     ax[0].set_yscale("log")
-    ax[0].plot(points, [c[:6].sum().item() for c in counts])
+    ax[0].plot(points, [c[:5].sum().item() for c in counts])
 
     ax[1].set_title("Normalized number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_xticks(points)
     ax[1].set_ylabel("Number of cells")
     ax[1].set_yscale("log")
-    for i, class_name in enumerate(YOGO_CLASS_ORDERING[:6]):
+    for i, class_name in enumerate(YOGO_CLASS_ORDERING[:5]):
         ax[1].plot(
             points,
-            [c[i].item() / c[:6].sum().item() for c in counts],
+            [c[i].item() / c[:5].sum().item() for c in counts],
             label=class_name,
         )
     ax[1].legend()
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # index ring to gametocyte
     ax.plot(
         points,
-        [c[1:6].sum().item() / c[:6].sum().item() for c in counts],
+        [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
     )
     ax.plot(
         points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
