@@ -145,7 +145,7 @@ def label_folder_with_yogo(
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         thresh=0.5,
-        label_override=label,
+        label=label,
     )
 
 
