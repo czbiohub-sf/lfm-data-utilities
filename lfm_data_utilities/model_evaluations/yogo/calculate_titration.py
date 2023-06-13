@@ -88,6 +88,14 @@ if __name__ == "__main__":
         help="name for the resulting plot",
         default=Path("./titration_plot.png"),
     )
+    parser.add_argument(
+        "--crop-height",
+        type=float,
+        help=(
+            "crop images to the given fraction - e.g. `--crop-height 0.25` will crop "
+            "images to a height of `round(height_org * 0.25)` (default to no cropping)"
+        ),
+    )
     args = parser.parse_args()
 
     if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
@@ -116,6 +124,11 @@ if __name__ == "__main__":
             path_to_images=path,
             batch_size=64,
             use_tqdm=True,
+            vertical_crop_height_px=(
+                round(772 * args.crop_height)
+                if args.crop_height is not None
+                else None
+            ),
             device="cuda" if torch.cuda.is_available() else "cpu",
         )
         # and process results asynchronously
