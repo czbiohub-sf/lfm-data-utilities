@@ -23,7 +23,7 @@ VALID_KEYS = [
 DEFAULT_KEYS = ["directory", "notes", "git_branch"]
 
 MAX_COLWIDTH = 50
-TXT_FILE = "metadata_compilation.txt"
+CSV_FILE = "metadata_compilation.csv"
 
 
 def run(folder, display_keys=DEFAULT_KEYS):
@@ -73,8 +73,8 @@ def run(folder, display_keys=DEFAULT_KEYS):
 
     print("\n" + truncated_master_df[display_keys].to_string())
 
-    master_df.to_csv(TXT_FILE)
-    print(f"\nWrote untruncated metadata compilation to {TXT_FILE}")
+    master_df.to_csv(CSV_FILE)
+    print(f"\nWrote untruncated metadata compilation to {CSV_FILE}")
 
 
 if __name__ == "__main__":
