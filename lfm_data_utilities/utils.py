@@ -947,3 +947,20 @@ def path_relative_to(path_a: Path, path_b: Union[str, Path], walk_up=False) -> P
 
     parts = ("..",) * step + path_a.parts[len(path.parts) :]
     return path_cls(*parts)
+
+
+def guess_model_name(path_to_pth: Path, default: Optional[str] = None) -> str:
+    """
+    At a certain point[1], we started saving the model name in YOGO checkpoints.
+    If there is the model name, use that. Then if you provide a default, use that.
+    Else, guess that the parent directory to the model is the model name.
+
+    [1] YOGO commit f9fc698b81e6fc704ef84a918f6c666975b6e602
+        https://github.com/czbiohub-sf/yogo/commit/f9fc698b81e6fc704ef84a918f6c666975b6e602
+    """
+    # import here so we don't have to wait the long import
+    # time for files that don't use pytorch
+    import torch
+
+    data = torch.load(path_to_pth, map_location="cpu")
+    return data.get("model_name", None) or default or data.parent.name
