@@ -1,3 +1,4 @@
 initial-titration-parasitemia: 0.125
 titration-points:
-  1:  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2023-05-22-100123/2023-05-22-100333_/images
+  2:  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titration_data_20230522/data/2023-05-22-113040/2023-05-22-113150_/images
+  3:  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titration_data_20230522/data/2023-05-22-115853/2023-05-22-120119_/images
