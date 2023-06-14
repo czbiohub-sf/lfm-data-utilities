@@ -73,8 +73,7 @@ def run(folder, display_keys=DEFAULT_KEYS):
 
     print("\n" + truncated_master_df[display_keys].to_string())
 
-    with open(TXT_FILE, "w") as writer:
-        writer.write(master_df[display_keys].to_string())
+    master_df.to_csv(TXT_FILE)
     print(f"\nWrote untruncated metadata compilation to {TXT_FILE}")
 
 
