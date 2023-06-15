@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
-from yogo.infer import predict
+from yogo.infer import predict, get_prediction_class_counts
 from yogo.utils import format_preds
 from yogo.data.dataset import YOGO_CLASS_ORDERING
 
@@ -41,20 +41,6 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
     return point_to_path, initial_parasitemia
 
 
-def get_prediction_class_counts(predictions: torch.Tensor) -> torch.Tensor:
-    tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
-    for pred_slice in predictions:
-        pred = format_preds(pred_slice)
-        if pred.numel() == 0:
-            continue  # ignore no predictions
-        classes = pred[:, 5:]
-        class_predictions = classes.argmax(dim=1)
-        tot_class_sum += torch.nn.functional.one_hot(
-            class_predictions, num_classes=len(YOGO_CLASS_ORDERING)
-        ).sum(dim=0)
-    return tot_class_sum
-
-
 def process_prediction(
     predictions: torch.Tensor,
     titration_point: str,
@@ -75,7 +61,7 @@ def check_for_exceptions(futs: List[Future]):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("calcualte a titration curve")
+    parser = argparse.ArgumentParser("calculate a titration curve")
     parser.add_argument("path_to_pth", type=Path, help="path to yogo pth file")
     parser.add_argument(
         "path_to_titration_yml",
@@ -86,7 +72,6 @@ if __name__ == "__main__":
         "--plot-name",
         type=Path,
         help="name for the resulting plot",
-        default=Path("./titration_plot.png"),
     )
     parser.add_argument(
         "--crop-height",
@@ -144,9 +129,12 @@ if __name__ == "__main__":
     datapoints = sorted(titration_results.items())
     points, counts = zip(*datapoints)
 
+    model_name = utils.guess_model_name(args.path_to_pth)
+    plot_name: Path = args.plot_name or Path(model_name)
+
     fig, ax = plt.subplots(1, 2, figsize=(15, 10))
     fig.suptitle(
-        f"{args.path_to_pth.parent} titration on {args.path_to_titration_yml}",
+        f"{model_name} titration on {args.path_to_titration_yml.name}",
         fontsize=16,
     )
 
@@ -162,6 +150,8 @@ if __name__ == "__main__":
     ax[1].set_xticks(points)
     ax[1].set_ylabel("Number of cells")
     ax[1].set_yscale("log")
+    print(YOGO_CLASS_ORDERING[:5])
+    print(counts)
     for i, class_name in enumerate(YOGO_CLASS_ORDERING[:5]):
         ax[1].plot(
             points,
@@ -170,12 +160,12 @@ if __name__ == "__main__":
         )
     ax[1].legend()
 
-    plt.savefig(f"{args.plot_name.with_suffix('.png')}")
+    plt.savefig(f"{plot_name.with_suffix('.png')}")
 
     # now plot total parasitemia vs. titration point
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     fig.suptitle(
-        f"{args.path_to_pth.parent} titration on {args.path_to_titration_yml}",
+        f"{model_name} titration on {args.path_to_titration_yml.name}",
         fontsize=16,
     )
 
@@ -195,4 +185,4 @@ if __name__ == "__main__":
     )
     ax.legend(["YOGO predictions", "Ground Truth"])
 
-    plt.savefig(f"total_{args.plot_name.with_suffix('.png')}")
+    plt.savefig(f"normalized_{plot_name.with_suffix('.png')}")
