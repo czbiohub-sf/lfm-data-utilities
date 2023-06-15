@@ -150,8 +150,7 @@ if __name__ == "__main__":
     ax[1].set_xticks(points)
     ax[1].set_ylabel("Number of cells")
     ax[1].set_yscale("log")
-    print(YOGO_CLASS_ORDERING[:5])
-    print(counts)
+
     for i, class_name in enumerate(YOGO_CLASS_ORDERING[:5]):
         ax[1].plot(
             points,
