@@ -13,10 +13,18 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from labelling_constants import FLEXO_DATA_DIR, IMAGE_SERVER_PORT
 
 
-try:
-    boolean_action = argparse.BooleanOptionalAction  # type: ignore
-except AttributeError:
-    boolean_action = "store_true"  # type: ignore
+"""
+Label Studio!
+
+There are two main components here:
+    1. A simple HTTP server that serves the images in given run set folder
+    2. Label Studio itself
+
+This file runs the image server, configures Label Studio, and runs it.
+This should only be run on localhost! If you are adapting this for a larger
+scale project, you should use a more robust server than the one provided here.
+Also, don't accept * for CORS!
+"""
 
 
 def get_parser():
@@ -42,6 +50,12 @@ def run_server(directory: Path):
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(directory), **kwargs)
+
+        def end_headers(self):
+            # allowing all access for CORS since we are running on localhost
+            # and nobody else should be able to access this server
+            self.send_header("Access-Control-Allow-Origin", "*")
+            super().end_headers()
 
     httpd = ThreadingHTTPServer(server_addy, Handler)
 
