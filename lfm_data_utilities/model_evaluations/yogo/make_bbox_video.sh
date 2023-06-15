@@ -34,4 +34,4 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-ffmpeg -y -framerate 30 -pattern_type glob -i '/tmp/temporary-yogo-images/*.tiff' -c:v libx264 -r 30 -pix_fmt yuv420p "$out_fname"
+ffmpeg -y -framerate 30 -pattern_type glob -i '/tmp/temporary-yogo-images/*.tiff' -c:v libx264 -r 30 -pix_fmt yuv420p "$out_fname" < /dev/null || exit
