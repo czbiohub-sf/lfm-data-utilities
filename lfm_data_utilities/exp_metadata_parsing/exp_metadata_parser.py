@@ -18,6 +18,8 @@ VALID_KEYS = [
     "target_brightness",
     "git_branch",
     "git_commit",
+    "autofocus_model",
+    "yogo_model",
 ]
 
 DEFAULT_KEYS = ["directory", "notes", "git_branch"]
