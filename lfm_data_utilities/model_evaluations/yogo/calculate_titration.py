@@ -148,7 +148,7 @@ if __name__ == "__main__":
     ax[1].set_title("Normalized number of cells per class per titration point")
     ax[1].set_xlabel("Titration point")
     ax[1].set_xticks(points)
-    ax[1].set_ylabel("Number of cells")
+    ax[1].set_ylabel("parasitemia")
     ax[1].set_yscale("log")
 
     for i, class_name in enumerate(YOGO_CLASS_ORDERING[:5]):
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     ax.set_title("Total number of parasitized cells per titration point")
     ax.set_xlabel("Titration point")
     ax.set_xticks(points)
-    ax.set_ylabel("Number of cells")
+    ax.set_ylabel(f"parasitemia (initial ground-truth parasitemia is {initial_parasitemia})")
     ax.set_yscale("log")
 
     # index ring to gametocyte
