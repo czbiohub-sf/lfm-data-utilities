@@ -218,7 +218,7 @@ def radial_average(data: np.ndarray) -> np.ndarray:
 
 def log_power_spectrum_radial_average_sum(
     img: np.ndarray,
-    normalization_func: Callable[[np.ndarray, np.ndarray]] = lambda x: x,
+    normalization_func: Callable[[np.ndarray], np.ndarray] = lambda x: x,
 ) -> float:
     """
     Parameters
