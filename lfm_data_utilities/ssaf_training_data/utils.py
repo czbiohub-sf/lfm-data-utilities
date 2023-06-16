@@ -189,20 +189,46 @@ def move_imgs_to_relative_pos_folders(
         copy_img_to_folder(img_path, save_dir, pos)
 
 
-def log_power_spectrum_radial_average_sum(img: np.ndarray) -> float:
-    def radial_average(data: np.ndarray) -> np.ndarray:
-        data = data / np.max(data)
-        h, w = data.shape
-        center = (w // 2, h // 2)
-        y, x = np.indices((data.shape))
-        r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)
-        r = r.astype(int)
+def radial_average(data: np.ndarray) -> np.ndarray:
+    """Get the radial average of concentric circles of around the center of an image
 
-        tbin = np.bincount(r.ravel(), data.ravel())
-        nr = np.bincount(r.ravel())
-        radialprofile = tbin / nr
-        return radialprofile
+    Parameters
+    ----------
+    data: np.ndarray
 
+    Returns
+    -------
+    np.ndarray
+        List of N averages (for each circle of radius r_i)
+    """
+
+    data = data / np.max(data)
+    h, w = data.shape
+    center = (w // 2, h // 2)
+    y, x = np.indices((data.shape))
+    r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)
+    r = np.rint(r)  # round to nearest int
+
+    tbin = np.bincount(r.ravel(), data.ravel())
+    nr = np.bincount(r.ravel())
+    radialprofile = tbin / nr
+
+    return radialprofile
+
+
+def log_power_spectrum_radial_average_sum(
+    img: np.ndarray,
+    normalization_func: Callable[[np.ndarray, np.ndarray]] = lambda x: x,
+) -> float:
+    """
+    Parameters
+    ----------
+    img: np.ndarray
+    normalization_func: Optional[function]
+        Function to normalize the data prior to processing. Default function argument makes no modifications to the image.
+    """
+
+    img = normalization_func(img)
     power_spectrum = np.fft.fftshift(np.fft.fft2(img))
     log_ps = np.log(np.abs(power_spectrum))
     return np.sum(radial_average(log_ps))
