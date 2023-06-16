@@ -95,13 +95,12 @@ def get_dataloader(
 
     d = DataLoader(
         full_dataset,
-        shuffle=True,
+        shuffle=False,
         drop_last=False,
         pin_memory=True,
         batch_size=batch_size,
         persistent_workers=num_workers > 0,
         multiprocessing_context="spawn" if num_workers > 0 else None,
-        # optimal # of workers? >= 32
         num_workers=num_workers,  # type: ignore
         generator=torch.Generator().manual_seed(111111),
         collate_fn=collate_batch,
@@ -132,13 +131,14 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
 
     values: List[Dict[str, Union[int, float]]] = []
 
-    for batch in tqdm(dataloader, desc="calculating loss"):
+    for i, batch in enumerate(tqdm(dataloader, desc="calculating loss")):
         inputs, labels, image_paths, label_paths = batch
         inputs = inputs.to(device)
         labels = labels.to(device)
         loss, loss_components = Y_loss(net(inputs), labels)
         values.append(
             {
+                "idx": i,
                 "image_path": image_paths.pop(),
                 "label_path": label_paths.pop(),
                 "total_loss": loss.item(),
@@ -149,7 +149,9 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
     return pd.DataFrame(values)
 
 
-def show_image(image_path: str, label_path: str, path_to_pth: str):
+def show_image(idx: int, df: pd.DataFrame, path_to_pth: str):
+    image_path, label_path = df.iloc[idx][["image_path", "label_path"]]
+
     net, net_cfg = YOGO.from_pth(path_to_pth)
 
     image = torch.from_numpy(np.array(Image.open(image_path).convert("L")))
@@ -182,10 +184,13 @@ def show_image(image_path: str, label_path: str, path_to_pth: str):
         # convert cxcywh to xyxy and scale to image size
         x1 = (r[1] - r[3] / 2) * img_w
         y1 = (r[2] - r[4] / 2) * img_h
-        x2 = (r[1] + r[3]) * img_w
-        y2 = (r[2] + r[4]) * img_h
+        x2 = (r[1] + r[3] / 2) * img_w
+        y2 = (r[2] + r[4] / 2) * img_h
         label = YOGO_CLASS_ORDERING[int(r[0])]
-        draw.rectangle((x1,y1,x2,y2), outline=(0, 0, 255, 255))
+        draw.rectangle(
+            (x1, y1, x2, y2),
+            outline=bbox_colour(label),
+        )
         draw.text((x1, y2), f"label: {label}", (0, 0, 0, 255))
 
     return prediction_bbox_img
