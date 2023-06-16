@@ -207,7 +207,7 @@ def radial_average(data: np.ndarray) -> np.ndarray:
     center = (w // 2, h // 2)
     y, x = np.indices((data.shape))
     r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)
-    r = np.rint(r)  # round to nearest int
+    r = r.astype(int)  # round to nearest int
 
     tbin = np.bincount(r.ravel(), data.ravel())
     nr = np.bincount(r.ravel())
@@ -218,7 +218,6 @@ def radial_average(data: np.ndarray) -> np.ndarray:
 
 def log_power_spectrum_radial_average_sum(
     img: np.ndarray,
-    normalization_func: Callable[[np.ndarray], np.ndarray] = lambda x: x,
 ) -> float:
     """
     Parameters
@@ -228,7 +227,6 @@ def log_power_spectrum_radial_average_sum(
         Function to normalize the data prior to processing. Default function argument makes no modifications to the image.
     """
 
-    img = normalization_func(img)
     power_spectrum = np.fft.fftshift(np.fft.fft2(img))
     log_ps = np.log(np.abs(power_spectrum))
     return np.sum(radial_average(log_ps))
