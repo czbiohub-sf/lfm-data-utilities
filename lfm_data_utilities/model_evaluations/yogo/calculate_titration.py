@@ -59,7 +59,11 @@ def process_prediction(
         classes = pred[:, 5:]
         image_counts = count_cells_for_formatted_preds(classes)
         tot_class_sum += image_counts
-        per_image_counts.append(tot_class_sum / tot_class_sum.sum())
+        per_image_counts.append(
+            tot_class_sum / tot_class_sum.sum()
+            if tot_class_sum.sum() > 0
+            else torch.zeros(len(YOGO_CLASS_ORDERING))
+        )
 
     result_dict[titration_point] = {
         "total_class_sum": tot_class_sum,
@@ -237,7 +241,7 @@ if __name__ == "__main__":
 
     model_name = utils.guess_model_name(args.path_to_pth)
 
-    args.plot_dir.mkdir(exists_ok=True, parents=True)
+    args.plot_dir.mkdir(exist_ok=True, parents=True)
 
     plot_titration_curve(points, counts, args.plot_dir, model_name)
     plot_normalized_parasitemia(points, counts, args.plot_dir, model_name)
