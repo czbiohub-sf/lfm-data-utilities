@@ -8,12 +8,15 @@ Goal: Run this script with YOGO over all of our labelled data and rank by loss!
 """
 
 import os
+import json
 import torch
 import argparse
+import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
 from pathlib import Path
+from PIL import Image, ImageDraw
 
 from typing import Any, List, Dict, Union, Tuple
 
@@ -21,8 +24,15 @@ from torch.utils.data import Dataset, ConcatDataset, DataLoader
 
 from yogo.model import YOGO
 from yogo.yogo_loss import YOGOLoss
+from yogo.utils.utils import bbox_colour
+from yogo.utils import format_preds, draw_yogo_prediction
 from yogo.data.dataset_description_file import load_dataset_description
-from yogo.data.dataset import ObjectDetectionDataset, label_file_to_tensor
+from yogo.data.dataset import (
+    ObjectDetectionDataset,
+    YOGO_CLASS_ORDERING,
+    label_file_to_tensor,
+    load_labels,
+)
 
 
 class ObjectDetectionDatasetWithPaths(ObjectDetectionDataset):
@@ -137,6 +147,48 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
         )
 
     return pd.DataFrame(values)
+
+
+def show_image(image_path: str, label_path: str, path_to_pth: str):
+    net, net_cfg = YOGO.from_pth(path_to_pth)
+
+    image = torch.from_numpy(np.array(Image.open(image_path).convert("L")))
+    image = image.unsqueeze(0).unsqueeze(0).float()
+    if net_cfg["normalize_images"]:
+        image = image / 255
+
+    notes_path = Path(label_path).parent.parent / "notes.json"
+    if notes_path.exists():
+        with open(notes_path) as f:
+            json_data = json.load(f)
+    else:
+        json_data = None
+
+    label_tensor = load_labels(label_path, notes_data=json_data)
+
+    pred = net(image)[0, ...]
+
+    prediction_bbox_img = draw_yogo_prediction(
+        image,
+        pred,
+        labels=YOGO_CLASS_ORDERING,
+        images_are_normalized=net_cfg["normalize_images"],
+    )
+
+    draw = ImageDraw.Draw(prediction_bbox_img)
+
+    img_h, img_w = image.shape[-2:]
+    for r in label_tensor:
+        # convert cxcywh to xyxy and scale to image size
+        x1 = (r[1] - r[3] / 2) * img_w
+        y1 = (r[2] - r[4] / 2) * img_h
+        x2 = (r[1] + r[3]) * img_w
+        y2 = (r[2] + r[4]) * img_h
+        label = YOGO_CLASS_ORDERING[int(r[0])]
+        draw.rectangle((x1,y1,x2,y2), outline=(0, 0, 255, 255))
+        draw.text((x1, y2), f"label: {label}", (0, 0, 0, 255))
+
+    return prediction_bbox_img
 
 
 if __name__ == "__main__":
