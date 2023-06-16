@@ -75,7 +75,10 @@ if __name__ == "__main__":
             )
     boxmap = np.array(
         yogo.utils.draw_yogo_prediction(
-            torch.tensor(image_data), result_tensor, thresh=0.5, iou_thresh=0,
+            torch.tensor(image_data),
+            result_tensor,
+            thresh=0.5,
+            iou_thresh=0,
         )
     )
 

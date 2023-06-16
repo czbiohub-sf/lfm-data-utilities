@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import math
 import warnings
 import argparse
 
@@ -9,10 +10,13 @@ import matplotlib.pyplot as plt
 
 from ruamel import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
-from yogo.infer import predict, get_prediction_class_counts
+from yogo.infer import (
+    predict,
+    count_cells_for_formatted_preds,
+)
 from yogo.utils import format_preds
 from yogo.data.dataset import YOGO_CLASS_ORDERING
 
@@ -44,9 +48,23 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
 def process_prediction(
     predictions: torch.Tensor,
     titration_point: str,
-    result_dict: Dict[str, torch.Tensor],
+    result_dict: Dict[str, Dict[str, Union[List[torch.Tensor], torch.Tensor]]],
 ) -> None:
-    result_dict[titration_point] = get_prediction_class_counts(predictions)
+    per_image_counts: List[torch.Tensor] = []
+    tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
+    for pred_slice in predictions:
+        pred = format_preds(pred_slice)
+        if pred.numel() == 0:
+            continue  # ignore no predictions
+        classes = pred[:, 5:]
+        image_counts = count_cells_for_formatted_preds(classes)
+        tot_class_sum += image_counts
+        per_image_counts.append(tot_class_sum / tot_class_sum.sum())
+
+    result_dict[titration_point] = {
+        "total_class_sum": tot_class_sum,
+        "per_image_counts": per_image_counts,
+    }
 
 
 def check_for_exceptions(futs: List[Future]):
@@ -60,78 +78,7 @@ def check_for_exceptions(futs: List[Future]):
                 raise maybe_exc
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("calculate a titration curve")
-    parser.add_argument("path_to_pth", type=Path, help="path to yogo pth file")
-    parser.add_argument(
-        "path_to_titration_yml",
-        type=Path,
-        help="path to a titration dataset description file",
-    )
-    parser.add_argument(
-        "--plot-name",
-        type=Path,
-        help="name for the resulting plot",
-    )
-    parser.add_argument(
-        "--crop-height",
-        type=float,
-        help=(
-            "crop images to the given fraction - e.g. `--crop-height 0.25` will crop "
-            "images to a height of `round(height_org * 0.25)` (default to no cropping)"
-        ),
-    )
-    args = parser.parse_args()
-
-    if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
-        warnings.warn(
-            "for best performance, we suggest running this script with 32 cpus "
-            "and a gpu"
-        )
-
-    try:
-        titration_points, initial_parasitemia = load_titration_yml(
-            args.path_to_titration_yml
-        )
-    except KeyError as e:
-        raise RuntimeError("invalid key in titration yml file") from e
-
-    titration_results: Dict[str, torch.Tensor] = {}
-
-    futs: List[Future] = []
-    tpe = ThreadPoolExecutor(max_workers=4)
-    for titration_point, path in titration_points.items():
-        # let's error out asap
-        check_for_exceptions(futs)
-        # predict synchronously
-        tn = predict(
-            path_to_pth=args.path_to_pth,
-            path_to_images=path,
-            batch_size=64,
-            use_tqdm=True,
-            vertical_crop_height_px=(
-                round(772 * args.crop_height)
-                if args.crop_height is not None
-                else None
-            ),
-            device="cuda" if torch.cuda.is_available() else "cpu",
-        )
-        # and process results asynchronously
-        fut = tpe.submit(process_prediction, tn, titration_point, titration_results)
-        futs.append(fut)
-
-    with utils.timing_context_manager(
-        "waiting for yogo prediction processing to complete"
-    ):
-        tpe.shutdown(wait=True)
-        check_for_exceptions(futs)
-
-    datapoints = sorted(titration_results.items())
-    points, counts = zip(*datapoints)
-
-    model_name = utils.guess_model_name(args.path_to_pth)
-    plot_name: Path = args.plot_name or Path(model_name)
-
+def plot_titration_curve(points, counts, plot_dir, model_name):
     fig, ax = plt.subplots(1, 2, figsize=(15, 10))
     fig.suptitle(
         f"{model_name} titration on {args.path_to_titration_yml.name}",
@@ -159,9 +106,10 @@ if __name__ == "__main__":
         )
     ax[1].legend()
 
-    plt.savefig(f"{plot_name.with_suffix('.png')}")
+    plt.savefig(f"{(plot_dir / model_name).with_suffix('.png')}")
 
-    # now plot total parasitemia vs. titration point
+
+def plot_normalized_parasitemia(points, counts, plot_dir, model_name):
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     fig.suptitle(
         f"{model_name} titration on {args.path_to_titration_yml.name}",
@@ -171,7 +119,9 @@ if __name__ == "__main__":
     ax.set_title("Total number of parasitized cells per titration point")
     ax.set_xlabel("Titration point")
     ax.set_xticks(points)
-    ax.set_ylabel(f"parasitemia (initial ground-truth parasitemia is {initial_parasitemia})")
+    ax.set_ylabel(
+        f"parasitemia (initial ground-truth parasitemia is {initial_parasitemia})"
+    )
     ax.set_yscale("log")
 
     # index ring to gametocyte
@@ -184,4 +134,114 @@ if __name__ == "__main__":
     )
     ax.legend(["YOGO predictions", "Ground Truth"])
 
-    plt.savefig(f"normalized_{plot_name.with_suffix('.png')}")
+    file_name = f"normalized_{Path(model_name).with_suffix('.png')}"
+    plt.savefig(args.plot_dir / file_name)
+
+
+def per_point_plot_normalized_per_image_counts(
+    point, per_image_counts, plot_dir, model_name
+):
+    fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+    fig.suptitle(
+        f"{model_name} titration on {args.path_to_titration_yml.name}",
+        fontsize=16,
+    )
+
+    ax.set_title(f"Normalized parasitemia per class for titration point {point}")
+    ax.set_xlabel("image")
+    ax.set_ylabel("parasitemia")
+    ax.set_yscale("log")
+
+    for i, class_name in enumerate(YOGO_CLASS_ORDERING[:5]):
+        ax.plot(
+            [c[i].item() / c[:5].sum().item() for c in per_image_counts],
+            label=class_name,
+        )
+    ax.legend()
+
+    file_name = f"per_img_parasitemia_{point}_{Path(model_name).with_suffix('.png')}"
+    plt.savefig(args.plot_dir / file_name)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("calculate a titration curve")
+    parser.add_argument("path_to_pth", type=Path, help="path to yogo pth file")
+    parser.add_argument(
+        "path_to_titration_yml",
+        type=Path,
+        help="path to a titration dataset description file",
+    )
+    parser.add_argument(
+        "--plot-dir",
+        type=Path,
+        help="directory for the plots (defaults to '.')",
+        default=Path("."),
+    )
+    parser.add_argument(
+        "--crop-height",
+        type=float,
+        help=(
+            "crop images to the given fraction - e.g. `--crop-height 0.25` will crop "
+            "images to a height of `round(height_org * 0.25)` (default to no cropping)"
+        ),
+    )
+    args = parser.parse_args()
+
+    if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
+        warnings.warn(
+            "for best performance, we suggest running this script with 32 cpus "
+            "and a gpu"
+        )
+
+    try:
+        titration_points, initial_parasitemia = load_titration_yml(
+            args.path_to_titration_yml
+        )
+    except KeyError as e:
+        raise RuntimeError("invalid key in titration yml file") from e
+
+    titration_results: Dict[
+        str, Dict[str, Union[List[torch.Tensor], torch.Tensor]]
+    ] = {}
+
+    futs: List[Future] = []
+    tpe = ThreadPoolExecutor(max_workers=4)
+    for titration_point, path in titration_points.items():
+        # let's error out asap
+        check_for_exceptions(futs)
+        # predict synchronously
+        tn = predict(
+            path_to_pth=args.path_to_pth,
+            path_to_images=path,
+            batch_size=64,
+            use_tqdm=True,
+            vertical_crop_height_px=(
+                round(772 * args.crop_height) if args.crop_height is not None else None
+            ),
+            device="cuda" if torch.cuda.is_available() else "cpu",
+        )
+        # and process results asynchronously
+        fut = tpe.submit(process_prediction, tn, titration_point, titration_results)
+        futs.append(fut)
+
+    with utils.timing_context_manager(
+        "waiting for yogo prediction processing to complete"
+    ):
+        tpe.shutdown(wait=True)
+        check_for_exceptions(futs)
+
+    datapoints = sorted(titration_results.items())
+    points, results = zip(*datapoints)
+    per_image_counts = [r["per_image_counts"] for r in results]
+    counts = [r["total_class_sum"] for r in results]
+
+    model_name = utils.guess_model_name(args.path_to_pth)
+
+    plot_titration_curve(points, counts, args.plot_dir, model_name)
+    plot_normalized_parasitemia(points, counts, args.plot_dir, model_name)
+
+    N = int(math.log(len(points), 10) + 1)
+    for point, per_image_count in zip(points, per_image_counts):
+        per_point_plot_normalized_per_image_counts(
+            f"{point:0{N}}", per_image_count, args.plot_dir, model_name
+        )
