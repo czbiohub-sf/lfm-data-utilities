@@ -13,17 +13,14 @@ import argparse
 import pandas as pd
 
 from tqdm import tqdm
-from typing import Tuple
 from pathlib import Path
 
-from typing import Any, List, Dict, Union, Tuple, Optional, MutableMapping
+from typing import Any, List, Dict, Union, Tuple
 
 from torch.utils.data import Dataset, ConcatDataset, DataLoader
 
 from yogo.model import YOGO
 from yogo.yogo_loss import YOGOLoss
-from yogo.data.blobgen import BlobDataset
-from yogo.data.dataloader import split_dataset
 from yogo.data.dataset_description_file import load_dataset_description
 from yogo.data.dataset import ObjectDetectionDataset, label_file_to_tensor
 
