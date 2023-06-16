@@ -237,6 +237,8 @@ if __name__ == "__main__":
 
     model_name = utils.guess_model_name(args.path_to_pth)
 
+    args.plot_dir.mkdir(exists_ok=True, parents=True)
+
     plot_titration_curve(points, counts, args.plot_dir, model_name)
     plot_normalized_parasitemia(points, counts, args.plot_dir, model_name)
 
