@@ -4,11 +4,16 @@
 
 Lets you inspect the output layers of the network, useful for debugging what the network is predicting given an input
 
-## make\_bbox\_video.sh
+## `loss-ranking.ipynb` or `rank_yogo_loss.py`
+
+Run YOGO over all labelled data! Useful to show where YOGO is struggling most, or where labels are incorrect.
+`loss-ranking.ipynb` is an interactive tool, where `rank_yogo_loss.py` will generate a `csv` appropriate for import into Excel.
+
+## `make\_bbox\_video.sh`
 
 Creates a video w/ bboxes overlayed
 
-## calc\_titration.py
+## `calculate\_titration.py`
 
 Calculates the titration curve of a titration dataset. From the spreadsheet,
 
