@@ -25,7 +25,7 @@ from torch.utils.data import Dataset, ConcatDataset, DataLoader
 from yogo.model import YOGO
 from yogo.yogo_loss import YOGOLoss
 from yogo.utils.utils import bbox_colour
-from yogo.utils import format_preds, draw_yogo_prediction
+from yogo.utils import draw_yogo_prediction
 from yogo.data.dataset_description_file import load_dataset_description
 from yogo.data.dataset import (
     ObjectDetectionDataset,
