@@ -305,8 +305,8 @@ if __name__ == "__main__":
 
     t0 = time.perf_counter()
     generate_tasks_for_runset(
-        labelled_run_paths,
-        IMG_SERVER_ROOT,
+        run_folders=labelled_run_paths,
+        relative_parent=IMG_SERVER_ROOT,
         label_dir_name=label_dir_name,
         tasks_file_name=tasks_file_name,
     )

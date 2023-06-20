@@ -20,6 +20,8 @@ from typing import List, Tuple, Dict
 
 from yogo.data.dataset import YOGO_CLASS_ORDERING
 
+
+from lfm_data_utilities.malaria_labelling.generate_labels import IMG_SERVER_ROOT
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     generate_tasks_for_runset,
 )
@@ -156,8 +158,8 @@ def make_yogo_label_dir(
             f.write(f"{c}\n")
 
     generate_tasks_for_runset(
-        [out_dir],
-        out_dir,
+        run_folders=[out_dir],
+        relative_parent=IMG_SERVER_ROOT,
         label_dir_name=label_dir,
         tasks_file_name="tasks.json",
         use_tqdm=True,
