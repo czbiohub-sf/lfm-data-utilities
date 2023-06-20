@@ -79,7 +79,6 @@ def gen_task(
 
     tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
-    print(f"INPUT DIR {str(folder_path)}, LABEL DIR {label_dir_name}")
     try:
         convert_yolo_to_ls(
             input_dir=str(folder_path),
