@@ -161,6 +161,17 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
     return pd.DataFrame(values)
 
 
+def select_top_n_paths(
+    col_name: str, n: int, df: pd.DataFrame, ascending=False
+) -> List[Tuple[str, str]]:
+    return [
+        tuple(row)
+        for row in df.sort_values(by=col_name, ascending=ascending)[:n][
+            ["image_path", "label_path"]
+        ].itertuples(index=False)
+    ]
+
+
 def show_image(idx: int, df: pd.DataFrame, path_to_pth: str):
     image_path, label_path = df.iloc[idx][["image_path", "label_path"]]
 

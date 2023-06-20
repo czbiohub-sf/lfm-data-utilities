@@ -6,12 +6,16 @@ from typing import List
 from urllib.request import pathname2url
 from functools import partial
 
+from lfm_data_utilities.malaria_labelling.labelling_constants import (
+    IMG_WIDTH,
+    IMG_HEIGHT,
+    IMAGE_SERVER_PORT,
+)
 from lfm_data_utilities.utils import (
     multiprocess_fn,
     path_relative_to,
 )
 
-from labelling_constants import IMG_WIDTH, IMG_HEIGHT, IMAGE_SERVER_PORT
 
 from label_studio_converter.imports.yolo import convert_yolo_to_ls
 
@@ -75,6 +79,7 @@ def gen_task(
 
     tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
+    print(f"INPUT DIR {str(folder_path)}, LABEL DIR {label_dir_name}")
     try:
         convert_yolo_to_ls(
             input_dir=str(folder_path),
