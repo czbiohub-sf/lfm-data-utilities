@@ -250,13 +250,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--label-dir-name",
-        default="labels",
-        help="name for label dir for each runset - defaults to 'labels'",
+        default=None,
+        help="name for label dir for each runset - defaults to 'labels' for cellpose, and 'yogo_labels' for yogo",
     )
     parser.add_argument(
         "--tasks-file-name",
-        default="tasks",
-        help="name for label studio tasks file - defaults to tasks.json",
+        default=None,
+        help="name for label studio tasks file - defaults to 'tasks.json' for cellpose, and 'yogo_labelled_data' for yogo",
     )
     parser.add_argument(
         "--label-override",
@@ -277,6 +277,15 @@ if __name__ == "__main__":
             "yogo is the selected model - see --path-to-yogo-pth option"
         )
 
+    label_dir_name = args.label_dir_name or (
+        "labels" if args.model == "cellpose"
+        else "yogo_labels"
+    )
+    tasks_file_name = args.tasks_file_name or (
+        "tasks" if args.model == "cellpose"
+        else "yogo_labelled_tasks"
+    )
+
     print("labelling runset...")
     t0 = time.perf_counter()
     labelled_run_paths = label_runset(
@@ -284,7 +293,7 @@ if __name__ == "__main__":
         model=args.model,
         path_to_pth=args.path_to_yogo_pth,
         label=args.label_override,
-        label_dir_name=args.label_dir_name,
+        label_dir_name=label_dir_name,
         skip=args.existing_label_action == "skip",
     )
     print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
@@ -299,8 +308,8 @@ if __name__ == "__main__":
     generate_tasks_for_runset(
         labelled_run_paths,
         img_server_root,
-        label_dir_name=args.label_dir_name,
-        tasks_file_name=args.tasks_file_name,
+        label_dir_name=label_dir_name,
+        tasks_file_name=tasks_file_name,
     )
     print(f"tasks files generated: {time.perf_counter() - t0:.3f} s")
     print("all done!")
