@@ -33,13 +33,13 @@ from lfm_data_utilities.utils import PathLike
 # get the class we want. Why a list of dicts?? whyyy!!!???
 MASTER_NOTES_DOT_JSON = {
     "categories": [
-        {"id": "1", "name": "healthy"},
-        {"id": "2", "name": "ring"},
-        {"id": "3", "name": "trophozoite"},
-        {"id": "4", "name": "schizont"},
-        {"id": "5", "name": "gametocyte"},
-        {"id": "6", "name": "wbc"},
-        {"id": "7", "name": "misc"},
+        {"id": "0", "name": "healthy"},
+        {"id": "1", "name": "ring"},
+        {"id": "2", "name": "trophozoite"},
+        {"id": "3", "name": "schizont"},
+        {"id": "4", "name": "gametocyte"},
+        {"id": "5", "name": "wbc"},
+        {"id": "6", "name": "misc"},
     ],
     "info": {"year": 2023, "version": "1.0", "contributor": "Label Studio"},
 }
@@ -49,27 +49,53 @@ MASTER_NAME_TO_ID = dict(
     [(row["name"], row["id"]) for row in MASTER_NOTES_DOT_JSON["categories"]]  # type: ignore
 )
 
+MASTER_ID_TO_NAME = {v: k for k, v in MASTER_NAME_TO_ID.items()}
 
-def copy_label(label_path: Path, output_path):
-    """Copies label_path, aware of variance of idx-to-label mapping done by label-studio"""
+
+def copy_label_to_central_dir(label_path: Path, output_path: Path):
+    """Copies label_path into central dir, aware of variance of idx-to-label mapping done by label-studio"""
     with open(label_path.parent.parent / "notes.json", "r") as f:
         label_notes_json = json.load(f)
         label_id_to_class_name = dict(
-            [(row["id"], row["name"]) for row in label_notes_json["categories"]]  # type: ignore
+            [(str(row["id"]), row["name"]) for row in label_notes_json["categories"]]  # type: ignore
         )
 
     with open(label_path, "r") as f:
-        label_data = f.readlines()
+        label_data = f.read().strip().split("\n")
 
     bboxes = []
     for row in label_data:
         row_numbers = row.split(" ")
         row_class = label_id_to_class_name[row_numbers[0]]
         row_corrected_label = MASTER_NAME_TO_ID[row_class]
-        bboxes.append(" ".join(row_corrected_label + row_numbers[1:]))
+        bboxes.append(" ".join([row_corrected_label, *row_numbers[1:]]))
 
     with open(output_path, "w") as f:
-        f.write("\n".join(bboxes))
+        out_data = "\n".join(bboxes).strip()
+        f.write(out_data)
+
+
+def copy_label_to_original_dir(label_path: Path, output_path: Path):
+    """Copies label_path back into original dir, aware of variance of idx-to-label mapping done by label-studio"""
+    with open(output_path.parent.parent / "notes.json", "r") as f:
+        label_notes_json = json.load(f)
+        label_name_to_id = dict(
+            [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
+        )
+
+    with open(label_path, "r") as f:
+        label_data = f.read().strip().split("\n")
+
+    bboxes = []
+    for row in label_data:
+        row_numbers = row.split(" ")
+        row_class = MASTER_ID_TO_NAME[row_numbers[0]]
+        row_corrected_label = label_name_to_id[row_class]
+        bboxes.append(" ".join([row_corrected_label, *row_numbers[1:]]))
+
+    with open(output_path, "w") as f:
+        out_data = "\n".join(bboxes).strip()
+        f.write(out_data)
 
 
 def make_yogo_label_dir(
@@ -109,7 +135,7 @@ def make_yogo_label_dir(
 
         try:
             shutil.copy(image_path, image_dir / image_name)
-            copy_label(label_path, label_dir / label_name)
+            copy_label_to_central_dir(Path(label_path), label_dir / label_name)
         except FileNotFoundError:
             print(f"Could not find {image_path} or {label_path}")
             continue
@@ -149,7 +175,7 @@ def sort_corrected_labels(corrected_label_dir, filename_map_path):
     # TODO need to make it more "interactive" - smth like a pre-commit stage
     # that displays the copies that *will* be made
     for filename, source in filename_map.items():
-        shutil.copy(corrected_label_dir / filename, Path(source).parent)
+        copy_label_to_original_dir(corrected_label_dir / filename, Path(source).parent)
 
 
 if __name__ == "__main__":
