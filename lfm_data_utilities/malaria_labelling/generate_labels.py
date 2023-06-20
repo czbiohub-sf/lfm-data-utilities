@@ -278,12 +278,10 @@ if __name__ == "__main__":
         )
 
     label_dir_name = args.label_dir_name or (
-        "labels" if args.model == "cellpose"
-        else "yogo_labels"
+        "labels" if args.model == "cellpose" else "yogo_labels"
     )
     tasks_file_name = args.tasks_file_name or (
-        "tasks" if args.model == "cellpose"
-        else "yogo_labelled_tasks"
+        "tasks" if args.model == "cellpose" else "yogo_labelled_tasks"
     )
 
     print("labelling runset...")
