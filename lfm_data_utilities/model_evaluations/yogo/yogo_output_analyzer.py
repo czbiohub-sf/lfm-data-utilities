@@ -20,6 +20,8 @@ CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
 
 def set_universal_fig_settings_(fig, img_shape, prediction_shape, scale=0.8):
     fig.update_layout(
+        plot_bgcolor="#eeeeee",
+        paper_bgcolor="#eeeeee",
         yaxis_visible=False,
         yaxis_showticklabels=False,
         xaxis_visible=False,
@@ -96,9 +98,7 @@ if __name__ == "__main__":
 
     app.layout = html.Div(
         [
-            html.Div(children="YOGO model output analysis"),
-            html.Div(children=f"model: {args.pth_path}"),
-            html.Div(children=f"image: {args.image_path}"),
+            html.H1(children="YOGO model output analysis"),
             html.Div(
                 children=[
                     dcc.Graph(figure=img_fig, id="image-original"),
@@ -109,17 +109,26 @@ if __name__ == "__main__":
                     "flex-direction": "row",
                     "margin": "1rem",
                     "width": "100%",
+                    "background-color": "#eeeeee",
                 },
             ),
-            dcc.RadioItems(
-                options=["objectness", "classification", "bbox"],
-                value="objectness",
-                id="YOGO-output-selector",
-            ),
-            dcc.RadioItems(
-                options=["max-confidence", *CLASS_LIST],
-                id="class-heatmap-selector",
-                value="max-confidence",
+            html.Div(
+                children=[
+                    dcc.RadioItems(
+                        options=["objectness", "classification", "bbox"],
+                        value="objectness",
+                        id="YOGO-output-selector",
+                    ),
+                    dcc.RadioItems(
+                        options=["max-confidence", *CLASS_LIST],
+                        id="class-heatmap-selector",
+                        value="max-confidence",
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "flex-direction": "row",
+                },
             ),
         ]
     )
