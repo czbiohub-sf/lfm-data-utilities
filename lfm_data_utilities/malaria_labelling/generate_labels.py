@@ -17,12 +17,17 @@ from cellpose.utils import (
 )
 from typing import Optional, Literal, List, Tuple
 
-from labelling_constants import CLASSES
-from generate_labelstudio_tasks import generate_tasks_for_runset
-from utils import convert_coords
+from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
+from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
+    generate_tasks_for_runset,
+)
+from lfm_data_utilities.malaria_labelling.utils import convert_coords
 
 from yogo.infer import predict
 from yogo.utils import iter_in_chunks
+
+
+IMG_SERVER_ROOT = Path("/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/")
 
 
 def empty_dir(path: Path):
@@ -298,14 +303,10 @@ if __name__ == "__main__":
 
     print("generating tasks files for Label Studio...")
 
-    img_server_root = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
-    )
-
     t0 = time.perf_counter()
     generate_tasks_for_runset(
-        labelled_run_paths,
-        img_server_root,
+        run_folders=labelled_run_paths,
+        relative_parent=IMG_SERVER_ROOT,
         label_dir_name=label_dir_name,
         tasks_file_name=tasks_file_name,
     )

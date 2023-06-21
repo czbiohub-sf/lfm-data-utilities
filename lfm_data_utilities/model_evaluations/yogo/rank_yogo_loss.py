@@ -35,6 +35,18 @@ from yogo.data.dataset import (
 )
 
 
+class YOGOPerLabelLoss(YOGOLoss):
+    def forward(
+        self, pred_batch: torch.Tensor, label_batch: torch.Tensor
+    ) -> Tuple[torch.Tensor, Dict[str, float]]:
+        loss, loss_components = super().forward(pred_batch, label_batch)
+        num_labels = label_batch[:, 0:1, :, :].sum().item()
+        loss /= num_labels
+        for k, v in loss_components.items():
+            loss_components[k] = v / num_labels
+        return loss, loss_components
+
+
 class ObjectDetectionDatasetWithPaths(ObjectDetectionDataset):
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor, str, str]:
         image_path = str(self._image_paths[index], encoding="utf-8")
@@ -111,7 +123,7 @@ def get_dataloader(
 def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    Y_loss = YOGOLoss(
+    Y_loss = YOGOPerLabelLoss(
         no_obj_weight=1,
         iou_weight=1,
         classify_weight=1,
@@ -149,7 +161,18 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
     return pd.DataFrame(values)
 
 
-def show_image(idx: int, df: pd.DataFrame, path_to_pth: str):
+def select_top_n_paths(
+    col_name: str, n: int, df: pd.DataFrame, ascending=False, include_index=False
+) -> List[Tuple[str, str]]:
+    return [
+        tuple(row)
+        for row in df.sort_values(by=col_name, ascending=ascending)[:n][
+            ["image_path", "label_path"]
+        ].itertuples(index=include_index)
+    ]
+
+
+def display_preds_and_labels(idx: int, df: pd.DataFrame, path_to_pth: str):
     image_path, label_path = df.iloc[idx][["image_path", "label_path"]]
 
     net, net_cfg = YOGO.from_pth(path_to_pth)
