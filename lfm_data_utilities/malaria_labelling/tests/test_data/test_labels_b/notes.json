@@ -1,0 +1,21 @@
+{
+  "categories": [
+    {
+      "id": "3",
+      "name": "healthy"
+    },
+    {
+      "id": "2",
+      "name": "ring"
+    },
+    {
+      "id": "1",
+      "name": "trophozoite"
+    }
+  ],
+  "info": {
+    "year": 2023,
+    "version": "1.0",
+    "contributor": "Label Studio"
+  }
+}
