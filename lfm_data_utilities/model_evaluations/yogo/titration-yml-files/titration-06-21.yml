@@ -1,0 +1,20 @@
+initial-titration-parasitemia: 0.151
+wb-titraion: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-195509_/images
+titration-points:
+  1: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-142543_/images
+  2: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-144545_/images
+  3: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-150244_/images
+  4: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-151720_/images
+  5: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-153356_/images
+  6: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-155118_/images
+  7: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-162427_/images
+  8: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-163912_/images
+  9: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-170409_/images
+  10: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-171928_/images
+  11: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-174342_/images
+  12: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-175800_/images
+  13: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-181321_/images
+  14: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-182758_/images
+  15: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-185705_/images
+  16: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-192402_/images
+  17: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-193912_/images
