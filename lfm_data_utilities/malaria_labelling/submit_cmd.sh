@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=64
-#SBATCH --output=./slurm-outputs/slurm-%j.out
+#SBATCH --output=./slurm-outputs/%j.out
 
 env | grep "^SLURM" | sort
 
