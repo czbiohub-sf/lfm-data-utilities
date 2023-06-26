@@ -40,7 +40,7 @@ class YOGOPerLabelLoss(YOGOLoss):
         self, pred_batch: torch.Tensor, label_batch: torch.Tensor
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         loss, loss_components = super().forward(pred_batch, label_batch)
-        num_labels = label_batch[:, 0:1, :, :].sum().item()
+        num_labels = max(label_batch[:, 0:1, :, :].sum().item(), 1)
         loss /= num_labels
         for k, v in loss_components.items():
             loss_components[k] = v / num_labels
@@ -68,7 +68,6 @@ def get_dataset(
     normalize_images: bool = False,
 ) -> Dataset[Any]:
     dataset_description = load_dataset_description(dataset_description_file)
-    # can we speed this up? multiproc dataset creation?
     full_dataset: ConcatDataset[ObjectDetectionDataset] = ConcatDataset(
         ObjectDetectionDatasetWithPaths(
             dsp["image_path"],
@@ -165,7 +164,7 @@ def select_top_n_paths(
     col_name: str, n: int, df: pd.DataFrame, ascending=False, include_index=False
 ) -> List[Tuple[str, str]]:
     return [
-        tuple(row)
+        (row[0], row[1])
         for row in df.sort_values(by=col_name, ascending=ascending)[:n][
             ["image_path", "label_path"]
         ].itertuples(index=include_index)
