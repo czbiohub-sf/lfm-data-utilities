@@ -65,9 +65,7 @@ def draw_rects(image_path, label_path):
     return rgb
 
 
-def plot_img_labels_pair(
-    image_path: Path, label_path: Path
-):
+def plot_img_labels_pair(image_path: Path, label_path: Path):
     annotated_img = draw_rects(image_path, label_path)
     plt.imshow(annotated_img)
     plt.show()
@@ -89,14 +87,6 @@ def make_img_label_pairs(
             continue
 
 
-def load_notes_file(path: Path) -> Optional[Dict[str, Any]]:
-    if not path.exists():
-        return None
-
-    with open(path, "r") as f:
-        return json.load(f)
-
-
 if __name__ == "__main__":
     import argparse
 
@@ -113,8 +103,7 @@ if __name__ == "__main__":
 
     image_dir = args.path_to_run / "images"
     label_dir = args.path_to_run / args.label_dir_name
-    notes = load_notes_file(args.path_to_run / "notes.json")
 
     print("ctrl-c to stop")
     for image_path, label_path in make_img_label_pairs(image_dir, label_dir):
-        plot_img_labels_pair(image_path, label_path, notes)
+        plot_img_labels_pair(image_path, label_path)
