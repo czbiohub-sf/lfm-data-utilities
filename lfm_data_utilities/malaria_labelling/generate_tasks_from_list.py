@@ -188,7 +188,9 @@ def sort_corrected_labels(corrected_label_dir, filename_map_path):
     # TODO need to make it more "interactive" - smth like a pre-commit stage
     # that displays the copies that *will* be made
     for filename, source in filename_map.items():
-        copy_label_to_original_dir(corrected_label_dir / "labels" / filename, Path(source))
+        copy_label_to_original_dir(
+            corrected_label_dir / "labels" / filename, Path(source)
+        )
 
 
 if __name__ == "__main__":
@@ -204,7 +206,9 @@ if __name__ == "__main__":
         "correct", help="correct labels", allow_abbrev=False
     )
 
-    resort_parser = subparsers.add_parser("resort", help="re-sort labels", allow_abbrev=False)
+    resort_parser = subparsers.add_parser(
+        "resort", help="re-sort labels", allow_abbrev=False
+    )
     resort_parser.add_argument(
         "corrected_label_dir", type=Path, help="path to corrected label dir"
     )

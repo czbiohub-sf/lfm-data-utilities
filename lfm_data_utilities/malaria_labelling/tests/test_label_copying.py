@@ -15,6 +15,7 @@ class TestLabelMovement(unittest.TestCase):
 
     We can do this by copying to one, and from one to each, which should be identical to the originals.
     """
+
     def setUp(self):
         # this dir should mock the original source label dir; we don't want to destroy any test data, so
         # we copy it here
@@ -33,20 +34,22 @@ class TestLabelMovement(unittest.TestCase):
 
         for label_dir_path in path_to_label_dirs:
             for label_file in (label_dir_path / "labels").iterdir():
-
                 central_labels = tempfile.NamedTemporaryFile()
                 central_file_path = Path(central_labels.name)
 
                 actual_file_name = self.temp_labels_dir / central_file_path.name
 
                 # copy notes.json into the tempdir and make a labels dir in it too
-                shutil.copyfile(label_file.parent.parent / "notes.json", self.temp_dir_path / "notes.json")
+                shutil.copyfile(
+                    label_file.parent.parent / "notes.json",
+                    self.temp_dir_path / "notes.json",
+                )
 
                 gtl.copy_label_to_central_dir(label_file, central_file_path)
                 gtl.copy_label_to_original_dir(central_file_path, actual_file_name)
 
-                labelfile = open(label_file, 'r')
-                actualfile = open(actual_file_name,'r')
+                labelfile = open(label_file, "r")
+                actualfile = open(actual_file_name, "r")
 
                 labelfile_data = labelfile.read().strip()
                 actualfile_data = actualfile.read().strip()
