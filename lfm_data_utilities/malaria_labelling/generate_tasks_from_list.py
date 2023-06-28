@@ -90,19 +90,13 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
             [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
         )
 
-    with open(label_path.parent.parent / "notes.json", "r") as f:
-        label_notes_json = json.load(f)
-        source_id_to_name = dict(
-            [(str(row["id"]), row["name"]) for row in label_notes_json["categories"]]  # type: ignore
-        )
-
     with open(label_path, "r") as f:
         label_data = f.read().strip().split("\n")
 
     bboxes = []
     for row in label_data:
         row_numbers = row.split(" ")
-        row_class = source_id_to_name[row_numbers[0]]
+        row_class = MASTER_ID_TO_NAME[row_numbers[0]]
         row_corrected_label = label_name_to_id[row_class]
         bboxes.append(" ".join([row_corrected_label, *row_numbers[1:]]))
 

@@ -33,9 +33,7 @@ class TestLabelMovement(unittest.TestCase):
 
         for label_dir_path in path_to_label_dirs:
             for label_file in (label_dir_path / "labels").iterdir():
-
-                central_labels = tempfile.NamedTemporaryFile()
-                central_file_path = Path(central_labels.name)
+                central_file_path = self.temp_labels_dir / "central_label"
 
                 actual_file_name = self.temp_labels_dir / central_file_path.name
 
