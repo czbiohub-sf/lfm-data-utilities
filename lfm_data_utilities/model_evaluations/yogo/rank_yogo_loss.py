@@ -162,9 +162,9 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
 
 def select_top_n_paths(
     col_name: str, n: int, df: pd.DataFrame, ascending=False, include_index=False
-) -> List[Tuple[str, str]]:
+) -> List[Tuple[int, str, str]]:
     return [
-        (row[0], row[1])
+        (int(row[0]), row[1], row[2])
         for row in df.sort_values(by=col_name, ascending=ascending)[:n][
             ["image_path", "label_path"]
         ].itertuples(index=include_index)
