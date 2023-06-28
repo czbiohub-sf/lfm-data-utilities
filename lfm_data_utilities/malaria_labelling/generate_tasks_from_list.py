@@ -84,16 +84,16 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
         warnings.warn(f"{label_path} does not exist; perhaps the labeller deleted it?")
         return
 
+    with open(label_path.parent.parent / "notes.json", "r") as f:
+        label_notes_json = json.load(f)
+        source_id_to_name = dict(
+            [(row["id"], str(row["name"])) for row in label_notes_json["categories"]]  # type: ignore
+        )
+
     with open(output_path.parent.parent / "notes.json", "r") as f:
         label_notes_json = json.load(f)
         label_name_to_id = dict(
             [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
-        )
-
-    with open(label_path.parent.parent / "notes.json", "r") as f:
-        label_notes_json = json.load(f)
-        source_id_to_name = dict(
-            [(str(row["id"]), row["name"]) for row in label_notes_json["categories"]]  # type: ignore
         )
 
     with open(label_path, "r") as f:
