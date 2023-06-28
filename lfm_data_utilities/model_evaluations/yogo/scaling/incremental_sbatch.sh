@@ -1,8 +1,8 @@
 #! /usr/bin/sh
 
-for i in $(seq 1 15); do
+for i in $(seq 1 16); do
   sbatch submit_cmd.sh yogo train \
-    ../dataset_defs/incremental_set_addition/all-labelled-data-test_$i.yml \
+    /home/axel.jacobsen/celldiagnosis/dataset_defs/incremental_set_addition/all-labelled-data-test_$i.yml \
     --epochs 128 \
     --batch-size 64 \
     --iou-weight 5.97586 \
