@@ -8,7 +8,7 @@ for i in $(seq 1 16); do
     --iou-weight 5.97586 \
     --label-smoothing 0.14 \
     --learning-rate 0.0005690962636948274 \
-    --from-pretrained trained_models/valiant-lion-732/best.pth \
+    --from-pretrained /home/axel.jacobsen/celldiagnosis/yogo/trained_models/valiant-lion-732/best.pth \
     --weight-decay 0.01930025077473428 \
     --note "all-labelled-data-test $i" --tag "incremental-data-test"
 done
