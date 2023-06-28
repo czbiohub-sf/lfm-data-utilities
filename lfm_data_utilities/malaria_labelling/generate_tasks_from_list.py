@@ -84,6 +84,12 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
         warnings.warn(f"{label_path} does not exist; perhaps the labeller deleted it?")
         return
 
+    with open(label_path.parent.parent / "notes.json", "r") as f:
+        label_notes_json = json.load(f)
+        source_id_to_name = dict(
+            [(row["id"], str(row["name"])) for row in label_notes_json["categories"]]  # type: ignore
+        )
+
     with open(output_path.parent.parent / "notes.json", "r") as f:
         label_notes_json = json.load(f)
         label_name_to_id = dict(
@@ -96,7 +102,7 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
     bboxes = []
     for row in label_data:
         row_numbers = row.split(" ")
-        row_class = MASTER_ID_TO_NAME[row_numbers[0]]
+        row_class = source_id_to_name[row_numbers[0]]
         row_corrected_label = label_name_to_id[row_class]
         bboxes.append(" ".join([row_corrected_label, *row_numbers[1:]]))
 
@@ -182,7 +188,9 @@ def sort_corrected_labels(corrected_label_dir, filename_map_path):
     # TODO need to make it more "interactive" - smth like a pre-commit stage
     # that displays the copies that *will* be made
     for filename, source in filename_map.items():
-        copy_label_to_original_dir(corrected_label_dir / "labels" / filename, Path(source))
+        copy_label_to_original_dir(
+            corrected_label_dir / "labels" / filename, Path(source)
+        )
 
 
 if __name__ == "__main__":
@@ -198,7 +206,9 @@ if __name__ == "__main__":
         "correct", help="correct labels", allow_abbrev=False
     )
 
-    resort_parser = subparsers.add_parser("resort", help="re-sort labels", allow_abbrev=False)
+    resort_parser = subparsers.add_parser(
+        "resort", help="re-sort labels", allow_abbrev=False
+    )
     resort_parser.add_argument(
         "corrected_label_dir", type=Path, help="path to corrected label dir"
     )
