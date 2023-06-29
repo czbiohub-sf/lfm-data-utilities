@@ -20,6 +20,11 @@ from lfm_data_utilities.utils import (
 from label_studio_converter.imports.yolo import convert_yolo_to_ls
 
 
+PARASITE_DATA_RUNSET_PATH = Path(
+    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
+)
+
+
 def generate_tasks_for_runset_by_parent_folder(
     path_to_runset_folder: Path,
     path_to_parent_for_image_server: Path,
@@ -129,13 +134,9 @@ if __name__ == "__main__":
     if not path_to_runset.exists():
         raise ValueError(f"{str(path_to_runset)} doesn't exist")
 
-    # TODO maybe this path_to_runset folder should just be flexo?
-    parasite_data_runset_path = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
-    )
     generate_tasks_for_runset_by_parent_folder(
         path_to_runset,
-        parasite_data_runset_path,
+        PARASITE_DATA_RUNSET_PATH,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
