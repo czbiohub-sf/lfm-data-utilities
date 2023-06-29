@@ -149,8 +149,8 @@ def make_yogo_label_dir(
         try:
             shutil.copy(image_path, image_dir / image_name)
             copy_label_to_central_dir(Path(label_path), label_dir / label_name)
-        except FileNotFoundError:
-            print(f"Could not find {image_path} or {label_path}")
+        except FileNotFoundError as e:
+            print(f"Could not find a file: {e}")
             continue
 
         filename_map[image_name] = str(

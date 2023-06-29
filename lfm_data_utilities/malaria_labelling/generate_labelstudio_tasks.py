@@ -73,7 +73,7 @@ def generate_tasks_for_runset(
 
 def gen_task(
     folder_path: Path,
-    relative_parent: Path,
+    relative_parent: Path = PARASITE_DATA_RUNSET_PATH,
     label_dir_name="labels",
     tasks_file_name="tasks",
 ):
