@@ -17,7 +17,7 @@ from lfm_data_utilities.utils import (
 )
 
 
-from label_studio_converter.imports.yolo import convert_yolo_to_ls
+from lfm_data_utilities.malaria_labelling.label_studio_converter.yogo_format_converter import convert_yolo_to_ls
 
 
 PARASITE_DATA_RUNSET_PATH = Path(
