@@ -17,7 +17,9 @@ from lfm_data_utilities.utils import (
 )
 
 
-from lfm_data_utilities.malaria_labelling.label_studio_converter.yogo_format_converter import convert_yolo_to_ls
+from lfm_data_utilities.malaria_labelling.label_studio_converter.yogo_format_converter import (
+    convert_yolo_to_ls,
+)
 
 
 PARASITE_DATA_RUNSET_PATH = Path(
@@ -77,7 +79,8 @@ def gen_task(
     label_dir_name="labels",
     tasks_file_name="tasks",
 ):
-    abbreviated_path = str(path_relative_to(folder_path, relative_parent))
+    # defensive pathing
+    abbreviated_path = str(path_relative_to(Path(folder_path), Path(relative_parent)))
     root_url = (
         f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
     )

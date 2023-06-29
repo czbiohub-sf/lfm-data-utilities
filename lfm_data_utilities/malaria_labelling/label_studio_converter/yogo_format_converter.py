@@ -34,7 +34,6 @@ class ExpandFullPath(argparse.Action):
         setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
 
 
-
 def convert_yolo_to_ls(
     input_dir,
     out_file,
@@ -155,15 +154,6 @@ def convert_yolo_to_ls(
         logger.info("Saving Label Studio JSON to %s", out_file)
         with open(out_file, "w") as out:
             json.dump(tasks, out)
-
-        logger.info(
-            "\n"
-            f"  1. Create a new project in Label Studio\n"
-            f'  2. Use Labeling Config from "{label_config_file}"\n'
-            f"  3. Setup serving for images [e.g. you can use Local Storage (or others):\n"
-            f"     https://labelstud.io/guide/storage.html#Local-storage]\n"
-            f'  4. Import "{out_file}" to the project\n'
-        )
     else:
         logger.error("No labels converted")
 
