@@ -33,7 +33,7 @@ def get_corresponding_dataset_dir_in_search_dir(
 ) -> List[Optional[Path]]:
     dataset_dir_search_string = dataset_dir.name
 
-    # If an images folder is passed in directly
+    # If a labels folder is passed in directly
     if search_dir.stem == "labels" and search_dir.is_dir():
         if dataset_dir_search_string in search_dir.parent.name:
             return [search_dir.parent]
@@ -56,7 +56,9 @@ def get_corresponding_dataset_dir_in_search_dir(
 
     # Recursively search multiple directories for the folder with the corresponding labels folder
     return [
-        x for x in list(search_dir.rglob(f"{dataset_dir_search_string}*")) if x.is_dir()
+        x
+        for x in list(search_dir.rglob(f"*{dataset_dir_search_string}*"))
+        if x.is_dir()
     ]
 
 
