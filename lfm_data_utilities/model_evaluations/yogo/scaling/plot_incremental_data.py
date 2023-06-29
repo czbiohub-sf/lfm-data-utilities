@@ -39,9 +39,9 @@ if __name__ == "__main__":
             [
                 *cols,
                 pl.col("training set size")
-                    .str.replace(" images", "")
-                    .cast(pl.Int32)
-                    .alias(sort_key),
+                .str.replace(" images", "")
+                .cast(pl.Int32)
+                .alias(sort_key),
             ]
         )
         .collect()
