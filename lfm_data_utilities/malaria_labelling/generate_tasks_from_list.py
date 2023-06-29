@@ -57,11 +57,16 @@ MASTER_ID_TO_NAME = {v: k for k, v in MASTER_NAME_TO_ID.items()}
 
 def copy_label_to_central_dir(label_path: Path, output_path: Path):
     """Copies label_path into central dir, aware of variance of idx-to-label mapping done by label-studio"""
-    with open(label_path.parent.parent / "notes.json", "r") as f:
-        label_notes_json = json.load(f)
-        label_id_to_class_name = dict(
-            [(str(row["id"]), row["name"]) for row in label_notes_json["categories"]]  # type: ignore
-        )
+    # if we haven't exported from label studio, there will not be a notes.json. The files will be in
+    # the MASTER_NOTES_DOT_JSON format
+    try:
+        with open(label_path.parent.parent / "notes.json", "r") as f:
+            label_notes_json = json.load(f)
+            label_id_to_class_name = dict(
+                [(str(row["id"]), row["name"]) for row in label_notes_json["categories"]]  # type: ignore
+            )
+    except FileNotFoundError:
+        label_id_to_class_name = MASTER_ID_TO_NAME
 
     with open(label_path, "r") as f:
         label_data = f.read().strip().split("\n")
