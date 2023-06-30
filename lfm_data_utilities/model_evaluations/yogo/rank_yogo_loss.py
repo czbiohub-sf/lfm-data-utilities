@@ -129,8 +129,9 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
         label_smoothing=0,
     ).to(device)
 
-    net, net_cfg = YOGO.from_pth(path_to_pth)
+    net, net_cfg = YOGO.from_pth(path_to_pth, inference=True)
     net.to(device)
+    net.eval()
 
     dataloader = get_dataloader(
         dataset_descriptor_file,
