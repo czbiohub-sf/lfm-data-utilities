@@ -158,9 +158,6 @@ def make_yogo_label_dir(
             print(f"Could not find a file: {e}")
             continue
 
-        filename_map[image_name] = str(
-            image_path.resolve() if isinstance(image_path, Path) else image_path
-        )
         filename_map[label_name] = str(
             label_path.resolve() if isinstance(label_path, Path) else label_path
         )
