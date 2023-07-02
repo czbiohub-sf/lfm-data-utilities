@@ -26,8 +26,6 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.WARNING)
 logger.addHandler(handler)
 
-from label_studio_converter.imports.colors import COLORS
-
 
 class ExpandFullPath(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
