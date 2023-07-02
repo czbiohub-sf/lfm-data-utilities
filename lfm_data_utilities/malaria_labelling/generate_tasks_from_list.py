@@ -95,11 +95,14 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
             [(row["id"], str(row["name"])) for row in label_notes_json["categories"]]  # type: ignore
         )
 
-    with open(output_path.parent.parent / "notes.json", "r") as f:
-        label_notes_json = json.load(f)
-        label_name_to_id = dict(
-            [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
-        )
+    try:
+        with open(output_path.parent.parent / "notes.json", "r") as f:
+            label_notes_json = json.load(f)
+            label_name_to_id = dict(
+                [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
+            )
+    except FileNotFoundError:
+            label_name_to_id = MASTER_NAME_TO_ID
 
     with open(label_path, "r") as f:
         label_data = f.read().strip().split("\n")
