@@ -59,8 +59,8 @@ def generate_tasks_for_runset(
     label_dir_name="labels",
     tasks_file_name="tasks",
     use_tqdm=False,
-):
-    multiprocess_fn(
+) -> List[Path]:
+    return multiprocess_fn(
         run_folders,
         partial(
             gen_task,
@@ -78,7 +78,7 @@ def gen_task(
     relative_parent: Path = PARASITE_DATA_RUNSET_PATH,
     label_dir_name="labels",
     tasks_file_name="tasks",
-):
+) -> Path:
     # defensive pathing
     abbreviated_path = str(path_relative_to(Path(folder_path), Path(relative_parent)))
     root_url = (
@@ -113,6 +113,8 @@ def gen_task(
         )
     except Exception as e:
         print(f"exception found for file {folder_path}: {e}. continuing...")
+
+    return tasks_path
 
 
 if __name__ == "__main__":

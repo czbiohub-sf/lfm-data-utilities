@@ -141,7 +141,7 @@ def label_folder_with_yogo(
     path_to_label_dir.mkdir(exist_ok=True, parents=True)
 
     try:
-        label = CLASSES.index(label_override)
+        label = CLASSES.index(label_override)  # type: ignore
     except ValueError:
         label = None
 

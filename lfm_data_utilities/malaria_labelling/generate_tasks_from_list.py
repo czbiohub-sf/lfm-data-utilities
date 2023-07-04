@@ -102,7 +102,7 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
                 [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
             )
     except FileNotFoundError:
-            label_name_to_id = MASTER_NAME_TO_ID
+        label_name_to_id = MASTER_NAME_TO_ID
 
     with open(label_path, "r") as f:
         label_data = f.read().strip().split("\n")
