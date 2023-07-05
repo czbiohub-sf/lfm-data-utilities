@@ -1,22 +1,19 @@
 #! /usr/bin/env python3
 
 import json
-import torch
 import signal
-import numpy as np
 from PIL import Image, ImageDraw
 
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-from typing import Generator, Iterable, Tuple, Optional, Dict, Any
+from typing import Generator, Iterable, Tuple
 
 from yogo.data.dataset import YOGO_CLASS_ORDERING
 
 from yogo.utils.utils import bbox_colour
-from yogo.data.dataset import read_grayscale, load_labels
+from yogo.data.dataset import load_labels
 
-from labelling_constants import CLASSES
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

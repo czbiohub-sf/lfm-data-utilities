@@ -3,7 +3,7 @@
 """ Thumbnail Sort Labelling
 
 High-level Goal:
-- take path to folder of YOLO style labels
+- take dataset description file for
 - create `tasks.json` file (files?)
 - create folders of thumbnails (the 'thumbnail-folder'), sorted by class
     - thumbnail filenames should include class, run id, cell id
@@ -11,6 +11,7 @@ High-level Goal:
     - create a file in the thumbnail folder that maps a run id to the path of the tasks.json file
 - once sorted files are created,
     - go through folders, correcting labels in the tasks.json file(s?)
+- zip and save biohub-labels/vetted as a backup
 - re-export the tasks.json file(s)
 
 Notes:
@@ -22,14 +23,13 @@ that run from label studio, since it will no longer have correct files.
 import shutil
 import argparse
 
+from tqdm import tqdm
 from typing import List
 from pathlib import Path
 
 from yogo.data.dataset import YOGO_CLASS_ORDERING
-from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
-    generate_tasks_for_runset,
-    PARASITE_DATA_RUNSET_PATH,
-)
+from yogo.data.dataset_description_file import load_dataset_description
+from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import gen_task
 
 
 def create_folders_for_output_dir(
@@ -50,35 +50,42 @@ def create_folders_for_output_dir(
         corrected_class_dir.mkdir(exist_ok=True, parents=True)
 
 
-def create_tasks_files_for_run_sets(path_to_run_sets: Path, label_dir_name: str):
-    paths_to_run_sets = [p.parent for p in path_to_run_sets.glob("./**/labels")]
+def create_tasks_files_for_run_sets(
+    path_to_labelled_data_ddf: Path, label_dir_name: str
+):
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
-    generate_tasks_for_runset(
-        run_folders=paths_to_run_sets,
-        relative_parent=PARASITE_DATA_RUNSET_PATH,
-        label_dir_name=label_dir_name,
-        tasks_file_name="tasks_for_thumbnails.json",
-    )
+    for d in tqdm(dataset_paths):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+        gen_task(
+            folder_path=Path(label_path).parent,
+            images_dir_path=image_path,
+        )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("path_to_output_dir", type=Path)
     parser.add_argument(
-        "--path-to-run-sets",
+        "--path-to-labelled-data-ddf",
         help=(
-            "path to folder of run sets - in general you should not need to change this, "
+            "path to dataset descriptor file for labelled data - in general you should not need to change this, "
             "since we mostly want to correct labels for human-labelled data (i.e. biohub-labels/vetted)"
         ),
         default=Path(
-            "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted"
+            "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/all-labelled-data-train-only.yml"
         ),
         type=Path,
     )
     parser.add_argument(
         "--label-dir-name",
+        help=(
+            "name of the directory containing the label files - defaults to 'labels'. "
+            "in general you should not need to change this, "
+        ),
         default="labels",
-        help="name for label dir for each runset",
     )
     parser.add_argument(
         "--overwrite-previous-thumbnails",
@@ -94,5 +101,5 @@ if __name__ == "__main__":
         force_overwrite=args.overwrite_previous_thumbnails,
     )
     task_files = create_tasks_files_for_run_sets(
-        args.path_to_run_sets, label_dir_name=args.label_dir_name
+        args.path_to_labelled_data_ddf, label_dir_name=args.label_dir_name
     )

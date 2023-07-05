@@ -15,8 +15,9 @@ from urllib.request import (
 )  # for converting "+","*", etc. in file paths to appropriate urls
 import uuid
 import logging
-from PIL import Image
 
+from PIL import Image
+from pathlib import Path
 
 from typing import Optional, Tuple
 
@@ -38,6 +39,7 @@ def convert_yolo_to_ls(
     to_name="image",
     from_name="label",
     label_dir_name="labels",
+    images_dir_path: Optional[Path] = None,
     out_type="annotations",
     image_root_url="/data/local-files/?d=",
     image_ext=".jpg,.jpeg,.png",
@@ -50,6 +52,8 @@ def convert_yolo_to_ls(
     :param to_name: object name from Label Studio labeling config
     :param from_name: control tag name from Label Studio labeling config
     :param out_type: annotation type - "annotations" or "predictions"
+    :param label_dir_name: name of the label dir - e.g. "labels", "yogo-labels"
+    :param images_dir_path: path to images dir
     :param image_root_url: root URL path where images will be hosted, e.g.: http://example.com/images
     :param image_ext: image extension/s - single string or comma separated list to search, eg. .jpeg or .jpg, .png and so on.
     """
@@ -58,15 +62,27 @@ def convert_yolo_to_ls(
     logger.info("Reading YOLO notes and categories from %s", input_dir)
 
     # build categories=>labels dict
-    notes_file = os.path.join(input_dir, "classes.txt")
-    with open(notes_file) as f:
-        lines = [line.strip() for line in f.readlines()]
-    categories = {i: line for i, line in enumerate(lines)}
+    notes_file = Path(input_dir) / "notes.json"
+    if notes_file.exists():
+        with open(notes_file, "r") as f:
+            notes_data = json.load(f)
+        categories = {int(v["id"]): v["name"] for v in notes_data["categories"]}
+    else:
+        classes_file = os.path.join(input_dir, "classes.txt")
+        with open(classes_file) as f:
+            lines = [line.strip() for line in f.readlines()]
+
+        categories = {i: line for i, line in enumerate(lines)}
+
     logger.info(f"Found {len(categories)} categories")
 
     # define directories
     labels_dir = os.path.join(input_dir, label_dir_name)
-    images_dir = os.path.join(input_dir, "images")
+    if images_dir_path is None:
+        images_dir = os.path.join(input_dir, "images")
+    else:
+        images_dir = str(images_dir_path)
+
     logger.info("Converting labels from %s", labels_dir)
 
     # build array out of provided comma separated image_extns (str -> array)
@@ -82,11 +98,13 @@ def convert_yolo_to_ls(
                 image_file_base = f[0 : -len(ext)]
                 image_file_found_flag = True
                 break
+
         if not image_file_found_flag:
             logger.warning(f"missing image file for label {f}")
             continue
 
         image_root_url += "" if image_root_url.endswith("/") else "/"
+        Path(images_dir) / image_file
         task = {
             "data": {
                 # eg. '../../foo+you.py' -> '../../foo%2Byou.py'
