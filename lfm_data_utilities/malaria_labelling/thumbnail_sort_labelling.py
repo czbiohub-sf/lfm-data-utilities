@@ -28,6 +28,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime
 from typing import List, Dict, Optional
 
 from yogo.data.dataset import YOGO_CLASS_ORDERING
@@ -35,6 +36,12 @@ from yogo.data.dataset_description_file import load_dataset_description
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     gen_task,
     LFM_SCOPE_PATH,
+)
+from lfm_data_utilities.utils import path_is_relative_to
+
+
+DEFAULT_LABELS_PATH = Path(
+    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
 )
 
 
@@ -154,8 +161,35 @@ def sort_thumbnails(path_to_thumbnails: Path):
 
     After creation, each thumbnail has the name <class>_<cell_id>_<id>.png. `id` is the id of the task.json file,
     which one can get from id_to_task_path.json. `cell_id` is the id of the cell in that tasks.json. `class` is
-    the cell's class.
+    the cell's original class.
+
+    The labeller will sort the thumbnails into the "Corrected Class Folder" for the class that they deem is the
+    true class for that cell.
+
+    This function will first create a backup of `LFM_scope/biohub-labels/vetted` into `LFM_scope/biohub-labels/vetted-backup`.
+    Then, it goes through the corrected class folders and will correct the tasks.json files. It will then export the
+
+    TODO hard coding DEFAULT_LABELS_PATH. What should we do with it? All the tasks.json paths should be from there, so this
+    information is redundant. Maybe we will use this to verify that the tasks.json files are correct? Need to reconsider this.
     """
+    with open(path_to_thumbnails / "id_to_task_path.json") as f:
+        id_to_task_path = json.load(f)
+
+    for task_path in id_to_task_path.values():
+        if not Path(task_path).exists():
+            raise ValueError(f"task_path {task_path} does not exist")
+        elif not path_is_relative_to(Path(task_path), DEFAULT_LABELS_PATH):
+            raise ValueError(
+                f"task_path {task_path} is not relative to {DEFAULT_LABELS_PATH}"
+            )
+
+    # create backup of vetted
+    vetted_backup_path = str(
+        DEFAULT_LABELS_PATH
+        / "vetted-backup"
+        / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+    )
+    shutil.make_archive(vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted")
 
 
 if __name__ == "__main__":
@@ -171,9 +205,7 @@ if __name__ == "__main__":
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
             "since we mostly want to correct labels for human-labelled data (i.e. biohub-labels/vetted)"
         ),
-        default=Path(
-            "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/all-labelled-data-train-only.yml"
-        ),
+        default=DEFAULT_LABELS_PATH / "all-labelled-data-train-only.yml",
         type=Path,
     )
     create_thumbnails_parser.add_argument(
@@ -194,7 +226,6 @@ if __name__ == "__main__":
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
 
     args = parser.parse_args()
-    print(args)
 
     if args.subparser == "sort-thumbnails":
         sort_thumbnails(args.path_to_thumbnails)
