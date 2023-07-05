@@ -79,12 +79,12 @@ def gen_task(
     tasks_file_name="tasks",
 ) -> Path:
     # defensive pathing
-    images_root_path_for_url = images_dir_path or folder_path
+    images_root_path_for_url = images_dir_path or folder_path / "images"
     abbreviated_path = str(
         path_relative_to(Path(images_root_path_for_url), Path(relative_parent))
     )
     root_url = (
-        f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
+        f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}"
     )
 
     tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
