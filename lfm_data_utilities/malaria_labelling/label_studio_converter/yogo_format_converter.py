@@ -107,7 +107,8 @@ def convert_yolo_to_ls(
         task = {
             "data": {
                 # eg. '../../foo+you.py' -> '../../foo%2Byou.py'
-                "image": image_root_url + str(pathname2url(image_file))
+                "image": image_root_url
+                + str(pathname2url(image_file))
             }
         }
 
