@@ -17,7 +17,7 @@ from lfm_data_utilities.utils import (
 )
 
 
-from lfm_data_utilities.malaria_labelling.label_studio_converter.yogo_format_converter import (
+from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_yolo_to_ls import (
     convert_yolo_to_ls,
 )
 
