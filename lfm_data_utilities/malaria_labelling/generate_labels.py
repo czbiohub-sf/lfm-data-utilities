@@ -17,7 +17,11 @@ from cellpose.utils import (
 )
 from typing import Optional, Literal, List, Tuple
 
-from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES, FLEXO_DATA_DIR, IMG_SERVER_ROOT
+from lfm_data_utilities.malaria_labelling.labelling_constants import (
+    CLASSES,
+    FLEXO_DATA_DIR,
+    IMG_SERVER_ROOT,
+)
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     generate_tasks_for_runset,
 )

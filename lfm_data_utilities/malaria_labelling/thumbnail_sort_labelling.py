@@ -89,6 +89,7 @@ def create_tasks_files_for_run_sets(
 def create_thumbnail_name(class_: str, cell_id: str, task_json_id: str) -> str:
     return f"{class_}_{cell_id}_{task_json_id}.png"
 
+
 def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, ...]:
     """
     parses a thumbnail name into class, cell_id, and task.json id
@@ -100,7 +101,9 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, ...]:
 
 
 def create_thumbnails_from_tasks_and_images(
-    tasks_json_path: Path, class_dirs: Dict[str, Path], task_json_id: Optional[str] = None
+    tasks_json_path: Path,
+    class_dirs: Dict[str, Path],
+    task_json_id: Optional[str] = None,
 ):
     task_json_id = task_json_id or tasks_json_path.parent.name
 
@@ -136,7 +139,9 @@ def create_thumbnails_from_tasks_and_images(
 
             cell_image = image[y1:y2, x1:x2]
             pil_cell_image = Image.fromarray(cell_image)
-            pil_cell_image.save(class_dir / create_thumbnail_name(class_, cell_id, task_json_id))
+            pil_cell_image.save(
+                class_dir / create_thumbnail_name(class_, cell_id, task_json_id)
+            )
 
 
 def create_thumbnails_for_sorting(
@@ -156,8 +161,12 @@ def create_thumbnails_for_sorting(
 
     N = int(math.log(len(task_paths), 10)) + 1
     id_to_task_path: Dict[str, str] = {}
-    for i, task_path in tqdm(enumerate(task_paths), total=len(task_paths), desc="creating thumbnails"):
-        create_thumbnails_from_tasks_and_images(task_path, class_dirs, task_json_id=f"{i:0{N}}")
+    for i, task_path in tqdm(
+        enumerate(task_paths), total=len(task_paths), desc="creating thumbnails"
+    ):
+        create_thumbnails_from_tasks_and_images(
+            task_path, class_dirs, task_json_id=f"{i:0{N}}"
+        )
         id_to_task_path[f"{i:0{N}}"] = str(task_path)
 
     with open(args.path_to_output_dir / "id_to_task_path.json", "w") as f:
@@ -203,20 +212,26 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
             / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         )
         if not dry_run:
-            shutil.make_archive(vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted")
+            shutil.make_archive(
+                vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
+            )
 
     # create a list of all the corrections
-    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = defaultdict(list)
+    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = defaultdict(
+        list
+    )
     for class_ in YOGO_CLASS_ORDERING:
         corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
         for thumbnail in corrected_class_dir.iterdir():
             original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
 
-            id_to_list_of_corrections[task_json_id].append({
-                "cell_id": cell_id,
-                "original_class": original_class,
-                "corrected_class": class_,
-            })
+            id_to_list_of_corrections[task_json_id].append(
+                {
+                    "cell_id": cell_id,
+                    "original_class": original_class,
+                    "corrected_class": class_,
+                }
+            )
 
     # Iterate through the corrections tasks-wise
     # This is going to be horifically inefficient - label studio chose their
@@ -244,16 +259,25 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
                     if bbox_prediction["id"] == cell_id:
                         bbox_prediction["value"]["rectanglelabels"] = [corrected_class]
                         # axel's debugging print statements
-                        print(f"corrected {cell_id} from {original_class} to {corrected_class}")
+                        print(
+                            f"corrected {cell_id} from {original_class} to {corrected_class}"
+                        )
                         print(
                             f"tasks['{i}']['predictions'][0]['result']['{j}']['value']['rectanglelabels'] = "
                             f"{tasks[i]['predictions'][0]['result'][j]['value']['rectanglelabels']}"
                         )
-                        assert tasks[i]['predictions'][0]['result'][j]['value']['rectanglelabels'][0] == corrected_class
+                        assert (
+                            tasks[i]["predictions"][0]["result"][j]["value"][
+                                "rectanglelabels"
+                            ][0]
+                            == corrected_class
+                        )
                         n_corrections += 1
 
             if n_corrections == 0:
-                raise ValueError(f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}")
+                raise ValueError(
+                    f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
+                )
 
         # write the (corrected) json file
         if not dry_run:
