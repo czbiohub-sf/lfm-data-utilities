@@ -202,7 +202,7 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
             / "vetted-backup"
             / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         )
-        if not dry_run
+        if not dry_run:
             shutil.make_archive(vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted")
 
     # create a list of all the corrections
@@ -249,6 +249,7 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
                             f"tasks['{i}']['predictions'][0]['result']['{j}']['value']['rectanglelabels'] = "
                             f"{tasks[i]['predictions'][0]['result'][j]['value']['rectanglelabels']}"
                         )
+                        assert tasks[i]['predictions'][0]['result'][j]['value']['rectanglelabels'][0] == corrected_class
                         n_corrections += 1
 
             if n_corrections == 0:
@@ -258,6 +259,8 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
         if not dry_run:
             with open(id_to_task_path[task_json_id], "w") as f:
                 json.dump(tasks, f)
+
+    # TODO implement a function that will export tasks.json to the YOGO format.
 
 
 if __name__ == "__main__":
