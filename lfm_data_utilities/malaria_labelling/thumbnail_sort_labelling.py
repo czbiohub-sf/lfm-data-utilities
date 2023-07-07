@@ -325,6 +325,7 @@ if __name__ == "__main__":
         ),
         default=DEFAULT_LABELS_PATH
         / "dataset_defs"
+        / "human-labels"
         / "all-labelled-data-train-only.yml",
         type=Path,
     )
