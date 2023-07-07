@@ -308,7 +308,7 @@ if __name__ == "__main__":
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
             "since we mostly want to correct labels for human-labelled data (i.e. biohub-labels/vetted)"
         ),
-        default=DEFAULT_LABELS_PATH / "all-labelled-data-train-only.yml",
+        default=DEFAULT_LABELS_PATH / "dataset_defs" / "all-labelled-data-train-only.yml",
         type=Path,
     )
     create_thumbnails_parser.add_argument(
