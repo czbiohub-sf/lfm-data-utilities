@@ -244,7 +244,9 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
     # tasks.json format poorly. They have list of dicts of predictions, and each
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
     # prediction? It would turn the cell search from O(n) to O(1).
-    for task_json_id, corrections in id_to_list_of_corrections.items():
+    for task_json_id, corrections in tqdm(
+        id_to_list_of_corrections.items(), desc="processing corrections"
+    ):
         if len(corrections) == 0:
             continue
 
@@ -258,8 +260,8 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
             corrected_class = correction["corrected_class"]
 
             # TODO maybe this n_corrections would be good for a sanity check?
+            n_corrections = 0
             for i, image_prediction in enumerate(tasks):
-                n_corrections = 0
                 bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
                 for j, bbox_prediction in enumerate(bbox_predictions):
                     if bbox_prediction["id"] == cell_id:
@@ -274,10 +276,10 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
                         n_corrections += 1
                         break
 
-                if n_corrections == 0:
-                    raise ValueError(
-                        f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
-                    )
+            if n_corrections == 0:
+                raise ValueError(
+                    f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
+                )
 
         # write the (corrected) json file
         if not dry_run:
@@ -296,6 +298,11 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
 
 
 if __name__ == "__main__":
+    try:
+        boolean_action = argparse.BooleanOptionalAction  # type: ignore
+    except AttributeError:
+        boolean_action = "store_true"  # type: ignore
+
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest="subparser")
@@ -308,7 +315,9 @@ if __name__ == "__main__":
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
             "since we mostly want to correct labels for human-labelled data (i.e. biohub-labels/vetted)"
         ),
-        default=DEFAULT_LABELS_PATH / "dataset_defs" / "all-labelled-data-train-only.yml",
+        default=DEFAULT_LABELS_PATH
+        / "dataset_defs"
+        / "all-labelled-data-train-only.yml",
         type=Path,
     )
     create_thumbnails_parser.add_argument(
@@ -327,11 +336,17 @@ if __name__ == "__main__":
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
+    sort_thumbnails_parser.add_argument(
+        "--commit",
+        action=boolean_action,
+        help="actually modify files on the file system instead of reporting what would be changed",
+        default=False,
+    )
 
     args = parser.parse_args()
 
     if args.subparser == "sort-thumbnails":
-        sort_thumbnails(args.path_to_thumbnails)
+        sort_thumbnails(args.path_to_thumbnails, args.commit)
     elif args.subparser == "create-thumbnails":
         create_thumbnails_for_sorting(
             args.path_to_output_dir,
