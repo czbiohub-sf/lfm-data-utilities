@@ -34,11 +34,16 @@ from typing import List, Dict, Optional, Tuple, DefaultDict
 
 from yogo.data.dataset import YOGO_CLASS_ORDERING
 from yogo.data.dataset_description_file import load_dataset_description
+
+from lfm_data_utilities.utils import path_is_relative_to, timing_context_manager
+from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
+from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_ls_to_yolo import (
+    convert_ls_to_yolo,
+)
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     gen_task,
     LFM_SCOPE_PATH,
 )
-from lfm_data_utilities.utils import path_is_relative_to, timing_context_manager
 
 
 DEFAULT_LABELS_PATH = Path(
@@ -195,11 +200,12 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
     """
     with open(path_to_thumbnails / "id_to_task_path.json") as f:
         id_to_task_path = json.load(f)
+        id_to_task_path = {k: Path(v) for k, v in id_to_task_path.items()}
 
     for task_path in id_to_task_path.values():
-        if not Path(task_path).exists():
+        if not task_path.exists():
             raise ValueError(f"task_path {task_path} does not exist")
-        elif not path_is_relative_to(Path(task_path), DEFAULT_LABELS_PATH):
+        elif not path_is_relative_to(task_path, DEFAULT_LABELS_PATH):
             raise ValueError(
                 f"task_path {task_path} is not relative to {DEFAULT_LABELS_PATH}"
             )
@@ -237,7 +243,7 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
     # This is going to be horifically inefficient - label studio chose their
     # tasks.json format poorly. They have list of dicts of predictions, and each
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
-    # prediction? It would turn the search from O(n) to O(1). Anyways, don't blame me.
+    # prediction? It would turn the cell search from O(n) to O(1).
     for task_json_id, corrections in id_to_list_of_corrections.items():
         if len(corrections) == 0:
             continue
@@ -252,20 +258,13 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
             corrected_class = correction["corrected_class"]
 
             # TODO maybe this n_corrections would be good for a sanity check?
-            n_corrections = 0
             for i, image_prediction in enumerate(tasks):
+                n_corrections = 0
                 bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
                 for j, bbox_prediction in enumerate(bbox_predictions):
                     if bbox_prediction["id"] == cell_id:
                         bbox_prediction["value"]["rectanglelabels"] = [corrected_class]
-                        # axel's debugging print statements
-                        print(
-                            f"corrected {cell_id} from {original_class} to {corrected_class}"
-                        )
-                        print(
-                            f"tasks['{i}']['predictions'][0]['result']['{j}']['value']['rectanglelabels'] = "
-                            f"{tasks[i]['predictions'][0]['result'][j]['value']['rectanglelabels']}"
-                        )
+                        # look at black's formatting here! geez!
                         assert (
                             tasks[i]["predictions"][0]["result"][j]["value"][
                                 "rectanglelabels"
@@ -273,18 +272,27 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
                             == corrected_class
                         )
                         n_corrections += 1
+                        break
 
-            if n_corrections == 0:
-                raise ValueError(
-                    f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
-                )
+                if n_corrections == 0:
+                    raise ValueError(
+                        f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
+                    )
 
         # write the (corrected) json file
         if not dry_run:
             with open(id_to_task_path[task_json_id], "w") as f:
                 json.dump(tasks, f)
 
-    # TODO implement a function that will export tasks.json to the YOGO format.
+    # convert the corrected json files to yolo format
+    for task_path in id_to_task_path.values():
+        convert_ls_to_yolo(
+            path_to_ls_file=task_path,
+            path_to_output_dir=task_path.parent,
+            classes=CLASSES,
+            overwrite_existing_labels=not dry_run,
+            download_images=False,
+        )
 
 
 if __name__ == "__main__":
@@ -331,3 +339,5 @@ if __name__ == "__main__":
             args.label_dir_name,
             args.overwrite_previous_thumbnails,
         )
+    else:
+        parser.print_help()
