@@ -178,7 +178,7 @@ def create_thumbnails_for_sorting(
         json.dump(id_to_task_path, f)
 
 
-def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
+def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     """
     The thumbnails dir should have three things:
         - a set of folders named after the classes ("Class Folder" from now on)
@@ -217,7 +217,7 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
             / "vetted-backup"
             / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         )
-        if not dry_run:
+        if commit:
             shutil.make_archive(
                 vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
             )
@@ -282,19 +282,27 @@ def sort_thumbnails(path_to_thumbnails: Path, dry_run=True):
                 )
 
         # write the (corrected) json file
-        if not dry_run:
+        if commit:
             with open(id_to_task_path[task_json_id], "w") as f:
                 json.dump(tasks, f)
+        else:
+            print(
+                "would have written corrected tasks.json "
+                f"file to {id_to_task_path[task_json_id]}"
+            )
 
     # convert the corrected json files to yolo format
     for task_path in id_to_task_path.values():
-        convert_ls_to_yolo(
-            path_to_ls_file=task_path,
-            path_to_output_dir=task_path.parent,
-            classes=CLASSES,
-            overwrite_existing_labels=not dry_run,
-            download_images=False,
-        )
+        if commit:
+            convert_ls_to_yolo(
+                path_to_ls_file=task_path,
+                path_to_output_dir=task_path.parent,
+                classes=CLASSES,
+                overwrite_existing_labels=commit,
+                download_images=False,
+            )
+        else:
+            print(f"would have overwritten YOGO labels at {task_path.parent}")
 
 
 if __name__ == "__main__":

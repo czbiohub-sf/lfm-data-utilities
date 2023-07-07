@@ -52,10 +52,30 @@ def prep_yolo_dir(
                 "existing labels, set overwrite_existing_labels=True."
             )
         else:
-            shutil.rmtree(labels_dir)
-            shutil.rmtree(images_dir)
-            shutil.rmtree(notes_file)
-            shutil.rmtree(classes_txt)
+            try:
+                shutil.rmtree(labels_dir)
+            except FileNotFoundError:
+                print(
+                    f"labels dir not found for {output_dir.name}; therefore we will not delete it"
+                )
+            try:
+                shutil.rmtree(images_dir)
+            except FileNotFoundError:
+                print(
+                    f"images dir not found for {output_dir.name}; therefore we will not delete it"
+                )
+            try:
+                notes_file.unlink()
+            except FileNotFoundError:
+                print(
+                    f"notes file not found for {output_dir.name}; therefore we will not delete it"
+                )
+            try:
+                classes_txt.unlink()
+            except FileNotFoundError:
+                print(
+                    f"classes file not found for {output_dir.name}; therefore we will not delete it"
+                )
 
     # Create the output directories
     labels_dir.mkdir(parents=True, exist_ok=True)
