@@ -19,7 +19,7 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import List, Tuple, Dict
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from yogo.data import YOGO_CLASS_ORDERING
 
 
 from lfm_data_utilities.malaria_labelling.generate_labels import IMG_SERVER_ROOT

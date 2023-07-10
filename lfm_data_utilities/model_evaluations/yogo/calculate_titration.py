@@ -18,7 +18,7 @@ from yogo.infer import (
     count_cells_for_formatted_preds,
 )
 from yogo.utils import format_preds
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from yogo.data import YOGO_CLASS_ORDERING
 
 from lfm_data_utilities import utils
 

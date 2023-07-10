@@ -11,10 +11,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Generator, Iterable, Tuple, Optional, Dict, Any
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING
-
 from yogo.utils.utils import bbox_colour
-from yogo.data.dataset import read_grayscale, load_labels
+from yogo.data import YOGO_CLASS_ORDERING
+from yogo.data.yogo_dataset import read_grayscale, load_labels
 
 from labelling_constants import CLASSES
 
