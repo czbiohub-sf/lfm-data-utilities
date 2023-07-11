@@ -27,9 +27,9 @@ from yogo.yogo_loss import YOGOLoss
 from yogo.utils.utils import bbox_colour
 from yogo.utils import draw_yogo_prediction
 from yogo.data.dataset_description_file import load_dataset_description
-from yogo.data.dataset import (
+from yogo.data import YOGO_CLASS_ORDERING
+from yogo.data.yogo_dataset import (
     ObjectDetectionDataset,
-    YOGO_CLASS_ORDERING,
     label_file_to_tensor,
     load_labels,
 )

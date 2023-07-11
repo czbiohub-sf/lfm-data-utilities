@@ -18,7 +18,7 @@ from yogo.infer import (
     count_cells_for_formatted_preds,
 )
 from yogo.utils import format_preds
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from yogo.data import YOGO_CLASS_ORDERING
 
 from lfm_data_utilities import utils
 
@@ -221,7 +221,6 @@ if __name__ == "__main__":
             use_tqdm=True,
             obj_thresh=0.5,
             iou_thresh=0.5,
-            aspect_thresh=3,
             vertical_crop_height_px=(
                 round(772 * args.crop_height) if args.crop_height is not None else None
             ),
