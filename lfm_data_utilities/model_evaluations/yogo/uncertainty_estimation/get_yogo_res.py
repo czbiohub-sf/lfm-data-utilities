@@ -35,7 +35,7 @@ if __name__ == '__main__':
     )
 
     with torch.no_grad():
-        for img_count, (img, label, image_path, label_path) in enumerate(dataloaders):
+        for img_count, (img, label, img_path, label_path) in enumerate(dataloaders):
             preds = net(img.to(device)).cpu()
 
             formatted_preds, formatted_labels = Metrics._format_preds_and_labels(
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             else:
                 all_res = np.concatenate((all_res, res), axis=0)
 
-            print(f"{img_count} - {image_path.parent.stem}")
+            print(f"{img_count} - {img_path[0]}")
     
     np.savetxt(data_file, all_res, delimiter=',')
     print(f"Saved data to {data_file}")
