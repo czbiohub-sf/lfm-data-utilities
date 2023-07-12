@@ -62,7 +62,7 @@ if __name__ == '__main__':
             else:
                 all_res = np.concatenate((all_res, res), axis=0)
 
-            print(img_count)
+            print(f"{img_count} - {image_path.parent.stem}")
     
     np.savetxt(data_file, all_res, delimiter=',')
     print(f"Saved data to {data_file}")
