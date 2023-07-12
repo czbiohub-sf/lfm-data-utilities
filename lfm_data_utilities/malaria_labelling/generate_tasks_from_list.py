@@ -164,6 +164,9 @@ def make_yogo_label_dir(
         filename_map[label_name] = str(
             label_path.resolve() if isinstance(label_path, Path) else label_path
         )
+        filename_map[image_name] = str(
+            image_path.resolve() if isinstance(image_path, Path) else image_name
+        )
 
     with open(out_dir / "image_label_map.txt", "w") as f:
         for k, v in filename_map.items():
