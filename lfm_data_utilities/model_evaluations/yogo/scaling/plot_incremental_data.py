@@ -62,9 +62,7 @@ if __name__ == "__main__":
     for i in range(len(plotting_columns)):
         for col in plotting_columns[i]:
             ax[i].plot(
-                df.select(sort_key),
-                df.select(col),
-                label=col,
+                df.select(sort_key), df.select(col), label=col,
             )
         ax[i].legend()
 

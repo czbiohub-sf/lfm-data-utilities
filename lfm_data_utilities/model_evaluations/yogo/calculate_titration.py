@@ -85,8 +85,7 @@ def check_for_exceptions(futs: List[Future]):
 def plot_titration_curve(points, counts, plot_dir, model_name):
     fig, ax = plt.subplots(1, 2, figsize=(15, 10))
     fig.suptitle(
-        f"{model_name} titration on {args.path_to_titration_yml.name}",
-        fontsize=16,
+        f"{model_name} titration on {args.path_to_titration_yml.name}", fontsize=16,
     )
 
     ax[0].set_title("Total number of cells per titration point")
@@ -116,8 +115,7 @@ def plot_titration_curve(points, counts, plot_dir, model_name):
 def plot_normalized_parasitemia(points, counts, plot_dir, model_name):
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     fig.suptitle(
-        f"{model_name} titration on {args.path_to_titration_yml.name}",
-        fontsize=16,
+        f"{model_name} titration on {args.path_to_titration_yml.name}", fontsize=16,
     )
 
     ax.set_title("Total number of parasitized cells per titration point")
@@ -130,11 +128,10 @@ def plot_normalized_parasitemia(points, counts, plot_dir, model_name):
 
     # index ring to gametocyte
     ax.plot(
-        points,
-        [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
+        points, [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
     )
     ax.plot(
-        points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
+        points, [initial_parasitemia / 2 ** i for i in range(len(titration_results))]
     )
     ax.legend(["YOGO predictions", "Ground Truth"])
 
@@ -147,8 +144,7 @@ def per_point_plot_normalized_per_image_counts(
 ):
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     fig.suptitle(
-        f"{model_name} titration on {args.path_to_titration_yml.name}",
-        fontsize=16,
+        f"{model_name} titration on {args.path_to_titration_yml.name}", fontsize=16,
     )
 
     ax.set_title(f"Normalized parasitemia per class for titration point {point}")
