@@ -102,7 +102,7 @@ def get_dataloader(
         normalize_images=normalize_images,
     )
 
-    num_workers = 0# min(len(os.sched_getaffinity(0)) // 2, 32)
+    num_workers = min(len(os.sched_getaffinity(0)) // 2, 32)
 
     d = DataLoader(
         full_dataset,
