@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
             num_preds = formatted_labels[0].shape[0]
 
-            res = np.empty((num_preds, 2))
+            res = np.empty((num_preds, 3))
             
             for pred_count, (fpred, flabel) in enumerate(zip(formatted_preds[0], formatted_labels[0])):
                 model_confidence = fpred[5:]
@@ -52,7 +52,7 @@ if __name__ == '__main__':
                 actual_class = int(flabel[5])
                 correct = model_class == actual_class
                 
-                res[pred_count] = [model_confidence[actual_class], correct]
+                res[pred_count] = [model_confidence[actual_class], correct, actual_class]
 
                 # print(f"{correct} - ACTUAL {actual_class}, MODEL {model_class} ({model_confidence[model_class]})")
 
