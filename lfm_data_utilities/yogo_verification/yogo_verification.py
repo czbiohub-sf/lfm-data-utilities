@@ -1,20 +1,24 @@
+import sys
+import os
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 
-from scipy.optimize import curve_fit
+from pathlib import Path
 
 from yogo.model import YOGO
 from yogo.metrics import Metrics
 from lfm_data_utilities.model_evaluations.yogo.rank_yogo_loss import get_dataloader
 
 
-def sigmoid(x, a, b):
-    return 1.0 / (1.0 + np.exp(-a*(x-b)))
-
-
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+    base_dir = Path("/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/")
+    folder = Path(sys.argv[1])
+    data_file = base_dir / folder / "res.csv"
+    if not os.path.exists(base_dir / folder):
+        os.makedirs(base_dir / folder)
 
     net, cfg = YOGO.from_pth(
         "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/yogo_models/honest-sweep-51/best.pth",
@@ -29,8 +33,6 @@ if __name__ == '__main__':
         Sy=97,
         normalize_images=cfg["normalize_images"],
     )
-
-    print("PROCESSING IN BKG")
 
     with torch.no_grad():
         for img_count, (img, label, image_path, label_path) in enumerate(dataloaders):
@@ -61,41 +63,6 @@ if __name__ == '__main__':
                 all_res = np.concatenate((all_res, res), axis=0)
 
             print(img_count)
-            #print(all_res)
-
-            #if img_count > 3:
-            #    break
-
-
-    data_file = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/res.csv"
-    sigmoid_file = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/sigmoid.png"
-    bins_file = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/bins.png"
     
     np.savetxt(data_file, all_res, delimiter=',')
-    all_res = all_res.T
-
-    popt, pcov = curve_fit(sigmoid, all_res[0], all_res[1])
-    x = np.linspace(0, 1, num=101)
-    y = sigmoid(x, popt[0], popt[1])
-
-    bin_count = 20
-    bins = np.linspace(0, 1, num=bin_count+1)
-    bin_avg = np.empty(bin_count)
-    bin_centers = np.empty(bin_count)
-    for idx in range(bin_count):
-        bin_filt = np.and(all_res[0] > bins[idx], all_res[0] < bins[idx+1])
-        bin_avg[idx] = np.mean(all_res[1][bin_filt])
-        bin_centers[idx] = (bins[idx] + bins[idx+1]) / 2.0
-
-    plt.scatter(all_res[0], all_res[1])
-    plt.plot(x, y)
-    plt.title(f"A={popt[0]:.2f}, B={popt[1]:.2f}")
-    plt.savefig(sigmoid_file) 
-
-    plt.figure()
-    plt.scatter(all_res[0], all_res[1])
-    plt.plot(bin_centers, bin_avg)
-    plt.title(f"Bins={bin_count}")
-    plt.savefig(bins_file)
-   
-    print("DONE")
+    print(f"Saved data to {data_file}")
