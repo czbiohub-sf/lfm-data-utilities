@@ -44,6 +44,8 @@ if __name__ == '__main__':
         plt.plot(x, y, color="orange", label="Sigmoid fit")
         plt.title(f"{class_name.upper()}: sig_A={popt[0]:.2f}, sig_B={popt[1]:.2f}, bins={num_bins},  N={num_res}")
         plt.plot(bin_centers, bin_avg, color='red', label="Binned average")
+        plt.ylabel("Correctness")
+        plt.xlabel("Confidence")
         plt.legend()
         plt.savefig(base_dir / folder / f"{class_name.lower()}.png")
        
