@@ -147,7 +147,8 @@ def make_yogo_label_dir(
     label_dir = out_dir / "labels"
     label_dir.mkdir(exist_ok=True, parents=True)
 
-    filename_map: Dict[str, str] = {}
+    label_name_map: Dict[str, str] = {}
+    image_name_map: Dict[str, str] = {}
 
     N = int(math.log(len(image_label_pairs), 10) + 1)
     for i, (image_path, label_path) in enumerate(tqdm(image_label_pairs)):
@@ -161,15 +162,19 @@ def make_yogo_label_dir(
             print(f"Could not find a file: {e}")
             continue
 
-        filename_map[label_name] = str(
+        label_name_map[label_name] = str(
             label_path.resolve() if isinstance(label_path, Path) else label_path
         )
-        filename_map[image_name] = str(
+        image_name_map[image_name] = str(
             image_path.resolve() if isinstance(image_path, Path) else image_name
         )
 
-    with open(out_dir / "image_label_map.txt", "w") as f:
-        for k, v in filename_map.items():
+    with open(out_dir / "image_map.txt", "w") as f:
+        for k, v in image_name_map.items():
+            f.write(f"{k} {v}\n")
+
+    with open(out_dir / "label_map.txt", "w") as f:
+        for k, v in label_name_map.items():
             f.write(f"{k} {v}\n")
 
     with open(out_dir / "classes.txt", "w") as f:
