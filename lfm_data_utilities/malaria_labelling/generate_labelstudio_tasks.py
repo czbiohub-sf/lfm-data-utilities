@@ -112,7 +112,9 @@ def gen_task(
             image_ext=".png",
         )
     except Exception as e:
-        print(f"exception found for file {folder_path}: {e}. continuing...")
+        import traceback
+        tb = traceback.format_exc()
+        print(f"exception found for file {folder_path}: {tb}. continuing...")
 
 
 if __name__ == "__main__":
