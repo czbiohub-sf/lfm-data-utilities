@@ -355,6 +355,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.subparser == "sort-thumbnails":
+        if not args.commit:
+            print("--commit not provided, so this will be a dry run - no files will be modified")
+
         sort_thumbnails(args.path_to_thumbnails, args.commit)
     elif args.subparser == "create-thumbnails":
         create_thumbnails_for_sorting(
