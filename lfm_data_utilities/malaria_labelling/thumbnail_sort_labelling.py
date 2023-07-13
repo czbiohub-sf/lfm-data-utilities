@@ -32,7 +32,7 @@ from datetime import datetime
 from collections import defaultdict
 from typing import List, Dict, Optional, Tuple, DefaultDict
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.dataset_description_file import load_dataset_description
 
 from lfm_data_utilities.utils import path_is_relative_to, timing_context_manager
