@@ -99,10 +99,11 @@ def gen_task(
             image_dims=(IMG_WIDTH, IMG_HEIGHT),
             ignore_images_without_labels=True,
         )
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         # report exception and continue; most of the time the exceptions are missing files, which
         # we can skip safely
         import traceback
+
         tb = traceback.format_exc()
         print(f"exception found for file {folder_path}: {tb}. continuing...")
 

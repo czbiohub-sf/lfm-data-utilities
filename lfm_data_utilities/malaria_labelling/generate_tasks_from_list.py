@@ -216,7 +216,10 @@ def sort_corrected_labels(
             with open((output_dir_override / k) / "classes.txt", "w") as f:
                 for c in YOGO_CLASS_ORDERING:
                     f.write(f"{c}\n")
-            shutil.copy(corrected_label_dir / "notes.json", output_dir_override / k / "notes.json")
+            shutil.copy(
+                corrected_label_dir / "notes.json",
+                output_dir_override / k / "notes.json",
+            )
 
             for corrected_file_name, original_file_name in d[k]:
                 # copy it over
@@ -233,7 +236,13 @@ def sort_corrected_labels(
                     assert (
                         label_path.exists()
                     ), f'{(Path(corrected_label_dir) / "labels" / corrected_file_name)} doesnt exist!'
-                    shutil.copy(label_path, output_dir_override / k / "labels" / Path(original_file_name).with_suffix(".txt").name)
+                    shutil.copy(
+                        label_path,
+                        output_dir_override
+                        / k
+                        / "labels"
+                        / Path(original_file_name).with_suffix(".txt").name,
+                    )
                 elif corrected_file_name.endswith(".png"):
                     shutil.copy(
                         original_file_name,
