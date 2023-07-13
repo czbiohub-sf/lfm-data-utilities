@@ -7,6 +7,12 @@ This script generates a folder + tasks from a list of images and labels.
 The challenging part of this problem is keeping the map from label to
 it's original location, so we can sort the labels back to the correct
 locations.
+
+NOTE (13/07/2023)
+
+I think this method is probably not great; it's a bit too complicated to justify
+how low throughput label-studio is - for that reason, I am depricating this (but
+keeping it around just in case).
 """
 
 import json
