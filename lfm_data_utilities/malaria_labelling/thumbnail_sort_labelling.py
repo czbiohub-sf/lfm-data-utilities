@@ -86,6 +86,7 @@ def create_tasks_files_for_run_sets(
         task_file = gen_task(
             folder_path=Path(label_path).parent,
             images_dir_path=image_path,
+            tasks_file_name="thumbnail_correction_task.json",
         )
         task_paths.append(task_file)
     return task_paths
@@ -244,9 +245,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     # tasks.json format poorly. They have list of dicts of predictions, and each
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
     # prediction? It would turn the cell search from O(n) to O(1).
-    for task_json_id, corrections in tqdm(
-        id_to_list_of_corrections.items(), desc="processing corrections"
-    ):
+    not_corrected = was_corrected = 0
+    for task_json_id, corrections in id_to_list_of_corrections.items():
         if len(corrections) == 0:
             continue
 
@@ -260,7 +260,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             corrected_class = correction["corrected_class"]
 
             # TODO maybe this n_corrections would be good for a sanity check?
-            n_corrections = 0
+            corrected = False
             for i, image_prediction in enumerate(tasks):
                 bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
                 for j, bbox_prediction in enumerate(bbox_predictions):
@@ -273,13 +273,18 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
                             ][0]
                             == corrected_class
                         )
-                        n_corrections += 1
+                        corrected = True
                         break
 
-            if n_corrections == 0:
-                raise ValueError(
+            if not corrected:
+                # raise ValueError(
+                not_corrected += 1
+                print(
                     f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
                 )
+            else:
+                was_corrected += 1
+                print(f"CORRECTED cell_id {cell_id}")
 
         # write the (corrected) json file
         if commit:
@@ -290,6 +295,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
                 "would have written corrected tasks.json "
                 f"file to {id_to_task_path[task_json_id]}"
             )
+
+    print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
 
     # convert the corrected json files to yolo format
     for task_path in id_to_task_path.values():
@@ -311,6 +318,13 @@ if __name__ == "__main__":
     except AttributeError:
         boolean_action = "store_true"  # type: ignore
 
+    default_ddf = (
+        DEFAULT_LABELS_PATH
+        / "dataset_defs"
+        / "human-labels"
+        / "all-labelled-data-train-only.yml"
+    )
+
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest="subparser")
@@ -321,12 +335,9 @@ if __name__ == "__main__":
         "--path-to-labelled-data-ddf",
         help=(
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
-            "since we mostly want to correct labels for human-labelled data (i.e. biohub-labels/vetted)"
+            "since we mostly want to correct labels for human-labelled data (default {default_ddf})"
         ),
-        default=DEFAULT_LABELS_PATH
-        / "dataset_defs"
-        / "human-labels"
-        / "all-labelled-data-train-only.yml",
+        default=default_ddf,
         type=Path,
     )
     create_thumbnails_parser.add_argument(
@@ -356,7 +367,9 @@ if __name__ == "__main__":
 
     if args.subparser == "sort-thumbnails":
         if not args.commit:
-            print("--commit not provided, so this will be a dry run - no files will be modified")
+            print(
+                "--commit not provided, so this will be a dry run - no files will be modified"
+            )
 
         sort_thumbnails(args.path_to_thumbnails, args.commit)
     elif args.subparser == "create-thumbnails":
