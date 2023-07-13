@@ -15,7 +15,7 @@ import yogo
 from dash import Dash, ctx, dcc, html, callback, Input, Output, State
 
 
-CLASS_LIST = yogo.data.dataset.YOGO_CLASS_ORDERING
+CLASS_LIST = yogo.data.YOGO_CLASS_ORDERING
 
 
 def set_universal_fig_settings_(fig, img_shape, prediction_shape, scale=0.8):
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     bbox_image = yogo.utils.draw_yogo_prediction(
         torch.tensor(image_data),
         result_tensor,
-        thresh=0.5,
+        obj_thresh=0.5,
         labels=CLASS_LIST,
     )
     bbox_image = np.array(bbox_image)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         yogo.utils.draw_yogo_prediction(
             torch.tensor(image_data),
             result_tensor,
-            thresh=0.5,
+            obj_thresh=0.5,
             iou_thresh=0,
         )
     )

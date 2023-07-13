@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Generator, Iterable, Tuple
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING
-
 from yogo.utils.utils import bbox_colour
-from yogo.data.dataset import load_labels
+from yogo.data import YOGO_CLASS_ORDERING
+from yogo.data.yogo_dataset import load_labels
 
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)

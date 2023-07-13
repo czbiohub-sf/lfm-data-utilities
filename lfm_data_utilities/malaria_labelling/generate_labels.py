@@ -150,7 +150,8 @@ def label_folder_with_yogo(
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         save_preds=True,
-        thresh=0.5,
+        obj_thresh=0.5,
+        iou_thresh=0.5,
         label=label,
         device=torch.device("cuda"),
     )

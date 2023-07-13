@@ -102,7 +102,9 @@ def gen_task(
     except FileNotFoundError as e:
         # report exception and continue; most of the time the exceptions are missing files, which
         # we can skip safely
-        print(f"exception found for file {folder_path}: {e}. continuing...")
+        import traceback
+        tb = traceback.format_exc()
+        print(f"exception found for file {folder_path}: {tb}. continuing...")
 
     return Path(tasks_path)
 

@@ -17,9 +17,10 @@ import warnings
 
 from tqdm import tqdm
 from pathlib import Path
+from collections import defaultdict
 from typing import List, Tuple, Dict
 
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from yogo.data import YOGO_CLASS_ORDERING
 
 
 from lfm_data_utilities.malaria_labelling.labelling_constants import IMG_SERVER_ROOT
@@ -147,7 +148,8 @@ def make_yogo_label_dir(
     label_dir = out_dir / "labels"
     label_dir.mkdir(exist_ok=True, parents=True)
 
-    filename_map: Dict[str, str] = {}
+    label_name_map: Dict[str, str] = {}
+    image_name_map: Dict[str, str] = {}
 
     N = int(math.log(len(image_label_pairs), 10) + 1)
     for i, (image_path, label_path) in enumerate(tqdm(image_label_pairs)):
@@ -161,12 +163,19 @@ def make_yogo_label_dir(
             print(f"Could not find a file: {e}")
             continue
 
-        filename_map[label_name] = str(
+        label_name_map[label_name] = str(
             label_path.resolve() if isinstance(label_path, Path) else label_path
         )
+        image_name_map[image_name] = str(
+            image_path.resolve() if isinstance(image_path, Path) else image_name
+        )
 
-    with open(out_dir / "image_label_map.txt", "w") as f:
-        for k, v in filename_map.items():
+    with open(out_dir / "image_map.txt", "w") as f:
+        for k, v in image_name_map.items():
+            f.write(f"{k} {v}\n")
+
+    with open(out_dir / "label_map.txt", "w") as f:
+        for k, v in label_name_map.items():
             f.write(f"{k} {v}\n")
 
     with open(out_dir / "classes.txt", "w") as f:
@@ -182,20 +191,62 @@ def make_yogo_label_dir(
     )
 
 
-def sort_corrected_labels(corrected_label_dir, filename_map_path):
+def sort_corrected_labels(
+    corrected_label_dir, filename_map_path, output_dir_override=None
+):
     """
     This function takes a directory with corrected labels and the original source
     and sorts the corrected labels into the same order as the source.
+    #
+    this code should be considered harmful
     """
     with open(filename_map_path, "r") as f:
         filename_map = dict([line.split() for line in f.readlines()])
 
-    # TODO need to make it more "interactive" - smth like a pre-commit stage
-    # that displays the copies that *will* be made
-    for filename, source in filename_map.items():
-        copy_label_to_original_dir(
-            corrected_label_dir / "labels" / filename, Path(source)
-        )
+    d = defaultdict(list)
+    for corrected_file_name, original_file_name in filename_map.items():
+        run_name = Path(original_file_name).parent.parent.name
+        d[run_name].append((corrected_file_name, original_file_name))
+
+    if output_dir_override is not None:
+        for k in d:
+            (output_dir_override / k).mkdir(parents=True)
+            (output_dir_override / k / "labels").mkdir(parents=True)
+            (output_dir_override / k / "images").mkdir(parents=True)
+            with open((output_dir_override / k) / "classes.txt", "w") as f:
+                for c in YOGO_CLASS_ORDERING:
+                    f.write(f"{c}\n")
+            shutil.copy(corrected_label_dir / "notes.json", output_dir_override / k / "notes.json")
+
+            for corrected_file_name, original_file_name in d[k]:
+                # copy it over
+                # it is either a text file or png; if text file, put it
+                # in labels; if png, put it in images :)
+                assert Path(
+                    original_file_name
+                ).exists(), f"{original_file_name} doesn't exist! {Path(original_file_name).exists()}"
+
+                if corrected_file_name.endswith(".txt"):
+                    label_path = (
+                        Path(corrected_label_dir) / "labels" / corrected_file_name
+                    )
+                    assert (
+                        label_path.exists()
+                    ), f'{(Path(corrected_label_dir) / "labels" / corrected_file_name)} doesnt exist!'
+                    shutil.copy(label_path, output_dir_override / k / "labels" / Path(original_file_name).with_suffix(".txt").name)
+                elif corrected_file_name.endswith(".png"):
+                    shutil.copy(
+                        original_file_name,
+                        output_dir_override / k / "images",
+                    )
+
+
+#     # TODO need to make it more "interactive" - smth like a pre-commit stage
+#     # that displays the copies that *will* be made
+#     for filename, source in filename_map.items():
+#         copy_label_to_original_dir(
+#             corrected_label_dir / "labels" / filename, Path(source)
+#         )
 
 
 if __name__ == "__main__":
@@ -220,6 +271,14 @@ if __name__ == "__main__":
     resort_parser.add_argument(
         "filename_map_path", type=Path, help="path to filename map (i.e. from the "
     )
+    resort_parser.add_argument(
+        "--output-dir-override",
+        type=Path,
+        help=(
+            "output directory for the corrections. if not "
+            "provided, corrections will replace the original file locations"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -229,6 +288,8 @@ if __name__ == "__main__":
             "a python program with your list of images and labels"
         )
     elif args.task == "resort":
-        sort_corrected_labels(args.corrected_label_dir, args.filename_map_path)
+        sort_corrected_labels(
+            args.corrected_label_dir, args.filename_map_path, args.output_dir_override
+        )
     else:
         parser.print_help()
