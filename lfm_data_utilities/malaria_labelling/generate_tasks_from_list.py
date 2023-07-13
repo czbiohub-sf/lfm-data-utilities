@@ -103,7 +103,7 @@ def copy_label_to_original_dir(label_path: Path, output_path: Path):
                 [(row["name"], str(row["id"])) for row in label_notes_json["categories"]]  # type: ignore
             )
     except FileNotFoundError:
-            label_name_to_id = MASTER_NAME_TO_ID
+        label_name_to_id = MASTER_NAME_TO_ID
 
     with open(label_path, "r") as f:
         label_data = f.read().strip().split("\n")
@@ -191,7 +191,9 @@ def make_yogo_label_dir(
     )
 
 
-def sort_corrected_labels(corrected_label_dir, filename_map_path, output_dir_override = None):
+def sort_corrected_labels(
+    corrected_label_dir, filename_map_path, output_dir_override=None
+):
     """
     This function takes a directory with corrected labels and the original source
     and sorts the corrected labels into the same order as the source.
@@ -211,8 +213,33 @@ def sort_corrected_labels(corrected_label_dir, filename_map_path, output_dir_ove
             (output_dir_override / k).mkdir(parents=True)
             (output_dir_override / k / "labels").mkdir(parents=True)
             (output_dir_override / k / "images").mkdir(parents=True)
+            with open((output_dir_override / k) / "classes.txt", "w") as f:
+                for c in YOGO_CLASS_ORDERING:
+                    f.write(f"{c}\n")
+            shutil.copy(corrected_label_dir / "notes.json", output_dir_override / k / "notes.json")
+
             for corrected_file_name, original_file_name in d[k]:
                 # copy it over
+                # it is either a text file or png; if text file, put it
+                # in labels; if png, put it in images :)
+                assert Path(
+                    original_file_name
+                ).exists(), f"{original_file_name} doesn't exist! {Path(original_file_name).exists()}"
+
+                if corrected_file_name.endswith(".txt"):
+                    label_path = (
+                        Path(corrected_label_dir) / "labels" / corrected_file_name
+                    )
+                    assert (
+                        label_path.exists()
+                    ), f'{(Path(corrected_label_dir) / "labels" / corrected_file_name)} doesnt exist!'
+                    shutil.copy(label_path, output_dir_override / k / "labels" / Path(original_file_name).with_suffix(".txt").name)
+                elif corrected_file_name.endswith(".png"):
+                    shutil.copy(
+                        original_file_name,
+                        output_dir_override / k / "images",
+                    )
+
 
 #     # TODO need to make it more "interactive" - smth like a pre-commit stage
 #     # that displays the copies that *will* be made
@@ -245,10 +272,12 @@ if __name__ == "__main__":
         "filename_map_path", type=Path, help="path to filename map (i.e. from the "
     )
     resort_parser.add_argument(
-        "--output-dir-override", type=Path, help=(
+        "--output-dir-override",
+        type=Path,
+        help=(
             "output directory for the corrections. if not "
             "provided, corrections will replace the original file locations"
-        )
+        ),
     )
 
     args = parser.parse_args()
@@ -259,6 +288,8 @@ if __name__ == "__main__":
             "a python program with your list of images and labels"
         )
     elif args.task == "resort":
-        sort_corrected_labels(args.corrected_label_dir, args.filename_map_path)
+        sort_corrected_labels(
+            args.corrected_label_dir, args.filename_map_path, args.output_dir_override
+        )
     else:
         parser.print_help()
