@@ -23,7 +23,7 @@ from typing import List, Tuple, Dict
 from yogo.data import YOGO_CLASS_ORDERING
 
 
-from lfm_data_utilities.malaria_labelling.generate_labels import IMG_SERVER_ROOT
+from lfm_data_utilities.malaria_labelling.labelling_constants import IMG_SERVER_ROOT
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     generate_tasks_for_runset,
 )

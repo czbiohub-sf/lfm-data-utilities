@@ -2,7 +2,7 @@
 
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from urllib.request import pathname2url
 from functools import partial
 
@@ -17,14 +17,12 @@ from lfm_data_utilities.utils import (
 )
 
 
-from lfm_data_utilities.malaria_labelling.label_studio_converter.yogo_format_converter import (
+from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_yolo_to_ls import (
     convert_yolo_to_ls,
 )
 
 
-PARASITE_DATA_RUNSET_PATH = Path(
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/"
-)
+LFM_SCOPE_PATH = Path("/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/")
 
 
 def generate_tasks_for_runset_by_parent_folder(
@@ -59,8 +57,8 @@ def generate_tasks_for_runset(
     label_dir_name="labels",
     tasks_file_name="tasks",
     use_tqdm=False,
-):
-    multiprocess_fn(
+) -> List[Path]:
+    return multiprocess_fn(
         run_folders,
         partial(
             gen_task,
@@ -75,15 +73,17 @@ def generate_tasks_for_runset(
 
 def gen_task(
     folder_path: Path,
-    relative_parent: Path = PARASITE_DATA_RUNSET_PATH,
+    relative_parent: Path = LFM_SCOPE_PATH,
+    images_dir_path: Optional[Path] = None,
     label_dir_name="labels",
     tasks_file_name="tasks",
-):
+) -> Path:
     # defensive pathing
-    abbreviated_path = str(path_relative_to(Path(folder_path), Path(relative_parent)))
-    root_url = (
-        f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}/images"
+    images_root_path_for_url = images_dir_path or folder_path / "images"
+    abbreviated_path = str(
+        path_relative_to(Path(images_root_path_for_url), Path(relative_parent))
     )
+    root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}"
 
     tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
@@ -92,29 +92,21 @@ def gen_task(
             input_dir=str(folder_path),
             out_file=tasks_path,
             label_dir_name=label_dir_name,
+            images_dir_path=images_dir_path,
             out_type="predictions",
             image_root_url=root_url,
             image_ext=".png",
             image_dims=(IMG_WIDTH, IMG_HEIGHT),
             ignore_images_without_labels=True,
         )
-    except TypeError:
-        # we aren't using our custom version, so try default
-        print(
-            "warning: couldn't give convert_yolo_to_ls image dims, so defaulting "
-            "to slow version. Will import"
-        )
-        convert_yolo_to_ls(
-            input_dir=str(folder_path),
-            out_file=tasks_path,
-            out_type="predictions",
-            image_root_url=root_url,
-            image_ext=".png",
-        )
-    except Exception as e:
+    except FileNotFoundError as e:
+        # report exception and continue; most of the time the exceptions are missing files, which
+        # we can skip safely
         import traceback
         tb = traceback.format_exc()
         print(f"exception found for file {folder_path}: {tb}. continuing...")
+
+    return Path(tasks_path)
 
 
 if __name__ == "__main__":
@@ -141,7 +133,7 @@ if __name__ == "__main__":
 
     generate_tasks_for_runset_by_parent_folder(
         path_to_runset,
-        PARASITE_DATA_RUNSET_PATH,
+        LFM_SCOPE_PATH,
         label_dir_name=args.label_dir_name,
         tasks_file_name=args.tasks_file_name,
     )
