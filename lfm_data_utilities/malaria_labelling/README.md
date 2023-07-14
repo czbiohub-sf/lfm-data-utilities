@@ -70,7 +70,7 @@ python3 -m pip install label-studio
     </RectangleLabels>
 </View>
 ```
-  - Go to the "Data Import" tab, click "Upload Files", and import the `tasks.json` in the run folder that you are annotating. It will be somewhere in `.../scope-parasite-data/run-sets`. **Note**: If this fails (e.g "too many SQL variables") - try creating the project _without_ doing this "Data Import" step. Then, once the project has been created, upload the data after.
+  - Go to the "Data Import" tab, click "Upload Files", and import the `yogo_labelled_tasks.json` in the run folder that you are annotating. It will be somewhere in `.../scope-parasite-data/run-sets`. **Note**: If this fails (e.g "too many SQL variables") - try creating the project _without_ doing this "Data Import" step. Then, once the project has been created, upload the data after.
   - Click "Save"
 
 and you are ready to annotate!
