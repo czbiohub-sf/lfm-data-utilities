@@ -151,7 +151,7 @@ class FlowrateEvaluator(FractionRangeEvaluator):
         flowrate_dy = float(row["flowrate_dy"])
         flowrate_confidence = float(row["flowrate_confidence"])
         if flowrate_confidence > self.flowrate_confidence_threshold:
-            value = (flowrate_dx ** 2 + flowrate_dy ** 2) ** 0.5
+            value = (flowrate_dx**2 + flowrate_dy**2) ** 0.5
             self.accumulate(value)
         else:
             self.tot_num_samples += 1

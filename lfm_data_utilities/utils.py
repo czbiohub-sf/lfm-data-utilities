@@ -125,7 +125,7 @@ def get_rms(data: List[float]):
     N = len(data)
 
     for val in data:
-        ms += val ** 2
+        ms += val**2
 
     return np.sqrt(ms / N)
 
@@ -612,7 +612,8 @@ def load_per_img_csv(filepath: PathLike) -> Dict:
             break
 
         per_img_csv_raw["vals"]["timestamp"][i] = datetime.strptime(
-            per_img_csv_raw["vals"]["timestamp"][i], "%Y-%m-%d-%H%M%S_%f",
+            per_img_csv_raw["vals"]["timestamp"][i],
+            "%Y-%m-%d-%H%M%S_%f",
         ).timestamp()
 
     return per_img_csv_raw
@@ -656,7 +657,12 @@ def protected_fcn(f, *args):
 # map
 def multithread_map_unordered(
     argument_list: Sequence[Any],
-    fn: Callable[[Any,], Any,],
+    fn: Callable[
+        [
+            Any,
+        ],
+        Any,
+    ],
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
@@ -684,7 +690,12 @@ def multithread_map_unordered(
 
 def multiprocess_fn(
     argument_list: List[Any],
-    fn: Callable[[Any,], Any,],
+    fn: Callable[
+        [
+            Any,
+        ],
+        Any,
+    ],
     ordered: bool = True,
     verbose: bool = True,
 ) -> List[Any]:

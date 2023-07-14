@@ -94,7 +94,9 @@ if __name__ == "__main__":
         "-f", "--file", help="Path to per image metadata file", required=True
     )
     argparser.add_argument(
-        "-t", "--txt", help="Path to txtfile with SSAF data for every frame",
+        "-t",
+        "--txt",
+        help="Path to txtfile with SSAF data for every frame",
     )
     argparser.add_argument("-o", "--output", help="Path to output file")
 

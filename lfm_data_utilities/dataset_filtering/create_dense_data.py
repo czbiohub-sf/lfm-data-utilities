@@ -136,8 +136,15 @@ def write_results(
         for i, results in enumerate(
             zip(flowrate_iterable, autofocus_results, yogo_results)
         ):
-            (flowrate_dx, flowrate_dy, flowrate_confidence,) = results[0]
-            (autofocus_res, yogo_res,) = results[1:]
+            (
+                flowrate_dx,
+                flowrate_dy,
+                flowrate_confidence,
+            ) = results[0]
+            (
+                autofocus_res,
+                yogo_res,
+            ) = results[1:]
             writer.writerow(
                 [
                     str(r)

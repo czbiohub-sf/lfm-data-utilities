@@ -116,7 +116,12 @@ def convert_yolo_to_ls(
         label_file = os.path.join(labels_dir, image_file_base + ".txt")
 
         if os.path.exists(label_file):
-            task[out_type] = [{"result": [], "ground_truth": False,}]
+            task[out_type] = [
+                {
+                    "result": [],
+                    "ground_truth": False,
+                }
+            ]
 
             # read image sizes
             if image_dims is None:

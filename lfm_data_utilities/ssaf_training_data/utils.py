@@ -216,7 +216,9 @@ def radial_average(data: np.ndarray) -> np.ndarray:
     return radialprofile
 
 
-def log_power_spectrum_radial_average_sum(img: np.ndarray,) -> float:
+def log_power_spectrum_radial_average_sum(
+    img: np.ndarray,
+) -> float:
     """
     Parameters
     ----------
