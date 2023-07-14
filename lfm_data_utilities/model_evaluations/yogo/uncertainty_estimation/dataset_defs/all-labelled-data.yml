@@ -7,12 +7,13 @@ class_names:
   - wbc
   - misc
 dataset_split_fractions:
-  test: 1.0
+  train: 1.0
+  test: 0.0
   val: 0.0
 dataset_paths:
-  2022-12-14-111221__chip0570-D3_S_annotations:
-    image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111221__chip0570-D3_S/images
-    label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111221__chip0570-D3_S_annotations/labels
+#   2022-12-14-111221__chip0570-D3_S_annotations:
+#     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111221__chip0570-D3_S/images
+#     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111221__chip0570-D3_S_annotations/labels
 #   2022-12-14-111221__chip0570-D3_S_yogolabelled_annotations:
 #     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111221__chip0570-D3_S/images
 #     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111221__chip0570-D3_S_yogolabelled_annotations/labels
@@ -59,15 +60,16 @@ dataset_paths:
 #     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full_images/curiosity/2023-02-13-001957/2023-02-13-013937_/images
 #     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/Uganda_2023-02-13-013937__annotations/labels
 # test_paths:
-#   2023-03-11-104146_chip0935-C8_annotations:
-#     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2023-03-11-100507/2023-03-11-104146_/images
-#     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2023-03-11-104146_chip0935-C8_annotations/labels
-#   2022-12-14-111917__chip0570-D2_S_annotations:
-#     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111917__chip0570-D2_S/images
-#     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111917__chip0570-D2_S_annotations/labels
-#   2022-12-14-120908__chip0562-D7_S-annotations:
-#     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-120908__chip0562-D7_S/images
-#     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-120908__chip0562-D7_S-annotations/labels
+  2023-03-11-104146_chip0935-C8_annotations:
+    image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2023-03-11-100507/2023-03-11-104146_/images
+    label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2023-03-11-104146_chip0935-C8_annotations/labels
+  2022-12-14-111917__chip0570-D2_S_annotations:
+    image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111917__chip0570-D2_S/images
+    label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111917__chip0570-D2_S_annotations/labels
+  2022-12-14-120908__chip0562-D7_S-annotations:
+    image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-120908__chip0562-D7_S/images
+    label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-120908__chip0562-D7_S-annotations/labels
   Uganda_2023-02-15-042659_PML:
     image_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full_images/phoenix/2023-02-15-002051/2023-02-15-042659_/images
     label_path: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/vetted/Uganda_2023-02-15-042659_PML/labels
+
