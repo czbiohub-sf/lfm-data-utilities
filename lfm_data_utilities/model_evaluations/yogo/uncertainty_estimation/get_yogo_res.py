@@ -52,7 +52,11 @@ if __name__ == "__main__":
     net.to(device)
 
     dataloaders = get_dataloader(
-        dataset_def_file, 1, Sx=129, Sy=97, normalize_images=cfg["normalize_images"],
+        dataset_def_file,
+        1,
+        Sx=129,
+        Sy=97,
+        normalize_images=cfg["normalize_images"],
     )
 
     with torch.no_grad():
