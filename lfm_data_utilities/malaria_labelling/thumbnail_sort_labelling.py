@@ -74,7 +74,7 @@ def create_folders_for_output_dir(
 
 
 def create_tasks_files_for_run_sets(
-    path_to_labelled_data_ddf: Path, label_dir_name: str
+    path_to_labelled_data_ddf: Path
 ) -> List[Path]:
     ddf = load_dataset_description(path_to_labelled_data_ddf)
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
@@ -86,6 +86,7 @@ def create_tasks_files_for_run_sets(
         task_file = gen_task(
             folder_path=Path(label_path).parent,
             images_dir_path=image_path,
+            label_dir_name=Path(label_path).name,
             tasks_file_name="thumbnail_correction_task.json",
         )
         task_paths.append(task_file)
@@ -153,7 +154,6 @@ def create_thumbnails_from_tasks_and_images(
 def create_thumbnails_for_sorting(
     path_to_output_dir: Path,
     path_to_labelled_data_ddf: Path,
-    label_dir_name: str = "labels",
     overwrite_previous_thumbnails: bool = False,
 ):
     class_dirs = create_folders_for_output_dir(
@@ -162,7 +162,7 @@ def create_thumbnails_for_sorting(
         force_overwrite=overwrite_previous_thumbnails,
     )
     task_paths = create_tasks_files_for_run_sets(
-        path_to_labelled_data_ddf, label_dir_name=label_dir_name
+        path_to_labelled_data_ddf
     )
 
     N = int(math.log(len(task_paths), 10)) + 1
@@ -341,14 +341,6 @@ if __name__ == "__main__":
         type=Path,
     )
     create_thumbnails_parser.add_argument(
-        "--label-dir-name",
-        help=(
-            "name of the directory containing the label files - defaults to 'labels'. "
-            "in general you should not need to change this, "
-        ),
-        default="labels",
-    )
-    create_thumbnails_parser.add_argument(
         "--overwrite-previous-thumbnails",
         action="store_true",
         help="if set, will overwrite previous thumbnails",
@@ -376,7 +368,6 @@ if __name__ == "__main__":
         create_thumbnails_for_sorting(
             args.path_to_output_dir,
             args.path_to_labelled_data_ddf,
-            args.label_dir_name,
             args.overwrite_previous_thumbnails,
         )
     else:
