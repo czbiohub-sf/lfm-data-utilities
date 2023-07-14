@@ -73,9 +73,7 @@ def create_folders_for_output_dir(
     return class_dirs
 
 
-def create_tasks_files_for_run_sets(
-    path_to_labelled_data_ddf: Path
-) -> List[Path]:
+def create_tasks_files_for_run_sets(path_to_labelled_data_ddf: Path) -> List[Path]:
     ddf = load_dataset_description(path_to_labelled_data_ddf)
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
@@ -161,9 +159,7 @@ def create_thumbnails_for_sorting(
         YOGO_CLASS_ORDERING,
         force_overwrite=overwrite_previous_thumbnails,
     )
-    task_paths = create_tasks_files_for_run_sets(
-        path_to_labelled_data_ddf
-    )
+    task_paths = create_tasks_files_for_run_sets(path_to_labelled_data_ddf)
 
     N = int(math.log(len(task_paths), 10)) + 1
     id_to_task_path: Dict[str, str] = {}
