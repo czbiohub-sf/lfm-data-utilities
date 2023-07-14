@@ -200,7 +200,6 @@ if __name__ == "__main__":
         ),
     )
     args = parser.parse_args()
-    print(args)
 
     if torch.multiprocessing.cpu_count() < 64 or not torch.cuda.is_available():
         warnings.warn(
