@@ -18,11 +18,7 @@ def create_notes_json(classes, output_path):
     json_data = {
         "categories": [{"id": i, "name": c} for i, c in enumerate(classes)],
         # not sure if this is required for label studio, but I dont want to risk it
-        "info": {
-            "year": 2023,
-            "version": "1.0",
-            "contributor": "Label Studio",
-        },
+        "info": {"year": 2023, "version": "1.0", "contributor": "Label Studio",},
     }
     with open(output_path, "w") as f:
         json.dump(json_data, f, indent=4)

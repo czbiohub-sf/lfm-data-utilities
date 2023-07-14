@@ -218,9 +218,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("sort zstacks into training data")
     parser.add_argument(
-        "unsorted_zstacks_loc",
-        type=Path,
-        help="Folder path of zstacks to be sorted",
+        "unsorted_zstacks_loc", type=Path, help="Folder path of zstacks to be sorted",
     )
     parser.add_argument(
         "save_loc",

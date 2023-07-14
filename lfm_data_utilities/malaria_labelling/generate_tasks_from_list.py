@@ -251,8 +251,7 @@ def sort_corrected_labels(
                     )
                 elif corrected_file_name.endswith(".png"):
                     shutil.copy(
-                        original_file_name,
-                        output_dir_override / k / "images",
+                        original_file_name, output_dir_override / k / "images",
                     )
 
 

@@ -30,8 +30,7 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 
 def write_metadata(
-    output_dir: Path,
-    autofocus_path_to_pth: List[Path],
+    output_dir: Path, autofocus_path_to_pth: List[Path],
 ):
     autofocus_package_id = utils.try_get_package_version_identifier(af)
 
@@ -73,12 +72,7 @@ def plot_violin(results, args):
             alpha=0.5,
         )
         tight_range_ax.plot(
-            [-10, 10],
-            [-10, 10],
-            linestyle="--",
-            color="gray",
-            linewidth=1,
-            alpha=0.5,
+            [-10, 10], [-10, 10], linestyle="--", color="gray", linewidth=1, alpha=0.5,
         )
         # plot a dashed line in gray at y=x
         for label, values in results.items():
@@ -255,8 +249,7 @@ if __name__ == "__main__":
     plt.savefig(f"{args.output_dir / 'loss_hist.png'}", dpi=150)
 
     write_metadata(
-        args.output_dir,
-        args.path_to_autofocus_pths,
+        args.output_dir, args.path_to_autofocus_pths,
     )
 
     if len(args.path_to_autofocus_pths) == 1:

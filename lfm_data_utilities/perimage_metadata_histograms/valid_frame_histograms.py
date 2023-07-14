@@ -9,9 +9,7 @@ from lfm_data_utilities.utils import (
     get_corresponding_ssaf_file,
     multiprocess_load_csv,
 )
-from histogram_constants import (
-    IMCOUNT_TARGET,
-)
+from histogram_constants import IMCOUNT_TARGET
 
 
 def run(metadata_dir, ssaf_dir, title, output=None) -> None:

@@ -52,9 +52,7 @@ def generate_confusion_matrix(
         conf[j, i] = res[0, 0]
 
     utils.multithread_map_unordered(
-        indices,
-        update_confusion_matrix,
-        verbose=False,
+        indices, update_confusion_matrix, verbose=False,
     )
 
     # directory structure here is

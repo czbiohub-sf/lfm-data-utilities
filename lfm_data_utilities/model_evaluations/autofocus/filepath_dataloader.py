@@ -96,11 +96,7 @@ class DatasetDescription:
 
     def __iter__(self):
         return iter(
-            (
-                self.split_fractions,
-                self.dataset_paths,
-                self.test_dataset_paths,
-            )
+            (self.split_fractions, self.dataset_paths, self.test_dataset_paths,)
         )
 
 

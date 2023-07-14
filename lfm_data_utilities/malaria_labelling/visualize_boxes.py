@@ -53,8 +53,7 @@ def draw_rects(image_path, label_path):
         y2 = (r[2] + r[4] / 2) * img_h
         label = YOGO_CLASS_ORDERING[int(r[0])]
         draw.rectangle(
-            (x1, y1, x2, y2),
-            outline=bbox_colour(label),
+            (x1, y1, x2, y2), outline=bbox_colour(label),
         )
         draw.text((x1, y2), f"label: {label}", (0, 0, 0, 255))
 

@@ -97,8 +97,9 @@ def get_flowrate_with_cross_correlation(
         int:
             dy: displacement in y
     """
-    im1_ds, im2_ds = downSampleImage(prev_img, scale_factor), downSampleImage(
-        next_img, scale_factor
+    im1_ds, im2_ds = (
+        downSampleImage(prev_img, scale_factor),
+        downSampleImage(next_img, scale_factor),
     )
 
     # Select the subregion within the first image by defining which quantiles to use

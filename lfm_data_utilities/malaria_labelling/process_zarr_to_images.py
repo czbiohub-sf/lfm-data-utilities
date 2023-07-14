@@ -167,10 +167,7 @@ if __name__ == "__main__":
 
     if args.fix:
         files_to_fix = list(
-            filter(
-                bool,
-                multithread_map_unordered(files, check_fcn, verbose=False),
-            )
+            filter(bool, multithread_map_unordered(files, check_fcn, verbose=False),)
         )
         multiprocess_fn(
             files_to_fix,
