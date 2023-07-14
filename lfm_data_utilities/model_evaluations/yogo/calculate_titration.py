@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from ruamel import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
 from yogo.infer import (
@@ -49,6 +49,7 @@ def process_prediction(
     predictions: torch.Tensor,
     titration_point: str,
     result_dict: Dict[str, Dict[str, Union[List[torch.Tensor], torch.Tensor]]],
+    min_confidence_threshold: Optional[float] = None,
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
@@ -57,7 +58,9 @@ def process_prediction(
         if pred.numel() == 0:
             continue  # ignore no predictions
         classes = pred[:, 5:]
-        image_counts = count_cells_for_formatted_preds(classes)
+        image_counts = count_cells_for_formatted_preds(
+            classes, min_confidence_threshold=min_confidence_threshold
+        )
         tot_class_sum += image_counts
         per_image_counts.append(
             tot_class_sum / tot_class_sum.sum()
@@ -185,11 +188,19 @@ if __name__ == "__main__":
             "images to a height of `round(height_org * 0.25)` (default to no cropping)"
         ),
     )
+    parser.add_argument(
+        "--min-confidence-threshold",
+        type=float,
+        help=(
+            "minimum class confidence for the prediction to be counted - off by default"
+        ),
+    )
     args = parser.parse_args()
+    print(args)
 
-    if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
+    if torch.multiprocessing.cpu_count() < 64 or not torch.cuda.is_available():
         warnings.warn(
-            "for best performance, we suggest running this script with 32 cpus "
+            "for best performance, we suggest running this script with 64 cpus "
             "and a gpu"
         )
 
@@ -213,7 +224,7 @@ if __name__ == "__main__":
         tn = predict(
             path_to_pth=args.path_to_pth,
             path_to_images=path,
-            batch_size=64,
+            batch_size=128,
             use_tqdm=True,
             obj_thresh=0.5,
             iou_thresh=0.5,
@@ -223,7 +234,13 @@ if __name__ == "__main__":
             device="cuda" if torch.cuda.is_available() else "cpu",
         )
         # and process results asynchronously
-        fut = tpe.submit(process_prediction, tn, titration_point, titration_results)
+        fut = tpe.submit(
+            process_prediction,
+            tn,
+            titration_point,
+            titration_results,
+            args.min_confidence_threshold,
+        )
         futs.append(fut)
 
     with utils.timing_context_manager(

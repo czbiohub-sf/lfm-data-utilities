@@ -17,7 +17,10 @@ from cellpose.utils import (
 )
 from typing import Optional, Literal, List, Tuple
 
-from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
+from lfm_data_utilities.malaria_labelling.labelling_constants import (
+    CLASSES,
+    IMG_SERVER_ROOT,
+)
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     generate_tasks_for_runset,
 )
@@ -25,9 +28,6 @@ from lfm_data_utilities.malaria_labelling.utils import convert_coords
 
 from yogo.infer import predict
 from yogo.utils import iter_in_chunks
-
-
-IMG_SERVER_ROOT = Path("/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/")
 
 
 def empty_dir(path: Path):
@@ -141,7 +141,7 @@ def label_folder_with_yogo(
     path_to_label_dir.mkdir(exist_ok=True, parents=True)
 
     try:
-        label = CLASSES.index(label_override)
+        label = CLASSES.index(label_override)  # type: ignore
     except ValueError:
         label = None
 

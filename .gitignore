@@ -16,4 +16,4 @@ lfm_data_utilities/model_evaluations/yogo/loss.csv
 
 .ipynb_checkpoints
 slurm-outputs/
-
+lfm_data_utilities/model_evaluations/yogo/plotting_results

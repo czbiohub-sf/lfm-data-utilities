@@ -62,10 +62,7 @@ class ObjectDetectionDatasetWithPaths(ObjectDetectionDataset):
 
 
 def get_dataset(
-    dataset_description_file: str,
-    Sx: int,
-    Sy: int,
-    normalize_images: bool = False,
+    dataset_description_file: str, Sx: int, Sy: int, normalize_images: bool = False,
 ) -> Dataset[Any]:
     dataset_description = load_dataset_description(dataset_description_file)
     full_dataset: ConcatDataset[ObjectDetectionDataset] = ConcatDataset(
@@ -96,13 +93,10 @@ def get_dataloader(
     normalize_images: bool = False,
 ) -> DataLoader:
     full_dataset = get_dataset(
-        dataset_descriptor_file,
-        Sx,
-        Sy,
-        normalize_images=normalize_images,
+        dataset_descriptor_file, Sx, Sy, normalize_images=normalize_images,
     )
 
-    num_workers = min(len(os.sched_getaffinity(0)) // 2, 32)
+    num_workers = 0  #  min(len(os.sched_getaffinity(0)) // 2, 32)
 
     d = DataLoader(
         full_dataset,
@@ -123,10 +117,7 @@ def get_loss_df(dataset_descriptor_file, path_to_pth) -> pd.DataFrame:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     Y_loss = YOGOPerLabelLoss(
-        no_obj_weight=1,
-        iou_weight=1,
-        classify_weight=1,
-        label_smoothing=0,
+        no_obj_weight=1, iou_weight=1, classify_weight=1, label_smoothing=0,
     ).to(device)
 
     net, net_cfg = YOGO.from_pth(path_to_pth, inference=False)
@@ -211,8 +202,7 @@ def display_preds_and_labels(idx: int, df: pd.DataFrame, path_to_pth: str):
         y2 = (r[2] + r[4] / 2) * img_h
         label = YOGO_CLASS_ORDERING[int(r[0])]
         draw.rectangle(
-            (x1, y1, x2, y2),
-            outline=bbox_colour(label),
+            (x1, y1, x2, y2), outline=bbox_colour(label),
         )
         draw.text((x1, y2), f"label: {label}", (0, 0, 0, 255))
 
@@ -227,9 +217,7 @@ if __name__ == "__main__":
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
-        "path_to_pth",
-        type=Path,
-        help="path to pth file",
+        "path_to_pth", type=Path, help="path to pth file",
     )
     args = parser.parse_args()
     get_loss_df(args.dataset_descriptor_file, args.path_to_pth).to_csv("loss.csv")
