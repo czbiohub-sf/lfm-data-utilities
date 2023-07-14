@@ -46,10 +46,16 @@ if __name__ == "__main__":
     image = Image.open(image_path).convert("L")
     image_data = np.array(image)
 
-    result_tensor = yogo.infer.predict(args.pth_path, path_to_images=image_path,)
+    result_tensor = yogo.infer.predict(
+        args.pth_path,
+        path_to_images=image_path,
+    )
 
     bbox_image = yogo.utils.draw_yogo_prediction(
-        torch.tensor(image_data), result_tensor, obj_thresh=0.5, labels=CLASS_LIST,
+        torch.tensor(image_data),
+        result_tensor,
+        obj_thresh=0.5,
+        labels=CLASS_LIST,
     )
     bbox_image = np.array(bbox_image)
 
@@ -71,14 +77,23 @@ if __name__ == "__main__":
             )
     boxmap = np.array(
         yogo.utils.draw_yogo_prediction(
-            torch.tensor(image_data), result_tensor, obj_thresh=0.5, iou_thresh=0,
+            torch.tensor(image_data),
+            result_tensor,
+            obj_thresh=0.5,
+            iou_thresh=0,
         )
     )
 
     app = Dash(__name__)
 
     img_fig = px.imshow(bbox_image)
-    img_fig.update(data=[{"hovertemplate": "<b>%{x}, %{y}</b><extra></extra>",}])
+    img_fig.update(
+        data=[
+            {
+                "hovertemplate": "<b>%{x}, %{y}</b><extra></extra>",
+            }
+        ]
+    )
     set_universal_fig_settings_(img_fig, image_data.shape, objectness_heatmap.shape)
 
     app.layout = html.Div(
@@ -110,7 +125,10 @@ if __name__ == "__main__":
                         value="max-confidence",
                     ),
                 ],
-                style={"display": "flex", "flex-direction": "row",},
+                style={
+                    "display": "flex",
+                    "flex-direction": "row",
+                },
             ),
         ]
     )
@@ -123,7 +141,13 @@ if __name__ == "__main__":
     def update_yogo_output(output_value, classification_value):
         if output_value == "objectness":
             fig = px.imshow(objectness_heatmap, zmin=0, zmax=1)
-            fig.update(data=[{"hovertemplate": "<b>%{z}</b><extra></extra>",}])
+            fig.update(
+                data=[
+                    {
+                        "hovertemplate": "<b>%{z}</b><extra></extra>",
+                    }
+                ]
+            )
         elif output_value == "classification":
             if classification_value == "max-confidence":
                 fig = px.imshow(max_class_confidences, zmin=0, zmax=1)
