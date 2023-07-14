@@ -54,6 +54,15 @@ def gen_dataset_def(
         }
 
     dataset_defs = {
+        "class_names": [
+            "healthy",
+            "ring",
+            "trophozoite",
+            "schizont",
+            "gametocyte",
+            "wbc",
+            "misc",
+        ],
         "dataset_split_fractions": {"train": 0.75, "test": 0.20, "val": 0.05},
         "dataset_paths": dataset_paths,
     }
