@@ -105,6 +105,37 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, ...]:
     return tuple(s.strip() for s in thumbnail_name.replace(".png", "").split("_"))
 
 
+def write_thumbnail(
+    class_dir: Path,
+    thumbnail_file_name: str,
+    image: Image.Image,
+    max_num_files_per_subdir: int = 1000,
+):
+    """
+    write the thumbnail to the class_dir, being aware of the number of thumbnails in each dir,
+    and creating new subdirs if needed
+    """
+    dirs = [p for p in class_dir.iterdir() if p.is_dir()]
+
+    # if there are no subdirs, create one
+    if len(dirs) == 0:
+        (class_dir / "0").mkdir()
+        dirs.append(class_dir / "0")
+
+    # place the thumbnail in the first subdir that has space
+    for subdir in dirs:
+        num_files_in_subdir = len(list(subdir.iterdir()))
+        if num_files_in_subdir < max_num_files_per_subdir:
+            image.save(class_dir / subdir / thumbnail_file_name)
+            return
+
+    # there were no subdirs w/ space, so create a new one
+    # naive new dirname, but whatever
+    new_dirname = str(len(dirs))
+    (class_dir / new_dirname).mkdir()
+    image.save(class_dir / new_dirname / thumbnail_file_name)
+
+
 def create_thumbnails_from_tasks_and_images(
     tasks_json_path: Path,
     class_dirs: Dict[str, Path],
@@ -144,8 +175,10 @@ def create_thumbnails_from_tasks_and_images(
 
             cell_image = image[y1:y2, x1:x2]
             pil_cell_image = Image.fromarray(cell_image)
-            pil_cell_image.save(
-                class_dir / create_thumbnail_name(class_, cell_id, task_json_id)
+            write_thumbnail(
+                class_dir,
+                create_thumbnail_name(class_, cell_id, task_json_id),
+                pil_cell_image,
             )
 
 
@@ -255,7 +288,6 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             original_class = correction["original_class"]
             corrected_class = correction["corrected_class"]
 
-            # TODO maybe this n_corrections would be good for a sanity check?
             corrected = False
             for i, image_prediction in enumerate(tasks):
                 bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
@@ -280,7 +312,6 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
                 )
             else:
                 was_corrected += 1
-                print(f"CORRECTED cell_id {cell_id}")
 
         # write the (corrected) json file
         if commit:
