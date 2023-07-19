@@ -150,7 +150,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
         if commit:
             convert_ls_to_yolo(
                 path_to_ls_file=task_path,
-                path_to_output_dir=label_path,
+                path_to_output_dir=label_path.parent,
                 classes=CLASSES,
                 overwrite_existing_labels=commit,
                 download_images=False,
