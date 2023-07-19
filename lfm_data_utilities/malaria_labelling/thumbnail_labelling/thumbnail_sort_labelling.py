@@ -26,7 +26,7 @@ from pathlib import Path
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails import (
     sort_thumbnails,
 )
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_thumbanils import (
+from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_thumbnails import (
     create_thumbnails_for_sorting,
 )
 
