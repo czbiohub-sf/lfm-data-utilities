@@ -9,7 +9,17 @@ from functools import partial
 from dataclasses import dataclass
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence, Generator
+from typing import (
+    List,
+    Dict,
+    Tuple,
+    Optional,
+    Any,
+    Callable,
+    Union,
+    Sequence,
+    Generator,
+)
 from pathlib import Path
 
 from tqdm import tqdm
@@ -345,8 +355,10 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     )
 
 
-def find_files_with_excludes(p: PathLike, match_str: str, excludes: List[str] = []) -> Generator[Path, None, None]:
-    """ find files in directory tree, excluding `excludes` and matching via `match_str`.
+def find_files_with_excludes(
+    p: PathLike, match_str: str, excludes: List[str] = []
+) -> Generator[Path, None, None]:
+    """find files in directory tree, excluding `excludes` and matching via `match_str`.
 
     We offload matching to pathlib.PurePath.match() [1], which gives glob-like matching.
     This can be *much* faster for traversing our data, since we have many folders with
@@ -391,7 +403,11 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     return sorted(
         [
             x
-            for x in find_files_with_excludes(top_level_dir, "*perimage*.csv", excludes=['images', 'labels', 'yogo_labels'])
+            for x in find_files_with_excludes(
+                top_level_dir,
+                "*perimage*.csv",
+                excludes=["images", "labels", "yogo_labels"],
+            )
             if is_not_hidden_path(x)
         ]
     )
@@ -413,7 +429,9 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     return sorted(
         [
             file
-            for file in find_files_with_excludes(top_level_dir, "*exp*.csv", excludes=['images', 'labels', 'yogo_labels'])
+            for file in find_files_with_excludes(
+                top_level_dir, "*exp*.csv", excludes=["images", "labels", "yogo_labels"]
+            )
             if is_not_hidden_path(file)
         ]
     )
