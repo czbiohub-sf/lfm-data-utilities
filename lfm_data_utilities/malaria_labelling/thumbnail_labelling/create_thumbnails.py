@@ -28,11 +28,14 @@ def create_folders_for_output_dir(
     output_dir_path: Path,
     classes: List[str],
     force_overwrite: bool = False,
+    ignore_classes: List[str] = [],
 ) -> Tuple[Dict[str, Path], Path]:
     """creates the 'thumbnail-folder' above"""
     class_dirs = {}
     for class_ in classes:
-        class_dir = output_dir_path / class_
+        if class_ not in ignore_classes:
+            class_dir = output_dir_path / class_
+
         corrected_class_dir = output_dir_path / f"corrected_{class_}"
         tasks_dir = output_dir_path / "tasks"
 
@@ -170,8 +173,9 @@ def create_thumbnails_for_sorting(
     )
     class_dirs, tasks_dir = create_folders_for_output_dir(
         path_to_output_dir,
-        set(YOGO_CLASS_ORDERING) - set(classes_to_ignore),
+        YOGO_CLASS_ORDERING,
         force_overwrite=overwrite_previous_thumbnails,
+        classes_to_ignore
     )
     tasks_and_labels_paths = create_tasks_files_for_run_sets(
         path_to_labelled_data_ddf, tasks_dir
