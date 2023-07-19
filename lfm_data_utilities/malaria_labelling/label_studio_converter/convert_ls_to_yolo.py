@@ -32,6 +32,7 @@ def prep_yolo_dir(
     path_to_output_dir: PathLike,
     overwrite_existing_labels: bool,
     label_dir_name: str = "labels",
+    hard_overwrite: bool = False,
 ):
     # necessary components for the output directory
     output_dir = Path(path_to_output_dir)
@@ -51,7 +52,7 @@ def prep_yolo_dir(
                 f"The output directory ({output_dir}) already exists. If you want to overwrite the "
                 "existing labels, set overwrite_existing_labels=True."
             )
-        else:
+        elif hard_overwrite:
             try:
                 shutil.rmtree(labels_dir)
             except FileNotFoundError:
