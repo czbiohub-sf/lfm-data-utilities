@@ -9,7 +9,17 @@ from functools import partial
 from dataclasses import dataclass
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
+from typing import (
+    List,
+    Dict,
+    Tuple,
+    Optional,
+    Any,
+    Callable,
+    Union,
+    Sequence,
+    Generator,
+)
 from pathlib import Path
 
 from tqdm import tqdm
@@ -345,6 +355,38 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     )
 
 
+def find_files_with_excludes(
+    p: PathLike, match_str: str, excludes: List[str] = []
+) -> Generator[Path, None, None]:
+    """find files in directory tree, excluding `excludes` and matching via `match_str`.
+
+    We offload matching to pathlib.PurePath.match() [1], which gives glob-like matching.
+    This can be *much* faster for traversing our data, since we have many folders with
+    20,000 images or text files, and do not have what we often want (such as path to a
+    metadata file!).
+
+    Parameters
+    ----------
+    p: PathLike
+        root of search
+    match_str: str
+        a glob-like match string
+    excludes: List[str]
+        a list of glob-like match strings that you want to exclude from the search in
+        order to speed the search up. e.g. `excludes=['images', 'labels', 'yogo_labels']`
+        makes searching for metadata files very quick.
+
+    [1] https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.match
+    """
+    for subpath in Path(p).iterdir():
+        if subpath.match(match_str):
+            yield subpath
+        elif any(subpath.match(e) for e in excludes):
+            continue
+        elif subpath.is_dir():
+            yield from find_files_with_excludes(subpath, match_str, excludes)
+
+
 def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
 
@@ -361,7 +403,11 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     return sorted(
         [
             x
-            for x in Path(top_level_dir).rglob("*perimage*.csv")
+            for x in find_files_with_excludes(
+                top_level_dir,
+                "*perimage*.csv",
+                excludes=["images", "labels", "yogo_labels"],
+            )
             if is_not_hidden_path(x)
         ]
     )
@@ -383,7 +429,9 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     return sorted(
         [
             file
-            for file in Path(top_level_dir).rglob("*exp*.csv")
+            for file in find_files_with_excludes(
+                top_level_dir, "*exp*.csv", excludes=["images", "labels", "yogo_labels"]
+            )
             if is_not_hidden_path(file)
         ]
     )
