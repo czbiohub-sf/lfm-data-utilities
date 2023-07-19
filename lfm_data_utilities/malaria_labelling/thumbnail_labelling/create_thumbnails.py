@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Tuple, Optional
 
 from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.dataset_description_file import load_dataset_description
@@ -25,42 +25,50 @@ DEFAULT_LABELS_PATH = Path(
 
 
 def create_folders_for_output_dir(
-    output_dir_path: Path, classes: List[str], force_overwrite: bool = False, ignore_classes: List[str]  =[]
-) -> Dict[str, Path]:
+    output_dir_path: Path,
+    classes: List[str],
+    force_overwrite: bool = False,
+) -> Tuple[Dict[str, Path], Path]:
     """creates the 'thumbnail-folder' above"""
     class_dirs = {}
-    for class_ in set(classes) - set(ignore_classes):
+    for class_ in classes:
         class_dir = output_dir_path / class_
         corrected_class_dir = output_dir_path / f"corrected_{class_}"
+        tasks_dir = output_dir_path / "tasks"
 
         if force_overwrite:
             if class_dir.exists():
                 shutil.rmtree(class_dir)
             if corrected_class_dir.exists():
                 shutil.rmtree(corrected_class_dir)
+            if tasks_dir.exists():
+                shutil.rmtree(tasks_dir)
 
         class_dir.mkdir(exist_ok=True, parents=True)
         corrected_class_dir.mkdir(exist_ok=True, parents=True)
+        tasks_dir.mkdir(exist_ok=True, parents=True)
 
         class_dirs[class_] = class_dir
-    return class_dirs
+    return class_dirs, tasks_dir
 
 
-def create_tasks_files_for_run_sets(path_to_labelled_data_ddf: Path) -> List[Path]:
+def create_tasks_files_for_run_sets(
+    path_to_labelled_data_ddf: Path, tasks_dir: Path
+) -> List[Dict[str, str]]:
     ddf = load_dataset_description(path_to_labelled_data_ddf)
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
     task_paths = []
-    for d in tqdm(dataset_paths):
+    for i, d in tqdm(enumerate(dataset_paths)):
         image_path = d["image_path"]
         label_path = d["label_path"]
         task_file = gen_task(
             folder_path=Path(label_path).parent,
             images_dir_path=image_path,
             label_dir_name=Path(label_path).name,
-            tasks_file_name="thumbnail_correction_task.json",
+            tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
         )
-        task_paths.append(task_file)
+        task_paths.append({"label_path": str(label_path), "task_path": str(task_file)})
     return task_paths
 
 
@@ -156,22 +164,34 @@ def create_thumbnails_for_sorting(
     overwrite_previous_thumbnails: bool = False,
     classes_to_ignore: List[str] = [],
 ):
-    class_dirs = create_folders_for_output_dir(
+    print(
+        f"{set(YOGO_CLASS_ORDERING)} - {set(classes_to_ignore)}",
+        set(YOGO_CLASS_ORDERING) - set(classes_to_ignore),
+    )
+    class_dirs, tasks_dir = create_folders_for_output_dir(
         path_to_output_dir,
-        YOGO_CLASS_ORDERING,
+        set(YOGO_CLASS_ORDERING) - set(classes_to_ignore),
         force_overwrite=overwrite_previous_thumbnails,
     )
-    task_paths = create_tasks_files_for_run_sets(path_to_labelled_data_ddf)
+    tasks_and_labels_paths = create_tasks_files_for_run_sets(
+        path_to_labelled_data_ddf, tasks_dir
+    )
 
-    N = int(math.log(len(task_paths), 10)) + 1
-    id_to_task_path: Dict[str, str] = {}
-    for i, task_path in tqdm(
-        enumerate(task_paths), total=len(task_paths), desc="creating thumbnails"
+    N = int(math.log(len(tasks_and_labels_paths), 10)) + 1
+    id_to_tasks_and_labels_path: Dict[str, Dict[str, str]] = {}
+
+    for i, task_and_label_path in tqdm(
+        enumerate(tasks_and_labels_paths),
+        total=len(tasks_and_labels_paths),
+        desc="creating thumbnails",
     ):
         create_thumbnails_from_tasks_and_images(
-            task_path, class_dirs, task_json_id=f"{i:0{N}}", classes_to_ignore=classes_to_ignore
+            Path(task_and_label_path["task_path"]),
+            class_dirs,
+            task_json_id=f"{i:0{N}}",
+            classes_to_ignore=classes_to_ignore,
         )
-        id_to_task_path[f"{i:0{N}}"] = str(task_path)
+        id_to_tasks_and_labels_path[f"{i:0{N}}"] = task_and_label_path
 
     with open(path_to_output_dir / "id_to_task_path.json", "w") as f:
-        json.dump(id_to_task_path, f)
+        json.dump(id_to_tasks_and_labels_path, f)

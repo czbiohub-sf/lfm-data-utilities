@@ -77,6 +77,7 @@ def gen_task(
     images_dir_path: Optional[Path] = None,
     label_dir_name="labels",
     tasks_file_name="tasks",
+    tasks_path: Optional[Path] = None,
 ) -> Path:
     # defensive pathing
     images_root_path_for_url = images_dir_path or folder_path / "images"
@@ -85,12 +86,12 @@ def gen_task(
     )
     root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}"
 
-    tasks_path = str(folder_path / Path(tasks_file_name).with_suffix(".json"))
+    output_tasks_path = tasks_path or str(folder_path / Path(tasks_file_name).with_suffix(".json"))
 
     try:
         convert_yolo_to_ls(
             input_dir=str(folder_path),
-            out_file=tasks_path,
+            out_file=output_tasks_path,
             label_dir_name=label_dir_name,
             images_dir_path=images_dir_path,
             out_type="predictions",
