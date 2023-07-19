@@ -13,7 +13,7 @@
 ulimit -H -c unlimited
 
 conda run ./create_dense_data.py \
-  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/run-sets \
-  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/scope-parasite-data/dense-data \
-  /home/axel.jacobsen/celldiagnosis/yogo/trained_models/volcanic-sweep-69/best.pth \
-  /home/axel.jacobsen/autofocus/ulc-malaria-autofocus/trained_models/noble-deluge-171/best.pth
+  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full_2 \
+  /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full_2/dense-data \
+  /home/axel.jacobsen/celldiagnosis/yogo/trained_models/devoted-snowflake-1666/best.pth \
+  /home/axel.jacobsen/autofocus/ulc-malaria-autofocus/trained_models/solar-microwave-438/best.pth
