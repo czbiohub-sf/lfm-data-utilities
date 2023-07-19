@@ -175,7 +175,7 @@ def create_thumbnails_for_sorting(
         path_to_output_dir,
         YOGO_CLASS_ORDERING,
         force_overwrite=overwrite_previous_thumbnails,
-        ignore_classes=classes_to_ignore
+        ignore_classes=classes_to_ignore,
     )
     tasks_and_labels_paths = create_tasks_files_for_run_sets(
         path_to_labelled_data_ddf, tasks_dir
