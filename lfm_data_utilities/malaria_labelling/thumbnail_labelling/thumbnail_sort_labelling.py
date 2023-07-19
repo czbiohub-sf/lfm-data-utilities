@@ -76,7 +76,7 @@ if __name__ == "__main__":
             "if set, will ignore this class when creating thumbnails - e.g. `--ignore-class healthy`\n"
             "you can provide this argument multiple times to ignore multiple classes - e.g. `--ignore-class healthy --ignore-class misc`\n"
             "suggested: `--ignore-class healthy`"
-        )
+        ),
     )
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")

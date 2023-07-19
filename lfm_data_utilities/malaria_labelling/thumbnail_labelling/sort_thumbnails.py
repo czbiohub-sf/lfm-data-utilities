@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
-from typing import List, Dict, Tuple, DefaultDict
+from typing import List, Dict, Tuple, DefaultDict, cast
 
 from yogo.data import YOGO_CLASS_ORDERING
 
@@ -54,15 +54,12 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     """
     with open(path_to_thumbnails / "id_to_task_path.json") as f:
         id_to_task_path = json.load(f)
-        id_to_task_path = {k: Path(v) for k, v in id_to_task_path.items()}
+        id_to_task_path = cast(Dict[str, Dict[str, str]], id_to_task_path)
 
-    for task_path in id_to_task_path.values():
+    for label_and_task_path in id_to_task_path.values():
+        task_path = Path(label_and_task_path["task_path"])
         if not task_path.exists():
             raise ValueError(f"task_path {task_path} does not exist")
-        elif not path_is_relative_to(task_path, DEFAULT_LABELS_PATH):
-            raise ValueError(
-                f"task_path {task_path} is not relative to {DEFAULT_LABELS_PATH}"
-            )
 
     # create backup of vetted
     with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
@@ -82,6 +79,10 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     )
     for class_ in YOGO_CLASS_ORDERING:
         corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
+        if not corrected_class_dir.exists():
+            # user ignored this class, so just skipp it
+            continue
+
         for thumbnail in corrected_class_dir.iterdir():
             original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
 
@@ -104,7 +105,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             continue
 
         # read the json file
-        with open(id_to_task_path[task_json_id]) as f:
+        with open(id_to_task_path[task_json_id]["task_path"]) as f:
             tasks = json.load(f)
 
         for correction in corrections:
@@ -118,13 +119,6 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
                 for j, bbox_prediction in enumerate(bbox_predictions):
                     if bbox_prediction["id"] == cell_id:
                         bbox_prediction["value"]["rectanglelabels"] = [corrected_class]
-                        # look at black's formatting here! geez!
-                        assert (
-                            tasks[i]["predictions"][0]["result"][j]["value"][
-                                "rectanglelabels"
-                            ][0]
-                            == corrected_class
-                        )
                         corrected = True
                         break
 
@@ -139,22 +133,24 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
 
         # write the (corrected) json file
         if commit:
-            with open(id_to_task_path[task_json_id], "w") as f:
+            with open(id_to_task_path[task_json_id]["task_path"], "w") as f:
                 json.dump(tasks, f)
         else:
             print(
                 "would have written corrected tasks.json "
-                f"file to {id_to_task_path[task_json_id]}"
+                f"file to {id_to_task_path[task_json_id]['task_path']}"
             )
 
     print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
 
     # convert the corrected json files to yolo format
-    for task_path in id_to_task_path.values():
+    for task_and_label_path in id_to_task_path.values():
+        task_path = Path(task_and_label_path["task_path"])
+        label_path = Path(task_and_label_path["label_path"])
         if commit:
             convert_ls_to_yolo(
                 path_to_ls_file=task_path,
-                path_to_output_dir=task_path.parent,
+                path_to_output_dir=label_path.parent,
                 classes=CLASSES,
                 overwrite_existing_labels=commit,
                 download_images=False,
