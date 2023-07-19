@@ -59,7 +59,7 @@ if __name__ == "__main__":
         "--path-to-labelled-data-ddf",
         help=(
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
-            "since we mostly want to correct labels for human-labelled data (default {default_ddf})"
+            f"since we mostly want to correct labels for human-labelled data (default {default_ddf})"
         ),
         default=default_ddf,
         type=Path,
