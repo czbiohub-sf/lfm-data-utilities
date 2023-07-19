@@ -25,11 +25,11 @@ DEFAULT_LABELS_PATH = Path(
 
 
 def create_folders_for_output_dir(
-    output_dir_path: Path, classes: List[str], force_overwrite: bool = False
+    output_dir_path: Path, classes: List[str], force_overwrite: bool = False, ignore_classes: List[str]  =[]
 ) -> Dict[str, Path]:
     """creates the 'thumbnail-folder' above"""
     class_dirs = {}
-    for class_ in classes:
+    for class_ in set(classes) - set(ignore_classes):
         class_dir = output_dir_path / class_
         corrected_class_dir = output_dir_path / f"corrected_{class_}"
 
@@ -103,6 +103,7 @@ def create_thumbnails_from_tasks_and_images(
     tasks_json_path: Path,
     class_dirs: Dict[str, Path],
     task_json_id: Optional[str] = None,
+    classes_to_ignore: List[str] = [],
 ):
     task_json_id = task_json_id or tasks_json_path.parent.name
 
@@ -119,8 +120,12 @@ def create_thumbnails_from_tasks_and_images(
         img_h, img_w = image.shape
 
         for prediction in task["predictions"][0]["result"]:
-            cell_id = prediction["id"]
             class_ = prediction["value"]["rectanglelabels"][0]
+
+            if class_ in classes_to_ignore:
+                continue
+
+            cell_id = prediction["id"]
             class_dir = class_dirs[class_]
 
             x1 = prediction["value"]["x"] / 100
@@ -149,6 +154,7 @@ def create_thumbnails_for_sorting(
     path_to_output_dir: Path,
     path_to_labelled_data_ddf: Path,
     overwrite_previous_thumbnails: bool = False,
+    classes_to_ignore: List[str] = [],
 ):
     class_dirs = create_folders_for_output_dir(
         path_to_output_dir,
@@ -163,7 +169,7 @@ def create_thumbnails_for_sorting(
         enumerate(task_paths), total=len(task_paths), desc="creating thumbnails"
     ):
         create_thumbnails_from_tasks_and_images(
-            task_path, class_dirs, task_json_id=f"{i:0{N}}"
+            task_path, class_dirs, task_json_id=f"{i:0{N}}", classes_to_ignore=classes_to_ignore
         )
         id_to_task_path[f"{i:0{N}}"] = str(task_path)
 

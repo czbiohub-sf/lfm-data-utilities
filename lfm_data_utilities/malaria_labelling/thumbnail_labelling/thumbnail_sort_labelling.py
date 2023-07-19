@@ -69,6 +69,15 @@ if __name__ == "__main__":
         action="store_true",
         help="if set, will overwrite previous thumbnails",
     )
+    create_thumbnails_parser.add_argument(
+        "--ignore-class",
+        action="append",
+        help=(
+            "if set, will ignore this class when creating thumbnails - e.g. `--ignore-class healthy`\n"
+            "you can provide this argument multiple times to ignore multiple classes - e.g. `--ignore-class healthy --ignore-class misc`\n"
+            "suggested: `--ignore-class healthy`"
+        )
+    )
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
@@ -93,6 +102,7 @@ if __name__ == "__main__":
             args.path_to_output_dir,
             args.path_to_labelled_data_ddf,
             args.overwrite_previous_thumbnails,
+            args.ignore_class,
         )
     else:
         parser.print_help()
