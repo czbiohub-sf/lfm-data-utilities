@@ -57,7 +57,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
         id_to_task_path = cast(Dict[str, Dict[str, str]], id_to_task_path)
 
     for label_and_task_path in id_to_task_path.values():
-        task_path = Path(label_and_task_path["task_path"])
+        task_path = path_to_thumbnails / "tasks" / label_and_task_path["task_name"]
         if not task_path.exists():
             raise ValueError(f"task_path {task_path} does not exist")
 
@@ -105,7 +105,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             continue
 
         # read the json file
-        with open(id_to_task_path[task_json_id]["task_path"]) as f:
+        with open(path_to_thumbnails / "tasks" / label_and_task_path["task_name"]) as f:
             tasks = json.load(f)
 
         for correction in corrections:
@@ -145,7 +145,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
 
     # convert the corrected json files to yolo format
     for task_and_label_path in id_to_task_path.values():
-        task_path = Path(task_and_label_path["task_path"])
+        task_path = path_to_thumbnails / "tasks" / task_and_label_path["task_name"]
         label_path = Path(task_and_label_path["label_path"])
         if commit:
             convert_ls_to_yolo(
