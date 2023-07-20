@@ -12,8 +12,13 @@ from lfm_data_utilities.malaria_labelling.label_studio_converter.create_ls_file 
     convert_formatted_YOGO_to_list,
 )
 
+from lfm_data_utilities.model_evaluations.yogo.rank_yogo_loss import (
+    ObjectDetectionDatasetWithPaths,
+    collate_image_label_batch,
+)
+
 from yogo.model import YOGO
-from yogo.utils.utils import format_preds
+from yogo.utils.utils import format_preds, format_preds_and_labels
 from yogo.utils.argparsers import unsigned_float
 from yogo.data.image_path_dataset import get_dataset, collate_fn
 from yogo.infer import choose_device, choose_dataloader_num_workers
@@ -72,6 +77,71 @@ def create_confidence_filtered_tasks_file_from_YOGO(
                 formatted_pred_class_confidences <= (max_class_confidence_thresh or 1),
             )
             formatted_preds = formatted_preds[formatted_pred_class_mask]
+
+            if len(formatted_preds) > 0:
+                tasks_file_writer.add_prediction(
+                    image_path,
+                    convert_formatted_YOGO_to_list(formatted_preds),
+                )
+
+    tasks_file_writer.write(output_path or Path("tasks.json"))
+
+
+def create_correctness_filtered_tasks_file_from_YOGO(
+    path_to_images: Path,
+    path_to_labels: Path,
+    path_to_pth: Path,
+    output_path: Optional[Path] = None,
+    obj_thresh: float = 0.5,
+    iou_thresh: float = 0.5,
+):
+    device = choose_device()
+
+    model, cfg = YOGO.from_pth(Path(path_to_pth), inference=True)
+    model.to(device)
+    model.eval()
+
+    dataset = ObjectDetectionDatasetWithPaths(
+        path_to_images,
+        path_to_labels,
+        model.Sx,
+        model.Sy,
+        normalize_images=cfg["normalize_images"],
+    )
+    dataloader = DataLoader(  # type: ignore
+        dataset,
+        batch_size=64,
+        shuffle=False,
+        drop_last=False,
+        pin_memory=True,
+        collate_fn=collate_image_label_batch,
+        num_workers=choose_dataloader_num_workers(len(dataset)),
+    )
+
+    tasks_file_writer = LabelStudioTasksFile()
+
+    for batch in tqdm(
+        dataloader, desc=f"yogo inference on {path_to_images.parent.name}"
+    ):
+        images, labels, image_paths = batch
+        images = images.to(device)
+        labels = labels.to(device)
+
+        with torch.no_grad():
+            predictions = model(images)
+
+        for image_path, prediction in zip(image_paths, predictions):
+            formatted_preds, formatted_labels = format_preds_and_labels(
+                prediction,
+                labels,
+                objectness_thresh_thresh=obj_thresh,
+            )
+
+            class_predictions = formatted_preds[:, 5:].argmax(dim=1)
+            class_labels = formatted_labels[:, 5]
+            incorrect_mask = class_predictions != class_labels
+
+            formatted_preds = formatted_preds[incorrect_mask]
 
             if len(formatted_preds) > 0:
                 tasks_file_writer.add_prediction(

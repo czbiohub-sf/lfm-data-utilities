@@ -33,6 +33,7 @@ from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_thumbnails 
     create_folders_for_output_dir,
     create_tasks_files_from_labels,
     create_confidence_filtered_tasks_from_YOGO,
+    create_correctness_filtered_tasks_file_from_YOGO,
 )
 
 
@@ -156,7 +157,12 @@ if __name__ == "__main__":
                 raise ValueError(
                     "if `--thumbnail-type yogo-incorrect` is provided, `--path-to-pth` must also be provided"
                 )
-            raise NotImplementedError()
+            tasks_and_labels_paths = create_correctness_filtered_tasks_file_from_YOGO(
+                args.path_to_labelled_data_ddf,
+                tasks_dir,
+                args.path_to_pth,
+                max_class_confidence_thresh=args.max_confidence,
+            )
 
         create_thumbnails_from_tasks_maps(
             args.path_to_output_dir,
