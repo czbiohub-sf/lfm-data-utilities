@@ -121,7 +121,13 @@ def convert_formatted_YOGO_to_list(
         return max(range(len(ar), key=ar.__getitem__))
 
     return [
-        (YOGO_CLASS_ORDERING[argmax(pred[5:])], *pred[:4].tolist())
+        (
+            YOGO_CLASS_ORDERING[argmax(pred[5:])],
+            pred[0].item(),
+            pred[1].item(),
+            pred[2].item(),
+            pred[3].item(),
+        )
         for pred in yogo_preds
     ]
 
