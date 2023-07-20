@@ -19,9 +19,10 @@ from yogo.data.image_path_dataset import get_dataset, collate_fn
 from yogo.infer import choose_device, choose_dataloader_num_workers
 
 
-def create_tasks_file_from_YOGO(
+def create_confidence_filtered_tasks_file_from_YOGO(
     path_to_pth: Path,
     path_to_images: Path,
+    output_path: Optional[Path] = None,
     obj_thresh: float = 0.5,
     iou_thresh: float = 0.5,
     min_class_confidence_thresh: Optional[float] = None,
@@ -76,7 +77,8 @@ def create_tasks_file_from_YOGO(
                     convert_formatted_YOGO_to_list(formatted_preds),
                 )
 
-    tasks_file_writer.write(Path("tasks.json"))
+    tasks_file_writer.write(output_path or Path("tasks.json"))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    create_tasks_file_from_YOGO(
+    create_confidence_filtered_tasks_file_from_YOGO(
         args.path_to_pth,
         args.path_to_images,
         obj_thresh=args.obj_thresh,

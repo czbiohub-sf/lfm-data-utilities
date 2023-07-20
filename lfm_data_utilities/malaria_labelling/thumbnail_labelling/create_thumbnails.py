@@ -10,7 +10,6 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union
 
-from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.dataset_description_file import load_dataset_description
 
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
@@ -18,45 +17,16 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     LFM_SCOPE_PATH,
 )
 
+from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
+    create_confidence_filtered_tasks_file_from_YOGO,
+)
 
 DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
 )
 
 
-def create_folders_for_output_dir(
-    output_dir_path: Path,
-    classes: List[str],
-    force_overwrite: bool = False,
-    ignore_classes: List[str] = [],
-) -> Tuple[Dict[str, Path], Path]:
-    """creates the 'thumbnail-folder' above"""
-    class_dirs = {}
-    for class_ in classes:
-        if class_ not in ignore_classes:
-            class_dir = output_dir_path / class_
-            if force_overwrite:
-                if class_dir.exists():
-                    shutil.rmtree(class_dir)
-            class_dir.mkdir(exist_ok=True, parents=True)
-            class_dirs[class_] = class_dir
-
-        corrected_class_dir = output_dir_path / f"corrected_{class_}"
-        tasks_dir = output_dir_path / "tasks"
-
-        if force_overwrite:
-            if corrected_class_dir.exists():
-                shutil.rmtree(corrected_class_dir)
-            if tasks_dir.exists():
-                shutil.rmtree(tasks_dir)
-
-        corrected_class_dir.mkdir(exist_ok=True, parents=True)
-        tasks_dir.mkdir(exist_ok=True, parents=True)
-
-    return class_dirs, tasks_dir
-
-
-def create_tasks_files_for_run_sets(
+def create_tasks_files_from_labels(
     path_to_labelled_data_ddf: Path, tasks_dir: Path
 ) -> List[Dict[str, Union[int, str]]]:
     ddf = load_dataset_description(path_to_labelled_data_ddf)
@@ -80,6 +50,73 @@ def create_tasks_files_for_run_sets(
             }
         )
     return task_paths
+
+
+def create_confidence_filtered_tasks_from_YOGO(
+    path_to_labelled_data_ddf: Path,
+    tasks_dir: Path,
+    path_to_pth: Path,
+    obj_thresh: float = 0.5,
+    iou_thresh: float = 0.5,
+    max_class_confidence_thresh: Optional[float] = None,
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+
+        create_confidence_filtered_tasks_file_from_YOGO(
+            path_to_pth=path_to_pth,
+            path_to_images=image_path,
+            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+            obj_thresh=obj_thresh,
+            iou_thresh=iou_thresh,
+            max_class_confidence_thresh=max_class_confidence_thresh,
+        )
+
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
+
+
+def create_folders_for_output_dir(
+    output_dir_path: Path,
+    classes: List[str],
+    force_overwrite: bool = False,
+    ignore_classes: List[str] = [],
+) -> Tuple[Dict[str, Path], Path]:
+    """creates the 'thumbnail-folder'"""
+    class_dirs = {}
+    for class_ in classes:
+        if class_ not in ignore_classes:
+            class_dir = output_dir_path / class_
+            if force_overwrite:
+                if class_dir.exists():
+                    shutil.rmtree(class_dir)
+            class_dir.mkdir(exist_ok=True, parents=True)
+            class_dirs[class_] = class_dir
+
+        corrected_class_dir = output_dir_path / f"corrected_{class_}"
+        tasks_dir = output_dir_path / "tasks"
+
+        if force_overwrite:
+            if corrected_class_dir.exists():
+                shutil.rmtree(corrected_class_dir)
+            if tasks_dir.exists():
+                shutil.rmtree(tasks_dir)
+
+        corrected_class_dir.mkdir(exist_ok=True, parents=True)
+        tasks_dir.mkdir(exist_ok=True, parents=True)
+
+    return class_dirs, tasks_dir
 
 
 def create_thumbnail_name(class_: str, cell_id: str, task_json_id: str) -> str:
@@ -117,7 +154,7 @@ def write_thumbnail(
     image.save(class_dir / new_dirname / thumbnail_file_name)
 
 
-def create_thumbnails_from_tasks_and_images(
+def create_thumbnails_from_tasks(
     tasks_json_path: Path,
     class_dirs: Dict[str, Path],
     task_json_id: Optional[str] = None,
@@ -168,38 +205,29 @@ def create_thumbnails_from_tasks_and_images(
             )
 
 
-def create_thumbnails_for_sorting(
+def create_thumbnails_from_tasks_maps(
     path_to_output_dir: Path,
-    path_to_labelled_data_ddf: Path,
-    overwrite_previous_thumbnails: bool = False,
+    task_and_label_paths: List[Dict[str, Union[str, int]]],
+    tasks_dir: Path,
+    class_dirs: Dict[str, Path],
     classes_to_ignore: List[str] = [],
 ):
-    class_dirs, tasks_dir = create_folders_for_output_dir(
-        path_to_output_dir,
-        YOGO_CLASS_ORDERING,
-        force_overwrite=overwrite_previous_thumbnails,
-        ignore_classes=classes_to_ignore,
-    )
-    tasks_and_labels_paths = create_tasks_files_for_run_sets(
-        path_to_labelled_data_ddf, tasks_dir
-    )
-
-    N = int(math.log(len(tasks_and_labels_paths), 10)) + 1
+    N = int(math.log(len(task_and_label_paths), 10)) + 1
     id_to_tasks_and_labels_path: Dict[str, Dict[str, Union[str, int]]] = {}
 
-    for task_and_label_path in tqdm(
-        tasks_and_labels_paths,
-        total=len(tasks_and_labels_paths),
+    for tlp in tqdm(
+        task_and_label_paths,
+        total=len(task_and_label_paths),
         desc="creating thumbnails",
     ):
-        i = task_and_label_path["task_num"]
-        create_thumbnails_from_tasks_and_images(
-            tasks_dir / str(task_and_label_path["task_name"]),
+        i = tlp["task_num"]
+        create_thumbnails_from_tasks(
+            tasks_dir / str(tlp["task_name"]),
             class_dirs,
             task_json_id=f"{i:0{N}}",
             classes_to_ignore=classes_to_ignore,
         )
-        id_to_tasks_and_labels_path[f"{i:0{N}}"] = task_and_label_path
+        id_to_tasks_and_labels_path[f"{i:0{N}}"] = tlp
 
     with open(path_to_output_dir / "id_to_task_path.json", "w") as f:
         json.dump(id_to_tasks_and_labels_path, f)
