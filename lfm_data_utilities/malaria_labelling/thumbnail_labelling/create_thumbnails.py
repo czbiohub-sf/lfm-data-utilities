@@ -127,6 +127,7 @@ def write_thumbnail(
     class_dir: Path,
     thumbnail_file_name: str,
     image: Image.Image,
+    dirsize_cache: Dict[Path, int],
     max_num_files_per_subdir: int = 1000,
 ):
     """
@@ -135,16 +136,12 @@ def write_thumbnail(
     """
     dirs = [p for p in class_dir.iterdir() if p.is_dir()]
 
-    # if there are no subdirs, create one
-    if len(dirs) == 0:
-        (class_dir / "0").mkdir()
-        dirs.append(class_dir / "0")
-
     # place the thumbnail in the first subdir that has space
     for subdir in dirs:
-        num_files_in_subdir = len(list(subdir.iterdir()))
+        num_files_in_subdir = dirsize_cache.get(subdir, len(list(subdir.iterdir())))
         if num_files_in_subdir < max_num_files_per_subdir:
             image.save(class_dir / subdir / thumbnail_file_name)
+            dirsize_cache[subdir] = num_files_in_subdir + 1
             return
 
     # there were no subdirs w/ space, so create a new one
@@ -152,6 +149,7 @@ def write_thumbnail(
     new_dirname = str(len(dirs))
     (class_dir / new_dirname).mkdir()
     image.save(class_dir / new_dirname / thumbnail_file_name)
+    dirsize_cache[subdir] = 1
 
 
 def create_thumbnails_from_tasks(
@@ -164,6 +162,8 @@ def create_thumbnails_from_tasks(
 
     with open(tasks_json_path) as f:
         tasks = json.load(f)
+
+    dirsize_cache: Dict[Path, int] = {}
 
     for task in tasks:
         image_url = task["data"]["image"]
@@ -202,6 +202,7 @@ def create_thumbnails_from_tasks(
                 class_dir,
                 create_thumbnail_name(class_, cell_id, task_json_id),
                 pil_cell_image,
+                dirsize_cache,
             )
 
 
