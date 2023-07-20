@@ -112,6 +112,20 @@ class LabelStudioTasksFile:
             json.dump(self.tasks, f)
 
 
+def convert_formatted_YOGO_to_list(
+    yogo_preds: torch.Tensor,
+) -> List[Tuple[str, float, float, float, float]]:
+    "TODO need better name"
+
+    def argmax(ar):
+        return max(range(len(ar), key=ar.__getitem__))
+
+    return [
+        (YOGO_CLASS_ORDERING[argmax(pred[5:])], *pred[:4].tolist())
+        for pred in yogo_preds
+    ]
+
+
 if __name__ == "__main__":
     # example usage
     tasks_file = LabelStudioTasksFile()
