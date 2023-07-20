@@ -149,7 +149,7 @@ def write_thumbnail(
     new_dirname = str(len(dirs))
     (class_dir / new_dirname).mkdir()
     image.save(class_dir / new_dirname / thumbnail_file_name)
-    dirsize_cache[subdir] = 1
+    dirsize_cache[(class_dir / new_dirname)] = 1
 
 
 def create_thumbnails_from_tasks(

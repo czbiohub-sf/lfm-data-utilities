@@ -51,7 +51,9 @@ def create_confidence_filtered_tasks_file_from_YOGO(
 
     tasks_file_writer = LabelStudioTasksFile()
 
-    for batch in tqdm(image_dataloader):
+    for batch in tqdm(
+        image_dataloader, desc=f"yogo inference on {path_to_images.parent.name}"
+    ):
         images, image_paths = batch
         images = images.to(device)
 
@@ -61,8 +63,8 @@ def create_confidence_filtered_tasks_file_from_YOGO(
         for image_path, prediction in zip(image_paths, predictions):
             formatted_preds = format_preds(
                 prediction,
-                obj_thresh=args.obj_thresh,
-                iou_thresh=args.iou_thresh,
+                obj_thresh=obj_thresh,
+                iou_thresh=iou_thresh,
             )
             formatted_pred_class_confidences = formatted_preds[:, 5:].max(dim=1).values
             formatted_pred_class_mask = torch.logical_and(

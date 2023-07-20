@@ -140,13 +140,6 @@ if __name__ == "__main__":
             tasks_and_labels_paths = create_tasks_files_from_labels(
                 args.path_to_labelled_data_ddf, tasks_dir
             )
-            create_thumbnails_from_tasks_maps(
-                args.path_to_output_dir,
-                tasks_and_labels_paths,
-                tasks_dir,
-                class_dirs,
-                classes_to_ignore=args.ignore_class or [],
-            )
         elif args.thumbnail_type == "yogo-confidence":
             if args.path_to_pth is None:
                 raise ValueError(
@@ -164,5 +157,13 @@ if __name__ == "__main__":
                     "if `--thumbnail-type yogo-incorrect` is provided, `--path-to-pth` must also be provided"
                 )
             raise NotImplementedError()
+
+        create_thumbnails_from_tasks_maps(
+            args.path_to_output_dir,
+            tasks_and_labels_paths,
+            tasks_dir,
+            class_dirs,
+            classes_to_ignore=args.ignore_class or [],
+        )
     else:
         parser.print_help()
