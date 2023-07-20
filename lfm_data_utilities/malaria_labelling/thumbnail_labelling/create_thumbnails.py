@@ -19,6 +19,7 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
 
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
     create_confidence_filtered_tasks_file_from_YOGO,
+    create_correctness_filtered_tasks_file_from_YOGO,
 )
 
 DEFAULT_LABELS_PATH = Path(
@@ -75,6 +76,40 @@ def create_confidence_filtered_tasks_from_YOGO(
             obj_thresh=obj_thresh,
             iou_thresh=iou_thresh,
             max_class_confidence_thresh=max_class_confidence_thresh,
+        )
+
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
+
+
+def create_correctness_filtered_tasks_from_YOGO(
+    path_to_labelled_data_ddf: Path,
+    tasks_dir: Path,
+    path_to_pth: Path,
+    obj_thresh: float = 0.5,
+    iou_thresh: float = 0.5,
+    max_class_confidence_thresh: Optional[float] = None,
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+
+        create_correctness_filtered_tasks_file_from_YOGO(
+            path_to_images=image_path,
+            path_to_labels=label_path,
+            path_to_pth=path_to_pth,
+            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+            obj_thresh=obj_thresh,
         )
 
         task_paths.append(

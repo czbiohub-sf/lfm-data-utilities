@@ -93,7 +93,6 @@ def create_correctness_filtered_tasks_file_from_YOGO(
     path_to_pth: Path,
     output_path: Optional[Path] = None,
     obj_thresh: float = 0.5,
-    iou_thresh: float = 0.5,
 ):
     device = choose_device()
 
