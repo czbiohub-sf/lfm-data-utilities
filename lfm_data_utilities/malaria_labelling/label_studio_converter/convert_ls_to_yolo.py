@@ -132,4 +132,6 @@ def convert_ls_to_yolo(
                 width /= 100
                 height /= 100
 
-                f.write(f"{class_id} {round(x_center, 10)} {round(y_center, 10)} {round(width, 10)} {round(height, 10)}\n")
+                f.write(
+                    f"{class_id} {round(x_center, 10)} {round(y_center, 10)} {round(width, 10)} {round(height, 10)}\n"
+                )
