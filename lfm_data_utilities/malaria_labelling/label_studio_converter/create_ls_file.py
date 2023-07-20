@@ -54,7 +54,7 @@ class LabelStudioTasksFile:
         class_string is one of YOGO_CLASS_ORDERING
         xc, yc, w, h are floats between 0 and 1
         """
-        class_ = YOGO_CLASS_ORDERING.index(prediction[0])
+        class_ = prediction[0]
         x = 100 * (prediction[1] - prediction[3] / 2)
         y = 100 * (prediction[2] - prediction[4] / 2)
         w = 100 * prediction[3]
@@ -118,7 +118,7 @@ def convert_formatted_YOGO_to_list(
     "TODO need better name"
 
     def argmax(ar):
-        return max(range(len(ar), key=ar.__getitem__))
+        return max(range(len(ar)), key=ar.__getitem__)
 
     return [
         (

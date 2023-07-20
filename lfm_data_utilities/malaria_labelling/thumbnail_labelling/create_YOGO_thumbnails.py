@@ -1,6 +1,7 @@
 import torch
 import argparse
 
+from tqdm import tqdm
 from pathlib import Path
 
 from torch.utils.data import DataLoader
@@ -12,7 +13,7 @@ from lfm_data_utilities.malaria_labelling.label_studio_converter.create_ls_file 
 
 from yogo.model import YOGO
 from yogo.utils.utils import format_preds
-from yogo.utils.argparse import unsigned_float
+from yogo.utils.argparsers import unsigned_float
 from yogo.data.image_path_dataset import get_dataset, collate_fn
 from yogo.infer import choose_device, choose_dataloader_num_workers
 
@@ -63,7 +64,7 @@ if __name__ == "__main__":
 
     tasks_file_writer = LabelStudioTasksFile()
 
-    for batch in image_dataloader:
+    for batch in tqdm(image_dataloader):
         images, image_paths = batch
         images = images.to(device)
 
@@ -73,9 +74,13 @@ if __name__ == "__main__":
         for image_path, prediction in zip(image_paths, predictions):
             tasks_file_writer.add_prediction(
                 image_path,
-                format_preds(
-                    prediction, obj_thresh=args.obj_thresh, iou_thresh=args.iou_thresh
-                ),
+                convert_formatted_YOGO_to_list(
+                    format_preds(
+                        prediction,
+                        obj_thresh=args.obj_thresh,
+                        iou_thresh=args.iou_thresh,
+                    )
+                )
             )
 
     tasks_file_writer.write(Path("tasks.json"))
