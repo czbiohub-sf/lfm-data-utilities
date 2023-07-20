@@ -66,7 +66,7 @@ def create_tasks_files_for_run_sets(
     for i, d in tqdm(enumerate(dataset_paths)):
         image_path = d["image_path"]
         label_path = d["label_path"]
-        task_file = gen_task(
+        gen_task(
             folder_path=Path(label_path).parent,
             images_dir_path=image_path,
             label_dir_name=Path(label_path).name,
