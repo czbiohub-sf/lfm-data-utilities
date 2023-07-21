@@ -10,7 +10,6 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union
 
-from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.dataset_description_file import load_dataset_description
 
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
@@ -18,10 +17,109 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     LFM_SCOPE_PATH,
 )
 
+from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
+    create_confidence_filtered_tasks_file_from_YOGO,
+    create_correctness_filtered_tasks_file_from_YOGO,
+)
 
 DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
 )
+
+
+def create_tasks_files_from_labels(
+    path_to_labelled_data_ddf: Path, tasks_dir: Path
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+        gen_task(
+            folder_path=Path(label_path).parent,
+            images_dir_path=image_path,
+            label_dir_name=Path(label_path).name,
+            tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+        )
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
+
+
+def create_confidence_filtered_tasks_from_YOGO(
+    path_to_labelled_data_ddf: Path,
+    tasks_dir: Path,
+    path_to_pth: Path,
+    obj_thresh: float = 0.5,
+    iou_thresh: float = 0.5,
+    max_class_confidence_thresh: Optional[float] = None,
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+
+        create_confidence_filtered_tasks_file_from_YOGO(
+            path_to_pth=path_to_pth,
+            path_to_images=image_path,
+            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+            obj_thresh=obj_thresh,
+            iou_thresh=iou_thresh,
+            max_class_confidence_thresh=max_class_confidence_thresh,
+        )
+
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
+
+
+def create_correctness_filtered_tasks_from_YOGO(
+    path_to_labelled_data_ddf: Path,
+    tasks_dir: Path,
+    path_to_pth: Path,
+    obj_thresh: float = 0.5,
+    iou_thresh: float = 0.5,
+    max_class_confidence_thresh: Optional[float] = None,
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+
+        create_correctness_filtered_tasks_file_from_YOGO(
+            path_to_images=image_path,
+            path_to_labels=label_path,
+            path_to_pth=path_to_pth,
+            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+            obj_thresh=obj_thresh,
+        )
+
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
 
 
 def create_folders_for_output_dir(
@@ -30,7 +128,7 @@ def create_folders_for_output_dir(
     force_overwrite: bool = False,
     ignore_classes: List[str] = [],
 ) -> Tuple[Dict[str, Path], Path]:
-    """creates the 'thumbnail-folder' above"""
+    """creates the 'thumbnail-folder'"""
     class_dirs = {}
     for class_ in classes:
         if class_ not in ignore_classes:
@@ -56,32 +154,6 @@ def create_folders_for_output_dir(
     return class_dirs, tasks_dir
 
 
-def create_tasks_files_for_run_sets(
-    path_to_labelled_data_ddf: Path, tasks_dir: Path
-) -> List[Dict[str, Union[int, str]]]:
-    ddf = load_dataset_description(path_to_labelled_data_ddf)
-    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
-
-    task_paths: List[Dict[str, Union[int, str]]] = []
-    for i, d in tqdm(enumerate(dataset_paths)):
-        image_path = d["image_path"]
-        label_path = d["label_path"]
-        task_file = gen_task(
-            folder_path=Path(label_path).parent,
-            images_dir_path=image_path,
-            label_dir_name=Path(label_path).name,
-            tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
-        )
-        task_paths.append(
-            {
-                "label_path": str(label_path),
-                "task_name": f"thumbnail_correction_task_{i}.json",
-                "task_num": i,
-            }
-        )
-    return task_paths
-
-
 def create_thumbnail_name(class_: str, cell_id: str, task_json_id: str) -> str:
     return f"{class_}_{cell_id}_{task_json_id}.png"
 
@@ -90,6 +162,7 @@ def write_thumbnail(
     class_dir: Path,
     thumbnail_file_name: str,
     image: Image.Image,
+    dirsize_cache: Dict[Path, int],
     max_num_files_per_subdir: int = 1000,
 ):
     """
@@ -98,16 +171,12 @@ def write_thumbnail(
     """
     dirs = [p for p in class_dir.iterdir() if p.is_dir()]
 
-    # if there are no subdirs, create one
-    if len(dirs) == 0:
-        (class_dir / "0").mkdir()
-        dirs.append(class_dir / "0")
-
     # place the thumbnail in the first subdir that has space
     for subdir in dirs:
-        num_files_in_subdir = len(list(subdir.iterdir()))
+        num_files_in_subdir = dirsize_cache.get(subdir, len(list(subdir.iterdir())))
         if num_files_in_subdir < max_num_files_per_subdir:
             image.save(class_dir / subdir / thumbnail_file_name)
+            dirsize_cache[subdir] = num_files_in_subdir + 1
             return
 
     # there were no subdirs w/ space, so create a new one
@@ -115,9 +184,10 @@ def write_thumbnail(
     new_dirname = str(len(dirs))
     (class_dir / new_dirname).mkdir()
     image.save(class_dir / new_dirname / thumbnail_file_name)
+    dirsize_cache[(class_dir / new_dirname)] = 1
 
 
-def create_thumbnails_from_tasks_and_images(
+def create_thumbnails_from_tasks(
     tasks_json_path: Path,
     class_dirs: Dict[str, Path],
     task_json_id: Optional[str] = None,
@@ -127,6 +197,8 @@ def create_thumbnails_from_tasks_and_images(
 
     with open(tasks_json_path) as f:
         tasks = json.load(f)
+
+    dirsize_cache: Dict[Path, int] = {}
 
     for task in tasks:
         image_url = task["data"]["image"]
@@ -165,41 +237,33 @@ def create_thumbnails_from_tasks_and_images(
                 class_dir,
                 create_thumbnail_name(class_, cell_id, task_json_id),
                 pil_cell_image,
+                dirsize_cache,
             )
 
 
-def create_thumbnails_for_sorting(
+def create_thumbnails_from_tasks_maps(
     path_to_output_dir: Path,
-    path_to_labelled_data_ddf: Path,
-    overwrite_previous_thumbnails: bool = False,
+    task_and_label_paths: List[Dict[str, Union[str, int]]],
+    tasks_dir: Path,
+    class_dirs: Dict[str, Path],
     classes_to_ignore: List[str] = [],
 ):
-    class_dirs, tasks_dir = create_folders_for_output_dir(
-        path_to_output_dir,
-        YOGO_CLASS_ORDERING,
-        force_overwrite=overwrite_previous_thumbnails,
-        ignore_classes=classes_to_ignore,
-    )
-    tasks_and_labels_paths = create_tasks_files_for_run_sets(
-        path_to_labelled_data_ddf, tasks_dir
-    )
-
-    N = int(math.log(len(tasks_and_labels_paths), 10)) + 1
+    N = int(math.log(len(task_and_label_paths), 10)) + 1
     id_to_tasks_and_labels_path: Dict[str, Dict[str, Union[str, int]]] = {}
 
-    for task_and_label_path in tqdm(
-        tasks_and_labels_paths,
-        total=len(tasks_and_labels_paths),
+    for tlp in tqdm(
+        task_and_label_paths,
+        total=len(task_and_label_paths),
         desc="creating thumbnails",
     ):
-        i = task_and_label_path["task_num"]
-        create_thumbnails_from_tasks_and_images(
-            tasks_dir / str(task_and_label_path["task_name"]),
+        i = tlp["task_num"]
+        create_thumbnails_from_tasks(
+            tasks_dir / str(tlp["task_name"]),
             class_dirs,
             task_json_id=f"{i:0{N}}",
             classes_to_ignore=classes_to_ignore,
         )
-        id_to_tasks_and_labels_path[f"{i:0{N}}"] = task_and_label_path
+        id_to_tasks_and_labels_path[f"{i:0{N}}"] = tlp
 
     with open(path_to_output_dir / "id_to_task_path.json", "w") as f:
         json.dump(id_to_tasks_and_labels_path, f)

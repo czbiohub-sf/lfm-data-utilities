@@ -86,7 +86,9 @@ def gen_task(
     )
     root_url = f"http://localhost:{IMAGE_SERVER_PORT}/{pathname2url(abbreviated_path)}"
 
-    output_tasks_path = tasks_path or str(folder_path / Path(tasks_file_name).with_suffix(".json"))
+    output_tasks_path = tasks_path or str(
+        folder_path / Path(tasks_file_name).with_suffix(".json")
+    )
 
     try:
         convert_yolo_to_ls(
