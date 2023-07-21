@@ -14,7 +14,7 @@ from lfm_data_utilities.malaria_labelling.label_studio_converter.create_ls_file 
 
 from lfm_data_utilities.model_evaluations.yogo.rank_yogo_loss import (
     ObjectDetectionDatasetWithPaths,
-    collate_image_label_batch,
+    collate_batch as collate_image_label_batch,
 )
 
 from yogo.model import YOGO
