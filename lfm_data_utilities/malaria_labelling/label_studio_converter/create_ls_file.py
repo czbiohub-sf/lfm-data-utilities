@@ -5,7 +5,7 @@ import uuid
 
 from pathlib import Path
 from urllib.request import pathname2url
-from typing import Any, List, Dict, Union, Tuple, Literal, Optional
+from typing import Any, List, Dict, Tuple, Literal
 
 from yogo.data import YOGO_CLASS_ORDERING
 
