@@ -122,18 +122,18 @@ def create_correctness_filtered_tasks_file_from_YOGO(
     for batch in tqdm(
         dataloader, desc=f"yogo inference on {path_to_images.parent.name}"
     ):
-        images, labels, image_paths = batch
+        images, labels, image_paths, label_paths = batch
         images = images.to(device)
         labels = labels.to(device)
 
         with torch.no_grad():
             predictions = model(images)
 
-        for image_path, prediction in zip(image_paths, predictions):
+        for image_path, prediction, label in zip(image_paths, predictions, labels):
             formatted_preds, formatted_labels = format_preds_and_labels(
                 prediction,
-                labels,
-                objectness_thresh_thresh=obj_thresh,
+                label,
+                objectness_thresh=obj_thresh,
             )
 
             class_predictions = formatted_preds[:, 5:].argmax(dim=1)
