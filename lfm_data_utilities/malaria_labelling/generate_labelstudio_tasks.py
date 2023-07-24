@@ -110,7 +110,7 @@ def gen_task(
         tb = traceback.format_exc()
         print(f"exception found for file {folder_path}: {tb}. continuing...")
 
-    return Path(tasks_path)
+    return Path(output_tasks_path)
 
 
 if __name__ == "__main__":
