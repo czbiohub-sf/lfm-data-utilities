@@ -123,7 +123,6 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
                         break
 
             if not corrected:
-                # raise ValueError(
                 not_corrected += 1
                 print(
                     f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
