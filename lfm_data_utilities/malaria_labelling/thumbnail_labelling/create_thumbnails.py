@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union, Callable
 
 from yogo.data.dataset_description_file import load_dataset_description
 
@@ -25,6 +25,32 @@ from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbn
 DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
 )
+
+
+def create_tasks_files_from_path_to_labelled_data_ddf(
+        path_to_labelled_data_ddf: Path, tasks_dir: Path, func: Callable, **kwargs
+) -> List[Dict[str, Union[int, str]]]:
+    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
+
+    task_paths: List[Dict[str, Union[int, str]]] = []
+    for i, d in tqdm(enumerate(dataset_paths)):
+        image_path = d["image_path"]
+        label_path = d["label_path"]
+        gen_task(
+            folder_path=Path(label_path).parent,
+            images_dir_path=image_path,
+            label_dir_name=Path(label_path).name,
+            tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
+        )
+        task_paths.append(
+            {
+                "label_path": str(label_path),
+                "task_name": f"thumbnail_correction_task_{i}.json",
+                "task_num": i,
+            }
+        )
+    return task_paths
 
 
 def create_tasks_files_from_labels(

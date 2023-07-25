@@ -61,7 +61,9 @@ if __name__ == "__main__":
 
     create_thumbnails_parser = subparsers.add_parser("create-thumbnails")
     create_thumbnails_parser.add_argument("path_to_output_dir", type=Path)
-    create_thumbnails_parser.add_argument(
+
+    input_source = create_thumbnails_parser.add_mutually_exclusive_group()
+    input_source.add_argument(
         "--path-to-labelled-data-ddf",
         help=(
             "path to dataset descriptor file for labelled data - in general you should not need to change this, "
@@ -70,6 +72,14 @@ if __name__ == "__main__":
         default=default_ddf,
         type=Path,
     )
+    input_source.add_argument(
+        "--path-to-run",
+        help=(
+            "path to dataset descriptor file run"
+        ),
+        type=Path,
+    )
+
     create_thumbnails_parser.add_argument(
         "--overwrite-previous-thumbnails",
         action="store_true",
