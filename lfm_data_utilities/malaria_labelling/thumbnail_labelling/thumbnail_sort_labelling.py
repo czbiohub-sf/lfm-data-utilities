@@ -19,6 +19,7 @@ Notes:
 that run from label studio, since it will no longer have correct files.
 """
 
+import shutil
 import argparse
 
 from pathlib import Path
@@ -171,5 +172,7 @@ if __name__ == "__main__":
             class_dirs,
             classes_to_ignore=args.ignore_class or [],
         )
+
+        shutil.copy("see_in_context.py", args.path_to_output_dir)
     else:
         parser.print_help()
