@@ -274,6 +274,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--obj-thresh",
+        "--obj-threshold",
         default=0.5,
         type=float,
         help="threshold for YOGO object detection",
