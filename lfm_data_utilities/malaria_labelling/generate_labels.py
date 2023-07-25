@@ -130,6 +130,7 @@ def label_folder_with_yogo(
     label_dir_name="labels",
     chunksize=32,
     label_override: Optional[str] = None,
+    obj_thresh=0.5,
     **kwargs,
 ):
     # Write classes.txt for label studio
@@ -150,7 +151,7 @@ def label_folder_with_yogo(
         path_to_images=path_to_images,
         output_dir=path_to_label_dir,
         save_preds=True,
-        obj_thresh=0.5,
+        obj_thresh=obj_thresh,
         iou_thresh=0.5,
         label=label,
         device=torch.device("cuda"),
@@ -165,6 +166,7 @@ def label_runset(
     chunksize=32,
     label: Optional[str] = None,
     skip=True,
+    obj_thresh=0.5,
 ) -> List[Path]:
     print(
         f"starting to label run set; {'skipping' if skip else 'overwritting'} existing labels"
@@ -270,6 +272,12 @@ if __name__ == "__main__":
         choices=CLASSES,
         help="override for YOGO labels - e.g. label every bbox as healthy",
     )
+    parser.add_argument(
+        "--obj-thresh",
+        default=0.5,
+        type=float,
+        help="threshold for YOGO object detection",
+    )
 
     args = parser.parse_args()
 
@@ -299,6 +307,7 @@ if __name__ == "__main__":
         label=args.label_override,
         label_dir_name=label_dir_name,
         skip=args.existing_label_action == "skip",
+        obj_thresh=args.obj_thresh,
     )
     print(f"runset labelled: {time.perf_counter() - t0:.3f} s")
 
