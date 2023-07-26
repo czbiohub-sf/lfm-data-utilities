@@ -8,113 +8,91 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union, Protocol
 
 from yogo.data.dataset_description_file import load_dataset_description
 
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
-    gen_task,
     LFM_SCOPE_PATH,
 )
 
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
-    create_confidence_filtered_tasks_file_from_YOGO,
-    create_correctness_filtered_tasks_file_from_YOGO,
-)
 
 DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
 )
 
 
-def create_tasks_files_from_labels(
-    path_to_labelled_data_ddf: Path, tasks_dir: Path
+class TasksJsonGenerationFunc(Protocol):
+    def __call__(self, image_path: Path, label_path: Path, tasks_path: Path) -> None:
+        ...
+
+
+def create_tasks_file_from_path_to_run(
+    path_to_run: Path,
+    tasks_path: Path,
+    func: TasksJsonGenerationFunc,
+) -> Dict[str, Union[int, str]]:
+    """
+    creates task.json files from datasets defined by `path_to_labelled_data_ddf` in  `tasks_dir`,
+    using `func` to do the generation.
+
+    `func` must take
+    - `image_path: Path`, path to image dir
+    - `label_path: Path`, path to labels
+    - `tasks_path: Path`, path to output location
+    """
+    if not (path_to_run / "images").exists():
+        raise ValueError(f"run folder {path_to_run} doesn't include a 'images' folder")
+
+    if (path_to_run / "yogo_labels").exists():
+        path_to_labels = path_to_run / "labels"
+    elif (path_to_run / "labels").exists():
+        path_to_labels = path_to_run / "yogo_labels"
+    else:
+        raise ValueError(
+            f"run folder {path_to_run} doesn't include a 'labels' nor a 'yogo_labels' directory"
+        )
+
+    func(
+        image_path=path_to_run / "images",
+        label_path=path_to_labels,
+        tasks_path=tasks_path,
+    )
+
+    return {
+        "label_path": str(path_to_labels),
+        "task_name": tasks_path.name,
+        "task_num": 0,
+    }
+
+
+def create_tasks_files_from_path_to_labelled_data_ddf(
+    path_to_labelled_data_ddf: Path,
+    tasks_dir: Path,
+    func: TasksJsonGenerationFunc,
 ) -> List[Dict[str, Union[int, str]]]:
+    """
+    creates task.json files from datasets defined by `path_to_labelled_data_ddf` in  `tasks_dir`,
+    using `func` to do the generation.
+
+    `func` must take
+    - `image_path: Path`, path to image dir
+    - `label_path: Path`, path to labels
+    - `tasks_path: Path`, path to output location
+    """
     ddf = load_dataset_description(path_to_labelled_data_ddf)
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
     task_paths: List[Dict[str, Union[int, str]]] = []
-    for i, d in tqdm(enumerate(dataset_paths)):
-        image_path = d["image_path"]
-        label_path = d["label_path"]
-        gen_task(
-            folder_path=Path(label_path).parent,
-            images_dir_path=image_path,
-            label_dir_name=Path(label_path).name,
+    for i, d in enumerate(tqdm(dataset_paths, desc="creating task.json files")):
+        func(
+            image_path=d["image_path"],
+            label_path=d["label_path"],
             tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
         )
         task_paths.append(
             {
-                "label_path": str(label_path),
-                "task_name": f"thumbnail_correction_task_{i}.json",
-                "task_num": i,
-            }
-        )
-    return task_paths
-
-
-def create_confidence_filtered_tasks_from_YOGO(
-    path_to_labelled_data_ddf: Path,
-    tasks_dir: Path,
-    path_to_pth: Path,
-    obj_thresh: float = 0.5,
-    iou_thresh: float = 0.5,
-    max_class_confidence_thresh: Optional[float] = None,
-) -> List[Dict[str, Union[int, str]]]:
-    ddf = load_dataset_description(path_to_labelled_data_ddf)
-    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
-
-    task_paths: List[Dict[str, Union[int, str]]] = []
-    for i, d in tqdm(enumerate(dataset_paths)):
-        image_path = d["image_path"]
-        label_path = d["label_path"]
-
-        create_confidence_filtered_tasks_file_from_YOGO(
-            path_to_pth=path_to_pth,
-            path_to_images=image_path,
-            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
-            obj_thresh=obj_thresh,
-            iou_thresh=iou_thresh,
-            max_class_confidence_thresh=max_class_confidence_thresh,
-        )
-
-        task_paths.append(
-            {
-                "label_path": str(label_path),
-                "task_name": f"thumbnail_correction_task_{i}.json",
-                "task_num": i,
-            }
-        )
-    return task_paths
-
-
-def create_correctness_filtered_tasks_from_YOGO(
-    path_to_labelled_data_ddf: Path,
-    tasks_dir: Path,
-    path_to_pth: Path,
-    obj_thresh: float = 0.5,
-    iou_thresh: float = 0.5,
-    max_class_confidence_thresh: Optional[float] = None,
-) -> List[Dict[str, Union[int, str]]]:
-    ddf = load_dataset_description(path_to_labelled_data_ddf)
-    dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
-
-    task_paths: List[Dict[str, Union[int, str]]] = []
-    for i, d in tqdm(enumerate(dataset_paths)):
-        image_path = d["image_path"]
-        label_path = d["label_path"]
-
-        create_correctness_filtered_tasks_file_from_YOGO(
-            path_to_images=image_path,
-            path_to_labels=label_path,
-            path_to_pth=path_to_pth,
-            output_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
-            obj_thresh=obj_thresh,
-        )
-
-        task_paths.append(
-            {
-                "label_path": str(label_path),
+                "label_path": str(d["label_path"]),
                 "task_name": f"thumbnail_correction_task_{i}.json",
                 "task_num": i,
             }
