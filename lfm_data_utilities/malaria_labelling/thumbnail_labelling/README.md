@@ -21,7 +21,7 @@ $ tree -I *.png
 ├── corrected_trophozoite
 ├── corrected_wbc
 ├── gametocyte
-│   └── 0                                  // these numbered folders contain thumbnails, but I won't list any of them except for these
+│   └── 0                 // these numbered folders contain thumbnails, but I won't list any of these
 │       ├── gametocyte_f53l5vgr22_0.png
 │       └── gametocyte_gmaa35f509_0.png
 ├── healthy
