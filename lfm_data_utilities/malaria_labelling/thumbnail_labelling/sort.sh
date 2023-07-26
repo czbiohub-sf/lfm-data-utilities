@@ -1,23 +1,35 @@
 #! /bin/bash
 
-# first argument is ddfs dir
-ddfs_dir=$1
+# first argument is text file of run paths
+runs_file=$1
+# second argument is output dir
+outdir=$2
 
-for f in $(ls -1 "$ddfs_dir"); do
-  # replace .yml in $f with ""
-  dirname=${f%.yml}
-  outdir="/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets/$dirname"
-  mkdir -p outdir
+# if there are not exactly 2 arguments, exit
+if [ "$#" -ne 2 ]; then
+  echo "usage: sort.sh <runs_text_file> <outdir>"
+  exit 1
+fi
 
-  ddf="$ddfs_dir/$f"
+while IFS= read -r run; do
+  echo "processing $run"
 
-  # if ddf doesn't exist, exit
-  if [ ! -f "$ddf" ]; then
-    echo "ddf $ddf doesn't exist"
+  # if run doesn't exist, exit
+  if [ ! -d "$run" ]; then
+    echo "run $run doesn't exist"
     exit 1
   fi
 
+  folder_outdir="$outdir/$(basename $run)"
+
+  mkdir -p folder_outdir
+
   ./thumbnail_sort_labelling.py create-thumbnails \
-      "$outdir" \
-      --path-to-labelled-data-ddf "$ddf"
-done
+      "$folder_outdir" \
+      --path-to-run "$run" \
+      --overwrite-previous-thumbnails \
+      --ignore-class "healty" \
+      --ignore-class "misc" \
+      --ignore-class "wbc"
+
+done < "$runs_file"
