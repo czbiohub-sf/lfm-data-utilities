@@ -28,12 +28,22 @@ from yogo.data import YOGO_CLASS_ORDERING
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails import (
     sort_thumbnails,
 )
+
+from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
+    gen_task,
+)
+
+
+from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
+    create_confidence_filtered_tasks_file_from_YOGO,
+    create_correctness_filtered_tasks_file_from_YOGO,
+)
+
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_thumbnails import (
+    create_tasks_files_from_path_to_labelled_data_ddf,
+    create_tasks_file_from_path_to_run,
     create_thumbnails_from_tasks_maps,
     create_folders_for_output_dir,
-    create_tasks_files_from_labels,
-    create_confidence_filtered_tasks_from_YOGO,
-    create_correctness_filtered_tasks_from_YOGO,
 )
 
 
@@ -66,17 +76,14 @@ if __name__ == "__main__":
     input_source.add_argument(
         "--path-to-labelled-data-ddf",
         help=(
-            "path to dataset descriptor file for labelled data - in general you should not need to change this, "
-            f"since we mostly want to correct labels for human-labelled data (default {default_ddf})"
+            "path to dataset descriptor file for labelled data (default {default_ddf})"
         ),
         default=default_ddf,
         type=Path,
     )
     input_source.add_argument(
         "--path-to-run",
-        help=(
-            "path to dataset descriptor file run"
-        ),
+        help="path to dataset descriptor file run",
         type=Path,
     )
 
@@ -120,6 +127,22 @@ if __name__ == "__main__":
             "if `--thumbnail-type yogo-confidence` is provided, this is the maximum confidence score to include in the thumbnail"
         ),
     )
+    create_thumbnails_parser.add_argument(
+        "--obj-thresh",
+        "--obj-threshold",
+        "--objectness-threshold",
+        type=float,
+        default=0.5,
+        help="objectness threshold for YOGO predictions",
+    )
+    create_thumbnails_parser.add_argument(
+        "--iou-thresh",
+        "--iou-threshold",
+        "--iou-threshold",
+        type=float,
+        default=0.5,
+        help="iou threshold for YOGO predictions",
+    )
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
@@ -148,31 +171,60 @@ if __name__ == "__main__":
         )
 
         if args.thumbnail_type == "labels":
-            tasks_and_labels_paths = create_tasks_files_from_labels(
-                args.path_to_labelled_data_ddf, tasks_dir
-            )
+
+            def func(image_path: Path, label_path: Path, tasks_path: Path) -> None:
+                gen_task(
+                    folder_path=Path(label_path).parent,
+                    images_dir_path=image_path,
+                    label_dir_name=Path(label_path).name,
+                    tasks_path=tasks_path,
+                )
+
         elif args.thumbnail_type == "yogo-confidence":
             if args.path_to_pth is None:
                 raise ValueError(
                     "if `--thumbnail-type yogo-confidence` is provided, `--path-to-pth` must also be provided"
                 )
-            tasks_and_labels_paths = create_confidence_filtered_tasks_from_YOGO(
-                args.path_to_labelled_data_ddf,
-                tasks_dir,
-                args.path_to_pth,
-                max_class_confidence_thresh=args.max_confidence,
-            )
+
+            def func(image_path: Path, label_path: Path, tasks_path: Path) -> None:
+                create_confidence_filtered_tasks_file_from_YOGO(
+                    path_to_pth=args.path_to_pth,
+                    path_to_images=image_path,
+                    output_path=tasks_path,
+                    obj_thresh=args.obj_thresh,
+                    iou_thresh=args.iou_thresh,
+                    max_class_confidence_thresh=args.max_confidence,
+                )
+
         elif args.thumbnail_type == "yogo-incorrect":
             if args.path_to_pth is None:
                 raise ValueError(
                     "if `--thumbnail-type yogo-incorrect` is provided, `--path-to-pth` must also be provided"
                 )
-            tasks_and_labels_paths = create_correctness_filtered_tasks_from_YOGO(
-                args.path_to_labelled_data_ddf,
-                tasks_dir,
-                args.path_to_pth,
-                max_class_confidence_thresh=args.max_confidence,
+
+            def func(image_path: Path, label_path: Path, tasks_path: Path) -> None:
+                create_correctness_filtered_tasks_file_from_YOGO(
+                    path_to_images=image_path,
+                    path_to_labels=label_path,
+                    path_to_pth=args.path_to_pth,
+                    output_path=tasks_path,
+                    obj_thresh=args.obj_thresh,
+                )
+
+        else:
+            raise NotImplementedError(
+                f"somehow got invalid thumbnail type {args.thumbnail_type}"
             )
+
+        if args.path_to_labelled_data_ddf:
+            tasks_and_labels_paths = create_tasks_files_from_path_to_labelled_data_ddf(
+                args.path_to_labelled_data_ddf, tasks_dir, func
+            )
+        elif args.path_to_run:
+            tasks_information = create_tasks_file_from_path_to_run(
+                args.path_to_run, tasks_dir / "thumbnail_correction_task_0.json", func
+            )
+            tasks_and_labels_path = [tasks_information]
 
         create_thumbnails_from_tasks_maps(
             args.path_to_output_dir,
