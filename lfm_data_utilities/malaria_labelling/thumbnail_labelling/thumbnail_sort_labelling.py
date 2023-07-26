@@ -216,15 +216,19 @@ if __name__ == "__main__":
                 f"somehow got invalid thumbnail type {args.thumbnail_type}"
             )
 
-        if args.path_to_labelled_data_ddf:
-            tasks_and_labels_paths = create_tasks_files_from_path_to_labelled_data_ddf(
-                args.path_to_labelled_data_ddf, tasks_dir, func
-            )
-        elif args.path_to_run:
+        if args.path_to_run:
             tasks_information = create_tasks_file_from_path_to_run(
                 args.path_to_run, tasks_dir / "thumbnail_correction_task_0.json", func
             )
-            tasks_and_labels_path = [tasks_information]
+            tasks_and_labels_paths = [tasks_information]
+        elif args.path_to_labelled_data_ddf:
+            tasks_and_labels_paths = create_tasks_files_from_path_to_labelled_data_ddf(
+                args.path_to_labelled_data_ddf, tasks_dir, func
+            )
+        else:
+            raise RuntimeError(
+                "one of --path-to-labelled-data-ddf or --path-to-run must be provided"
+            )
 
         create_thumbnails_from_tasks_maps(
             args.path_to_output_dir,

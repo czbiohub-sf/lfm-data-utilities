@@ -31,7 +31,7 @@ def create_tasks_file_from_path_to_run(
     path_to_run: Path,
     tasks_path: Path,
     func: TasksJsonGenerationFunc,
-) -> Dict[str, Union[int, str, None]]:
+) -> Dict[str, Union[int, str]]:
     """
     creates task.json files from datasets defined by `path_to_labelled_data_ddf` in  `tasks_dir`,
     using `func` to do the generation.
@@ -44,9 +44,9 @@ def create_tasks_file_from_path_to_run(
     if not (path_to_run / "images").exists():
         raise ValueError(f"run folder {path_to_run} doesn't include a 'images' folder")
 
-    if (path_to_run / "labels").exists():
+    if (path_to_run / "yogo_labels").exists():
         path_to_labels = path_to_run / "labels"
-    elif (path_to_run / "yogo_labels").exists():
+    elif (path_to_run / "labels").exists():
         path_to_labels = path_to_run / "yogo_labels"
     else:
         raise ValueError(
@@ -62,7 +62,7 @@ def create_tasks_file_from_path_to_run(
     return {
         "label_path": str(path_to_labels),
         "task_name": tasks_path.name,
-        "task_num": None,
+        "task_num": 0,
     }
 
 
@@ -84,7 +84,7 @@ def create_tasks_files_from_path_to_labelled_data_ddf(
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
     task_paths: List[Dict[str, Union[int, str]]] = []
-    for i, d in tqdm(enumerate(dataset_paths)):
+    for i, d in enumerate(tqdm(dataset_paths, desc="creating task.json files")):
         func(
             image_path=d["image_path"],
             label_path=d["label_path"],
