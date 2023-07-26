@@ -9,7 +9,15 @@ for f in $(ls -1 "$ddfs_dir"); do
   outdir="/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets/$dirname"
   mkdir -p outdir
 
+  ddf="$ddfs_dir/$f"
+
+  # if ddf doesn't exist, exit
+  if [ ! -f "$ddf" ]; then
+    echo "ddf $ddf doesn't exist"
+    exit 1
+  fi
+
   ./thumbnail_sort_labelling.py create-thumbnails \
       "$outdir" \
-      --path-to-labelled-data-ddf "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/ddfs/$f"
+      --path-to-labelled-data-ddf "$ddf"
 done
