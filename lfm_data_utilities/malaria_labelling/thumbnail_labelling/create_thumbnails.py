@@ -45,9 +45,9 @@ def create_tasks_file_from_path_to_run(
         raise ValueError(f"run folder {path_to_run} doesn't include a 'images' folder")
 
     if (path_to_run / "yogo_labels").exists():
-        path_to_labels = path_to_run / "labels"
-    elif (path_to_run / "labels").exists():
         path_to_labels = path_to_run / "yogo_labels"
+    elif (path_to_run / "labels").exists():
+        path_to_labels = path_to_run / "labels"
     else:
         raise ValueError(
             f"run folder {path_to_run} doesn't include a 'labels' nor a 'yogo_labels' directory"
