@@ -10,7 +10,7 @@ Where you should start depends entirely on what you need to do. If you are just 
 
 # Human Annotation
 
-We will use [Label Studio](https://labelstud.io/) for human annotation.
+We have two options: [thumbnail labelling](thumbnail_labelling/README.md) or [Label Studio](https://labelstud.io/).
 
 ## Preparation
 
