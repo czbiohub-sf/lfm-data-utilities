@@ -27,8 +27,7 @@ while IFS= read -r run; do
   ./thumbnail_sort_labelling.py create-thumbnails \
       "$folder_outdir" \
       --path-to-run "$run" \
-      --overwrite-previous-thumbnails \
-      --ignore-class "healty" \
+      --ignore-class "healthy" \
       --ignore-class "misc" \
       --ignore-class "wbc"
 
