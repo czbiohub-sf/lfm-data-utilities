@@ -164,6 +164,11 @@ if __name__ == "__main__":
 
         sort_thumbnails(args.path_to_thumbnails, args.commit)
     elif args.subparser == "create-thumbnails":
+        if not args.overwrite_previous_thumbnails and args.path_to_output_dir.exists():
+            raise RuntimeError(
+                f"output folder {args.path_to_output_dir} exists; to overwrite, use --overwrite-previous-thumbnails"
+            )
+
         class_dirs, tasks_dir = create_folders_for_output_dir(
             args.path_to_output_dir,
             YOGO_CLASS_ORDERING,
