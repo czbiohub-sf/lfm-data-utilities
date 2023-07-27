@@ -58,6 +58,8 @@ if __name__ == "__main__":
             for cell in task["predictions"][0]["result"]:  # type: ignore
                 if cell["id"] == cell_id:
                     image_url = task["data"]["image"]  # type: ignore
-                    image_path = LFM_scope_path / image_url.replace("http://localhost:8081/", "")
+                    image_path = LFM_scope_path / image_url.replace(
+                        "http://localhost:8081/", ""
+                    )
                     Image.open(image_path).show()  # type: ignore
                     break
