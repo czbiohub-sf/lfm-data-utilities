@@ -15,6 +15,7 @@ setup(
         "pandas>=1.5.3",
         "matplotlib==3.7.0",
         "opencv-python>=4.7.0.72",
+        "nbdev",
         # "autofocus @ git+https://github.com/czbiohub/ulc-malaria-autofocus@main",
         "zarr",
     ],
