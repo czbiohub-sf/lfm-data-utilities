@@ -36,8 +36,8 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
 
 
 def backup_vetted(commit: bool = True, _backup: bool = True):
-    with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
-        if commit and _backup:
+    if commit and _backup:
+        with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
             vetted_backup_path = str(
                 DEFAULT_LABELS_PATH
                 / "vetted-backup"
@@ -117,6 +117,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
     TODO hard coding DEFAULT_LABELS_PATH. What should we do with it? All the tasks.json paths should be from there, so this
     information is redundant. Maybe we will use this to verify that the tasks.json files are correct? Need to reconsider this.
     """
+    verbose = not commit
+
     with open(path_to_thumbnails / "id_to_task_path.json") as f:
         id_to_task_path = json.load(f)
         id_to_task_path = cast(Dict[str, Dict[str, str]], id_to_task_path)
@@ -160,7 +162,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
                 bbox_index = indexes_by_id[cell_id]["bbox_index"]
             except KeyError:
                 not_corrected += 1
-                print(
+                if verbose:
+                    print(
                     f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
                 )
                 continue
@@ -173,7 +176,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             ]
             if not (id_is_correct and original_class_matches):
                 not_corrected += 1
-                print(
+                if verbose:
+                    print(
                     f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']} or "
                     f"original_class {original_class} does not match bbox_pred class "
                     f"{bbox_pred['value']['rectanglelabels']}"
@@ -188,10 +192,11 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
         if commit:
             with open(task_path, "w") as f:
                 json.dump(tasks, f)
-        else:
+        elif verbose:
             print("would have written corrected tasks.json file to {task_path}")
 
-    print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
+    if verbose:
+        print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
 
     # convert the corrected json files to yolo format
     for task_and_label_path in id_to_task_path.values():
@@ -205,5 +210,5 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
                 overwrite_existing_labels=commit,
                 download_images=False,
             )
-        else:
+        elif verbose:
             print(f"would have overwritten YOGO labels at {task_path.parent}")
