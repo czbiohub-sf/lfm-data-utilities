@@ -36,7 +36,7 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
 )
 
 
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_YOGO_thumbnails import (
+from lfm_data_utilities.malaria_labelling.thumbnail_labelling.yogo_filters import (
     create_confidence_filtered_tasks_file_from_YOGO,
     create_correctness_filtered_tasks_file_from_YOGO,
 )
