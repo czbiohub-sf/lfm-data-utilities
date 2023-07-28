@@ -35,7 +35,7 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
     return cast(Tuple[str, str, str], t)
 
 
-def backup_vetted(commit: bool = True):
+def backup_vetted(commit: bool = True, _backup: bool = True):
     with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
         if commit:
             vetted_backup_path = str(
@@ -97,7 +97,7 @@ def find_cell_indices_id_map(tasks: Dict) -> Dict[str, Dict[str, int]]:
     return d
 
 
-def sort_thumbnails(path_to_thumbnails: Path, commit=True):
+def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
     """
     The thumbnails dir should have three things:
         - a set of folders named after the classes ("Class Folder" from now on)
@@ -127,7 +127,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             raise ValueError(f"task_path {task_path} does not exist")
 
     # create backup of vetted
-    backup_vetted(commit=commit)
+    backup_vetted(commit=commit, _backup=_backup)
 
     # create a list of all the corrections
     id_to_list_of_corrections = get_list_of_corrections(path_to_thumbnails)
