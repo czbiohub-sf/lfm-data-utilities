@@ -61,5 +61,6 @@ if __name__ == "__main__":
                     image_path = LFM_scope_path / image_url.replace(
                         "http://localhost:8081/", ""
                     )
+                    print(image_path)
                     Image.open(image_path).show()  # type: ignore
                     break
