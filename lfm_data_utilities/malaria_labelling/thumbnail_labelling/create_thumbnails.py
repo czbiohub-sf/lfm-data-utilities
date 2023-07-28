@@ -153,7 +153,7 @@ def write_thumbnail(
     for subdir in dirs:
         num_files_in_subdir = dirsize_cache.get(subdir, len(list(subdir.iterdir())))
         if num_files_in_subdir < max_num_files_per_subdir:
-            image.save(class_dir / subdir / thumbnail_file_name)
+            image.save(class_dir / subdir.name / thumbnail_file_name)
             dirsize_cache[subdir] = num_files_in_subdir + 1
             return
 
@@ -170,6 +170,7 @@ def create_thumbnails_from_tasks(
     class_dirs: Dict[str, Path],
     task_json_id: Optional[str] = None,
     classes_to_ignore: List[str] = [],
+    image_server_root: Path = LFM_SCOPE_PATH,
 ):
     task_json_id = task_json_id or tasks_json_path.parent.name
 
@@ -182,7 +183,7 @@ def create_thumbnails_from_tasks(
         image_url = task["data"]["image"]
 
         # task.json files hold image urls that are relative to LFM_scope
-        image_path = LFM_SCOPE_PATH / image_url.replace("http://localhost:8081/", "")
+        image_path = image_server_root / image_url.replace("http://localhost:8081/", "")
         image = np.array(Image.open(image_path).convert("L"))
 
         img_h, img_w = image.shape
@@ -225,6 +226,7 @@ def create_thumbnails_from_tasks_maps(
     tasks_dir: Path,
     class_dirs: Dict[str, Path],
     classes_to_ignore: List[str] = [],
+    image_server_root: Path = LFM_SCOPE_PATH,
 ):
     N = int(math.log(len(task_and_label_paths), 10)) + 1
     id_to_tasks_and_labels_path: Dict[str, Dict[str, Union[str, int]]] = {}
@@ -240,6 +242,7 @@ def create_thumbnails_from_tasks_maps(
             class_dirs,
             task_json_id=f"{i:0{N}}",
             classes_to_ignore=classes_to_ignore,
+            image_server_root=image_server_root,
         )
         id_to_tasks_and_labels_path[f"{i:0{N}}"] = tlp
 

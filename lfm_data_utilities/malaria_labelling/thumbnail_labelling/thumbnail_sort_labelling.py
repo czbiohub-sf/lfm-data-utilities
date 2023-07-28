@@ -31,6 +31,7 @@ from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails im
 )
 
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
+    LFM_SCOPE_PATH,
     gen_task,
 )
 
@@ -53,7 +54,7 @@ DEFAULT_LABELS_PATH = Path(
 )
 
 
-if __name__ == "__main__":
+def main():
     try:
         boolean_action = argparse.BooleanOptionalAction  # type: ignore
     except AttributeError:
@@ -144,6 +145,15 @@ if __name__ == "__main__":
         default=0.5,
         help="iou threshold for YOGO predictions",
     )
+    create_thumbnails_parser.add_argument(
+        "--image-server-relative-parent-override",
+        type=Path,
+        default=LFM_SCOPE_PATH,
+        help=(
+            "override the image server relative parent for generating tasks; if you want the root of the image server"
+            "to be different from LFM_Scope, you can provide that here - but don't touch this if that doesn't make sense"
+        )
+    )
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
@@ -181,6 +191,7 @@ if __name__ == "__main__":
             def func(image_path: Path, label_path: Path, tasks_path: Path) -> None:
                 gen_task(
                     folder_path=Path(label_path).parent,
+                    relative_parent=args.image_server_relative_parent_override,
                     images_dir_path=image_path,
                     label_dir_name=Path(label_path).name,
                     tasks_path=tasks_path,
@@ -242,8 +253,13 @@ if __name__ == "__main__":
             tasks_dir,
             class_dirs,
             classes_to_ignore=args.ignore_class or [],
+            image_server_root=args.image_server_relative_parent_override,
         )
 
         shutil.copy("see_in_context.py", args.path_to_output_dir)
     else:
         parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
