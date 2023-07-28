@@ -47,6 +47,53 @@ def backup_vetted(commit: bool = True):
             )
 
 
+def get_list_of_corrections(path_to_thumbnails: Path) -> DefaultDict[str, List[Dict[str, str]]]:
+    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = (
+        defaultdict(list)
+    )
+    for class_ in YOGO_CLASS_ORDERING:
+        corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
+        if not corrected_class_dir.exists():
+            # user ignored this class, so just skipp it
+            continue
+
+        for thumbnail in corrected_class_dir.iterdir():
+            original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
+
+            id_to_list_of_corrections[task_json_id].append(
+                {
+                    "cell_id": cell_id,
+                    "original_class": original_class,
+                    "corrected_class": class_,
+                }
+            )
+    return id_to_list_of_corrections
+
+
+def find_cell_indices_id_map(tasks: Dict) -> Dict[str, Dict[str,int]]:
+    """ for each cell in the tasks.json dict, find it's image index and bbox index
+
+    The idea is something like this
+
+    >>> indexes_by_id = find_cell_indices_id_map(tasks)
+    >>> for correction in corrections:
+    ...     image_index = indexes_by_id[correction["id"]]["image_index"]
+    ...     bbox_index = indexes_by_id[correction["id"]]["bbox_index"]
+    ...     tasks \
+    ...         [image_index] \
+    ...         ["predictions"][0]["result"] \
+    ...         [bbox_index] \
+    ...         ["value"]["rectanglelabels"] \
+    ...         = [correction["corrected_class"]]
+    """
+    d = dict()
+    for i, image_prediction in enumerate(tasks):
+        bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
+        for j, bbox_prediction in enumerate(bbox_predictions):
+            d[bbox_prediction["id"]] = {"image_index": i, "bbox_index": j}
+    return d
+
+
 def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     """
     The thumbnails dir should have three things:
@@ -86,9 +133,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
     # This is going to be horifically inefficient - label studio chose their
     # tasks.json format poorly. They have list of dicts of predictions, and each
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
-    # prediction? It would turn the cell search from O(n) to O(1).
-    # TODO convert to dict of dicts so we only have to do one O(n) pass with subsequent
-    # O(1) lookups. Will make a big difference for the 250+ Mb tasks.json files.
+    # prediction? It would turn the cell search from O(n) to O(1). Oh well, do a
+    # first pass over the dict, making a map of cell id to image index and bbox index
     not_corrected = was_corrected = 0
     for task_json_id, corrections in id_to_list_of_corrections.items():
         if len(corrections) == 0:
@@ -98,27 +144,39 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
         with open(path_to_thumbnails / "tasks" / label_and_task_path["task_name"]) as f:
             tasks = json.load(f)
 
+        indexes_by_id = find_cell_indices_id_map(tasks)
+
         for correction in corrections:
             cell_id = correction["cell_id"]
             original_class = correction["original_class"]
             corrected_class = correction["corrected_class"]
 
-            corrected = False
-            for i, image_prediction in enumerate(tasks):
-                bbox_predictions = image_prediction["predictions"][0]["result"]  # lol
-                for j, bbox_prediction in enumerate(bbox_predictions):
-                    if bbox_prediction["id"] == cell_id:
-                        bbox_prediction["value"]["rectanglelabels"] = [corrected_class]
-                        corrected = True
-                        break
-
-            if not corrected:
+            try:
+                image_index = indexes_by_id[cell_id]["image_index"]
+                bbox_index  = indexes_by_id[cell_id]["bbox_index"]
+            except KeyError:
                 not_corrected += 1
                 print(
                     f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
                 )
-            else:
-                was_corrected += 1
+                continue
+
+            bbox_pred = tasks[image_index]["predictions"][0]["result"][bbox_index]
+
+            id_is_correct = bbox_pred["id"] == cell_id
+            original_class_matches = bbox_pred["value"]["rectanglelabels"] == [original_class]
+            if not (id_is_correct and original_class_matches):
+                not_corrected += 1
+                print(
+                    f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']} or "
+                    f"original_class {original_class} does not match bbox_pred class "
+                    f"{bbox_pred['value']['rectanglelabels']}"
+                )
+                continue
+
+            bbox_pred["value"]["rectanglelabels"] = [correction["corrected_class"]]
+
+            was_corrected += 1
 
         # write the (corrected) json file
         if commit:
