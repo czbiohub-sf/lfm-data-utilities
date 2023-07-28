@@ -22,7 +22,7 @@ DEFAULT_LABELS_PATH = Path(
 )
 
 
-def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str,str,str]:
+def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
     """
     parses a thumbnail name into class, cell_id, and task.json id
 
@@ -30,8 +30,9 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str,str,str]:
     have underscores in them.
     """
     t = tuple(s.strip() for s in thumbnail_name.replace(".png", "").split("_"))
-    if len(t) != 3: raise ValueError(f"invalid thumbnail name {thumbnail_name}")
-    return cast(Tuple[str,str,str],t)
+    if len(t) != 3:
+        raise ValueError(f"invalid thumbnail name {thumbnail_name}")
+    return cast(Tuple[str, str, str], t)
 
 
 def backup_vetted(commit: bool = True):
@@ -47,9 +48,11 @@ def backup_vetted(commit: bool = True):
             )
 
 
-def get_list_of_corrections(path_to_thumbnails: Path) -> DefaultDict[str, List[Dict[str, str]]]:
-    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = (
-        defaultdict(list)
+def get_list_of_corrections(
+    path_to_thumbnails: Path,
+) -> DefaultDict[str, List[Dict[str, str]]]:
+    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = defaultdict(
+        list
     )
     for class_ in YOGO_CLASS_ORDERING:
         corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
@@ -70,7 +73,7 @@ def get_list_of_corrections(path_to_thumbnails: Path) -> DefaultDict[str, List[D
     return id_to_list_of_corrections
 
 
-def find_cell_indices_id_map(tasks: Dict) -> Dict[str, Dict[str,int]]:
+def find_cell_indices_id_map(tasks: Dict) -> Dict[str, Dict[str, int]]:
     """ for each cell in the tasks.json dict, find it's image index and bbox index
 
     The idea is something like this
@@ -149,11 +152,11 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
         for correction in corrections:
             cell_id = correction["cell_id"]
             original_class = correction["original_class"]
-            corrected_class = correction["corrected_class"]
+            correction["corrected_class"]
 
             try:
                 image_index = indexes_by_id[cell_id]["image_index"]
-                bbox_index  = indexes_by_id[cell_id]["bbox_index"]
+                bbox_index = indexes_by_id[cell_id]["bbox_index"]
             except KeyError:
                 not_corrected += 1
                 print(
@@ -164,7 +167,9 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             bbox_pred = tasks[image_index]["predictions"][0]["result"][bbox_index]
 
             id_is_correct = bbox_pred["id"] == cell_id
-            original_class_matches = bbox_pred["value"]["rectanglelabels"] == [original_class]
+            original_class_matches = bbox_pred["value"]["rectanglelabels"] == [
+                original_class
+            ]
             if not (id_is_correct and original_class_matches):
                 not_corrected += 1
                 print(

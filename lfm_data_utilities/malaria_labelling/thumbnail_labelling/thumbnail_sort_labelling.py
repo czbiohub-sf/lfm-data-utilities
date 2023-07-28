@@ -152,7 +152,7 @@ def main():
         help=(
             "override the image server relative parent for generating tasks; if you want the root of the image server"
             "to be different from LFM_Scope, you can provide that here - but don't touch this if that doesn't make sense"
-        )
+        ),
     )
 
     sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
