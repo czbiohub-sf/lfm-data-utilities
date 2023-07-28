@@ -1,34 +1,42 @@
 #! /bin/bash
 
-# first argument is text file of run paths
-runs_file=$1
-# second argument is output dir
-outdir=$2
+#SBATCH --job-name=thumbnail-creation
+#SBATCH --output=temp_output/logs/%A_%a.out
+#SBATCH --error=temp_output/logs/%A_%a.err
+#SBATCH --time=6:00:00
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+#SBATCH --array=1-15
+#SBATCH --cpus-per-task=8
 
-# if there are not exactly 2 arguments, exit
-if [ "$#" -ne 2 ]; then
-  echo "usage: sort.sh <runs_text_file> <outdir>"
+# check if there is an input
+if [ -z "$1" ]; then
+  echo "usage: $0 <path-to-file> <output-dir>"
   exit 1
 fi
 
-while IFS= read -r run; do
-  echo "processing $run"
+mkdir -p temp_output/logs
 
-  # if run doesn't exist, exit
-  if [ ! -d "$run" ]; then
-    echo "run $run doesn't exist"
-    exit 1
-  fi
+# first argument is text file of run paths
+run=$(sed -n "$SLURM_ARRAY_TASK_ID"p "$1")
+# second argument is output dir
+outdir=$2
 
-  folder_outdir="$outdir/$(basename $run)"
+echo "processing $run"
 
-  mkdir -p folder_outdir
+# if run doesn't exist, exit
+if [ ! -d "$run" ]; then
+  echo "run $run doesn't exist"
+  exit 1
+fi
 
-  ./thumbnail_sort_labelling.py create-thumbnails \
-      "$folder_outdir" \
-      --path-to-run "$run" \
-      --ignore-class "healthy" \
-      --ignore-class "misc" \
-      --ignore-class "wbc"
+folder_outdir="$outdir/$(basename $run)"
 
-done < "$runs_file"
+mkdir -p folder_outdir
+
+conda run ./thumbnail_sort_labelling.py create-thumbnails \
+    "$folder_outdir" \
+    --path-to-run "$run" \
+    --ignore-class "healthy" \
+    --ignore-class "misc" \
+    --ignore-class "wbc"
