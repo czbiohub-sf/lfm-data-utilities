@@ -10,6 +10,8 @@ from pathlib import Path
 from collections import defaultdict
 from typing import List, Dict, Union, Tuple, Generator
 
+from tqdm import tqdm
+
 from yogo.data import YOGO_CLASS_ORDERING
 
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails import (
@@ -46,8 +48,6 @@ class TestResortingThumbnails(unittest.TestCase):
             original_thumbnails = list(class_dir.rglob("*.png"))
 
             initial_total_count += len(original_thumbnails)
-
-            print(class_, len(original_thumbnails))
 
             if len(original_thumbnails) == 0:
                 final_class_counts[class_] = 0
@@ -97,21 +97,13 @@ class TestResortingThumbnails(unittest.TestCase):
         with zipfile.ZipFile(self.test_thumbnails_zip, "r") as zip_ref:
             zip_ref.extractall(self.test_data_dir)
 
-    def setUp(self):
-        self.reset_dirs()
-
     def tearDown(self):
         self.reset_dirs()
 
     def test_resorting_thumbnails(self):
-        expected_class_counts = self.random_sort_thumbnails()
-
-        sort_thumbnails(self.test_thumbnails_dir, _backup=False)
-
-        number_of_corrected_labels = self.count_num_classes_in_label_dir(self.test_labels_dir / "labels")
-
-        print("OUTOUTOUT", self.test_labels_dir / "labels")
-        print(f"{expected_class_counts=}")
-        print(f"{number_of_corrected_labels=}")
-
-        self.assertEqual(expected_class_counts, number_of_corrected_labels)
+        for i in tqdm(range(10)):
+            self.reset_dirs()
+            expected_class_counts = self.random_sort_thumbnails()
+            sort_thumbnails(self.test_thumbnails_dir, _backup=False)
+            number_of_corrected_labels = self.count_num_classes_in_label_dir(self.test_labels_dir / "labels")
+            self.assertEqual(expected_class_counts, number_of_corrected_labels)
