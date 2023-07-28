@@ -1,1 +1,1 @@
-{"0": {"label_path": "tests/test_data/small_set_of_labels/labels", "task_name": "thumbnail_correction_task_0.json", "task_num": 0}}
+{"0": {"label_path": "/home/axel.jacobsen/celldiagnosis/lfm-data-utilities/lfm_data_utilities/malaria_labelling/thumbnail_labelling/tests/test_data/small_set_of_labels/labels", "task_name": "thumbnail_correction_task_0.json", "task_num": 0}}
