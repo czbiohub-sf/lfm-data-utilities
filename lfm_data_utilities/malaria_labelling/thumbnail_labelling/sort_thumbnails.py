@@ -22,14 +22,29 @@ DEFAULT_LABELS_PATH = Path(
 )
 
 
-def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, ...]:
+def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str,str,str]:
     """
     parses a thumbnail name into class, cell_id, and task.json id
 
     We can just remove the '.png' and split on '_', since class, cell_id, and task_json_id don't
     have underscores in them.
     """
-    return tuple(s.strip() for s in thumbnail_name.replace(".png", "").split("_"))
+    t = tuple(s.strip() for s in thumbnail_name.replace(".png", "").split("_"))
+    if len(t) != 3: raise ValueError(f"invalid thumbnail name {thumbnail_name}")
+    return cast(Tuple[str,str,str],t)
+
+
+def backup_vetted(commit: bool = True):
+    with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
+        if commit:
+            vetted_backup_path = str(
+                DEFAULT_LABELS_PATH
+                / "vetted-backup"
+                / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+            )
+            shutil.make_archive(
+                vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
+            )
 
 
 def sort_thumbnails(path_to_thumbnails: Path, commit=True):
@@ -62,43 +77,18 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True):
             raise ValueError(f"task_path {task_path} does not exist")
 
     # create backup of vetted
-    with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
-        vetted_backup_path = str(
-            DEFAULT_LABELS_PATH
-            / "vetted-backup"
-            / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
-        )
-        if commit:
-            shutil.make_archive(
-                vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
-            )
+    backup_vetted(commit=commit)
 
     # create a list of all the corrections
-    id_to_list_of_corrections: DefaultDict[str, List[Dict[str, str]]] = defaultdict(
-        list
-    )
-    for class_ in YOGO_CLASS_ORDERING:
-        corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
-        if not corrected_class_dir.exists():
-            # user ignored this class, so just skipp it
-            continue
-
-        for thumbnail in corrected_class_dir.iterdir():
-            original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
-
-            id_to_list_of_corrections[task_json_id].append(
-                {
-                    "cell_id": cell_id,
-                    "original_class": original_class,
-                    "corrected_class": class_,
-                }
-            )
+    id_to_list_of_corrections = get_list_of_corrections(path_to_thumbnails)
 
     # Iterate through the corrections tasks-wise
     # This is going to be horifically inefficient - label studio chose their
     # tasks.json format poorly. They have list of dicts of predictions, and each
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
     # prediction? It would turn the cell search from O(n) to O(1).
+    # TODO convert to dict of dicts so we only have to do one O(n) pass with subsequent
+    # O(1) lookups. Will make a big difference for the 250+ Mb tasks.json files.
     not_corrected = was_corrected = 0
     for task_json_id, corrections in id_to_list_of_corrections.items():
         if len(corrections) == 0:
