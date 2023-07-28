@@ -1,0 +1,37 @@
+{
+    "categories": [
+        {
+            "id": 0,
+            "name": "healthy"
+        },
+        {
+            "id": 1,
+            "name": "ring"
+        },
+        {
+            "id": 2,
+            "name": "trophozoite"
+        },
+        {
+            "id": 3,
+            "name": "schizont"
+        },
+        {
+            "id": 4,
+            "name": "gametocyte"
+        },
+        {
+            "id": 5,
+            "name": "wbc"
+        },
+        {
+            "id": 6,
+            "name": "misc"
+        }
+    ],
+    "info": {
+        "year": 2023,
+        "version": "1.0",
+        "contributor": "Label Studio"
+    }
+}
