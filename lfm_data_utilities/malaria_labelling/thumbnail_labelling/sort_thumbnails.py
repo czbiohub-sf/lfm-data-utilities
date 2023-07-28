@@ -37,7 +37,7 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
 
 def backup_vetted(commit: bool = True, _backup: bool = True):
     with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
-        if commit:
+        if commit and _backup:
             vetted_backup_path = str(
                 DEFAULT_LABELS_PATH
                 / "vetted-backup"
@@ -144,7 +144,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             continue
 
         # read the json file
-        with open(path_to_thumbnails / "tasks" / label_and_task_path["task_name"]) as f:
+        task_path = path_to_thumbnails / "tasks" / label_and_task_path["task_name"]
+        with open(task_path) as f:
             tasks = json.load(f)
 
         indexes_by_id = find_cell_indices_id_map(tasks)
@@ -185,13 +186,10 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
 
         # write the (corrected) json file
         if commit:
-            with open(id_to_task_path[task_json_id]["task_path"], "w") as f:
+            with open(task_path, "w") as f:
                 json.dump(tasks, f)
         else:
-            print(
-                "would have written corrected tasks.json "
-                f"file to {id_to_task_path[task_json_id]['task_path']}"
-            )
+            print("would have written corrected tasks.json file to {task_path}")
 
     print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
 
@@ -202,7 +200,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
         if commit:
             convert_ls_to_yolo(
                 path_to_ls_file=task_path,
-                path_to_output_dir=label_path.parent,
+                path_to_output_dir=label_path.parent.resolve(),
                 classes=CLASSES,
                 overwrite_existing_labels=commit,
                 download_images=False,

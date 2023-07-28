@@ -60,7 +60,7 @@ def create_tasks_file_from_path_to_run(
     )
 
     return {
-        "label_path": str(path_to_labels),
+        "label_path": str(path_to_labels.resolve()),
         "task_name": tasks_path.name,
         "task_num": 0,
     }
