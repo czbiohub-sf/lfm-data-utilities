@@ -104,24 +104,24 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 
         ax1 = fig.add_subplot(fig.add_subplot(gs[1, 0]))
         ax1.imshow(
-            random.choice(grouped_images[predicted_peak - 1]),
-            cmap="gray",
-            vmin=0,
-            vmax=255,
-            interpolation=None,
-        )
-        ax1.set_title("focus - 1 step")
-        ax1.axis("off")
-
-        ax2 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
-        ax2.imshow(
             random.choice(grouped_images[predicted_peak - 2]),
             cmap="gray",
             vmin=0,
             vmax=255,
             interpolation=None,
         )
-        ax2.set_title("focus - 2 steps")
+        ax1.set_title("focus - 2 steps")
+        ax1.axis("off")
+
+        ax2 = fig.add_subplot(fig.add_subplot(gs[2, 0]))
+        ax2.imshow(
+            random.choice(grouped_images[predicted_peak - 4]),
+            cmap="gray",
+            vmin=0,
+            vmax=255,
+            interpolation=None,
+        )
+        ax2.set_title("focus - 4 steps")
         ax2.axis("off")
 
         ax3 = fig.add_subplot(fig.add_subplot(gs[1, 1]))
@@ -148,24 +148,24 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
 
         ax5 = fig.add_subplot(fig.add_subplot(gs[1, 2]))
         ax5.imshow(
-            random.choice(grouped_images[predicted_peak + 1]),
-            cmap="gray",
-            vmin=0,
-            vmax=255,
-            interpolation=None,
-        )
-        ax5.set_title("focus + 1 step")
-        ax5.axis("off")
-
-        ax6 = fig.add_subplot(fig.add_subplot(gs[2, 2]))
-        ax6.imshow(
             random.choice(grouped_images[predicted_peak + 2]),
             cmap="gray",
             vmin=0,
             vmax=255,
             interpolation=None,
         )
-        ax6.set_title("focus + 2 steps")
+        ax5.set_title("focus + 2 steps")
+        ax5.axis("off")
+
+        ax6 = fig.add_subplot(fig.add_subplot(gs[2, 2]))
+        ax6.imshow(
+            random.choice(grouped_images[predicted_peak + 4]),
+            cmap="gray",
+            vmin=0,
+            vmax=255,
+            interpolation=None,
+        )
+        ax6.set_title("focus + 4 steps")
         ax6.axis("off")
 
         gs.tight_layout(fig)
