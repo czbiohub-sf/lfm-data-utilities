@@ -71,7 +71,7 @@ def main():
 
     subparsers = parser.add_subparsers(dest="subparser")
 
-    create_thumbnails_parser = subparsers.add_parser("create-thumbnails")
+    create_thumbnails_parser = subparsers.add_parser("create")
     create_thumbnails_parser.add_argument("path_to_output_dir", type=Path)
 
     input_source = create_thumbnails_parser.add_mutually_exclusive_group()
@@ -155,7 +155,7 @@ def main():
         ),
     )
 
-    sort_thumbnails_parser = subparsers.add_parser("sort-thumbnails")
+    sort_thumbnails_parser = subparsers.add_parser("sort")
     sort_thumbnails_parser.add_argument("path_to_thumbnails", type=Path)
     sort_thumbnails_parser.add_argument(
         "--commit",
@@ -166,14 +166,14 @@ def main():
 
     args = parser.parse_args()
 
-    if args.subparser == "sort-thumbnails":
+    if args.subparser == "sort":
         if not args.commit:
             print(
                 "--commit not provided, so this will be a dry run - no files will be modified"
             )
 
         sort_thumbnails(args.path_to_thumbnails, args.commit)
-    elif args.subparser == "create-thumbnails":
+    elif args.subparser == "create":
         if not args.overwrite_previous_thumbnails and args.path_to_output_dir.exists():
             raise RuntimeError(
                 f"output folder {args.path_to_output_dir} exists; to overwrite, use --overwrite-previous-thumbnails"
