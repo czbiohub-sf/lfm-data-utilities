@@ -61,6 +61,11 @@ def get_list_of_corrections(
             continue
 
         for thumbnail in corrected_class_dir.iterdir():
+            if thumbnail.name.startswith("."):
+                # ignore hidden files
+                print(f"ignoring {thumbnail.name}")
+                continue
+
             original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
 
             id_to_list_of_corrections[task_json_id].append(
