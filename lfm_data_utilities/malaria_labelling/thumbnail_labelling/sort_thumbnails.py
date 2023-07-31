@@ -63,7 +63,6 @@ def get_list_of_corrections(
         for thumbnail in corrected_class_dir.iterdir():
             if thumbnail.name.startswith("."):
                 # ignore hidden files
-                print(f"ignoring {thumbnail.name}")
                 continue
 
             original_class, cell_id, task_json_id = parse_thumbnail_name(thumbnail.name)
@@ -151,7 +150,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             continue
 
         # read the json file
-        task_path = path_to_thumbnails / "tasks" / label_and_task_path["task_name"]
+        task_path = path_to_thumbnails / "tasks" / id_to_task_path[task_json_id]["task_name"]
         with open(task_path) as f:
             tasks = json.load(f)
 
@@ -163,8 +162,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             correction["corrected_class"]
 
             try:
-                image_index = indexes_by_id[cell_id]["image_index"]
-                bbox_index = indexes_by_id[cell_id]["bbox_index"]
+                original_cell_prediction_indices = indexes_by_id[cell_id]
             except KeyError:
                 not_corrected += 1
                 if verbose:
@@ -172,6 +170,9 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
                     f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
                 )
                 continue
+
+            image_index = original_cell_prediction_indices["image_index"]
+            bbox_index = original_cell_prediction_indices["bbox_index"]
 
             bbox_pred = tasks[image_index]["predictions"][0]["result"][bbox_index]
 
