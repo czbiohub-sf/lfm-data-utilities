@@ -185,12 +185,13 @@ def plot_normalized_parasitemia_multi_confidence_thresh(
     )
     ax.set_yscale("log")
 
-    for min_confidence_threshold, tot_counts in min_confidence_threshold_counts.items():
-        ax.plot(
-            points,
-            [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
-            label=min_confidence_threshold,
-        )
+    for threshold_results in min_confidence_threshold_counts:
+        for min_confidence_threshold, tot_counts in threshold_results.items():
+            ax.plot(
+                points,
+                [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
+                label=min_confidence_threshold,
+            )
 
     ax.plot(
         points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
