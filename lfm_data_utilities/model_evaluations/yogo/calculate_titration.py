@@ -52,16 +52,39 @@ def process_prediction(
     min_confidence_threshold: Optional[float] = None,
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
+    per_image_counts_confidence_ranges: List[Dict[float, torch.Tensor]] = []
+
+    confidence_values = torch.linspace(0.1, 1, 10).tolist()
+    confidence_range_sums = {cv: torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
+                             for cv in confidence_values}
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
     for pred_slice in predictions:
         pred = format_preds(pred_slice)
+
         if pred.numel() == 0:
             continue  # ignore no predictions
+
         classes = pred[:, 5:]
+
+        current_confidence_sums = {}
+        for confidence_threshold in confidence_values:
+            image_counts = count_cells_for_formatted_preds(
+                classes, min_confidence_threshold=confidence_threshold
+            )
+            confidence_range_sums[confidence_threshold] += image_counts
+            current_confidence_sums[confidence_threshold] = confidence_range_sums[confidence_threshold]
+
+        per_image_counts.append(
+            tot_class_sum / tot_class_sum.sum()
+            if tot_class_sum.sum() > 0
+            else torch.zeros(len(YOGO_CLASS_ORDERING))
+        )
+
         image_counts = count_cells_for_formatted_preds(
             classes, min_confidence_threshold=min_confidence_threshold
         )
         tot_class_sum += image_counts
+
         per_image_counts.append(
             tot_class_sum / tot_class_sum.sum()
             if tot_class_sum.sum() > 0
