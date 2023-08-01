@@ -27,7 +27,7 @@ def calc_qf(folder_path: Path):
     grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
 
     focus_metrics = utils.multiprocess_focus_metric(
-        imgs, utils.log_power_spectrum_radial_average_sum
+        imgs, utils.nDCTS
     )
 
     grouped_focus_metrics = utils.group_by_motor_positions(
