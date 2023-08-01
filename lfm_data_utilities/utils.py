@@ -883,6 +883,8 @@ def get_list_of_img_paths_in_folder(folder_path: PathLike) -> List[Path]:
     elif len(pngs) > 0 and len(tiffs) == 0:
         return pngs
 
+    elif len(pngs) == 0 and len(tiffs) == 0:
+        raise ValueError(f"no tiffs and no pngs in {folder_path}")
     else:
         raise ValueError(
             f"For some reason there are both pngs and tiffs in this folder: \npngs: {pngs}\ntiffs: {tiffs}"
