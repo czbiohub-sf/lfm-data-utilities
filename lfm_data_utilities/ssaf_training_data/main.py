@@ -15,6 +15,45 @@ from lfm_data_utilities.ssaf_training_data import utils
 # (Axel) I am not proud of this function - it's messy and hacky and fragile,
 # but i don't want to spend a lot of time working on this, so hacky and fast
 # is the way to go
+def calc_qf(folder_path: Path):
+    local_vicinity: int = 10
+    max_motor_pos: int = 900
+
+    img_paths = get_list_of_img_paths_in_folder(folder_path)
+    motor_positions = utils.get_motor_positions_from_img_paths(img_paths)
+    motor_pos_nodup = np.unique(motor_positions)
+
+    imgs = load_imgs_threaded(img_paths)
+    grouped_images = utils.group_by_motor_positions(imgs, motor_positions)
+
+    focus_metrics = utils.multiprocess_focus_metric(
+        imgs, utils.log_power_spectrum_radial_average_sum
+    )
+
+    grouped_focus_metrics = utils.group_by_motor_positions(
+        focus_metrics, motor_positions
+    )
+
+    # Get mean and normalize focus metric
+    metrics_averaged = np.asarray([np.mean(fms) for fms in grouped_focus_metrics])
+    metrics_normed = metrics_averaged / np.max(metrics_averaged)
+
+    # Get metrics and motor positions for the values in the local vicinity of the peak focus
+    peak_focus_pos = np.argmax(metrics_normed).item()
+
+    start = max(peak_focus_pos - local_vicinity, 0)
+    end = min(peak_focus_pos + local_vicinity, max_motor_pos)
+
+    motor_pos_local_vicinity = motor_pos_nodup[start:end]
+    metrics_local_vicinity = metrics_normed[start:end]
+
+    # Quadratic fit
+    qf = np.polynomial.polynomial.Polynomial.fit(
+        motor_pos_local_vicinity, metrics_local_vicinity, 2
+    )
+    return qf
+
+
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     """Run the analysis + sorting on a given folder
 
@@ -63,6 +102,7 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     qf = np.polynomial.polynomial.Polynomial.fit(
         motor_pos_local_vicinity, metrics_local_vicinity, 2
     )
+    print(qf.convert().coef)
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 

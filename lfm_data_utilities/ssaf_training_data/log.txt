@@ -1,0 +1,19 @@
+/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/unsorted/AVT_04112022/2022-11-03-164459-local_zstack threw invalid literal for int() with base 10: '.'
+/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/unsorted/spirit_15062023/LocalZstacks_Chip1263_B2 threw no tiffs and no pngs in /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/unsorted/spirit_15062023/LocalZstacks_Chip1263_B2
+/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/unsorted/spirit_15062023/LocalZstacks_Chip1263_A2 threw no tiffs and no pngs in /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/SingleShotAutofocus/unsorted/spirit_15062023/LocalZstacks_Chip1263_A2
+shape: (111, 3)
+┌────────────────────────────────┬──────────────────────┬───────────┐
+│ run                            ┆ run_set              ┆ a         │
+│ ---                            ┆ ---                  ┆ ---       │
+│ str                            ┆ str                  ┆ f64       │
+╞════════════════════════════════╪══════════════════════╪═══════════╡
+│ 2023-05-08-151628-local_zstack ┆ opportunity_08052023 ┆ -0.000374 │
+│ 2023-05-08-143751-local_zstack ┆ opportunity_08052023 ┆ -0.000425 │
+│ 2023-05-08-162801-local_zstack ┆ opportunity_08052023 ┆ -0.000296 │
+│ 2023-05-08-153253-local_zstack ┆ opportunity_08052023 ┆ -0.000443 │
+│ …                              ┆ …                    ┆ …         │
+│ 2023-04-20-134457-local_zstack ┆ AVT_20042023         ┆ -0.000388 │
+│ 2023-04-20-132427-local_zstack ┆ AVT_20042023         ┆ -0.000392 │
+│ 2023-04-20-133028-local_zstack ┆ AVT_20042023         ┆ -0.000382 │
+│ 2023-04-20-133619-local_zstack ┆ AVT_20042023         ┆ -0.000344 │
+└────────────────────────────────┴──────────────────────┴───────────┘
