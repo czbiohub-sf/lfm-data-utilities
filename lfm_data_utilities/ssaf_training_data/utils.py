@@ -9,6 +9,7 @@ from shutil import copy
 from pathlib import Path
 from multiprocessing import Pool
 from lfm_data_utilities.utils import PathLike
+from scipy.fft import dctn
 
 
 def get_list_of_zstack_folders(top_level_dir: PathLike) -> List[Path]:
@@ -223,13 +224,27 @@ def log_power_spectrum_radial_average_sum(
     Parameters
     ----------
     img: np.ndarray
-    normalization_func: Optional[function]
-        Function to normalize the data prior to processing. Default function argument makes no modifications to the image.
     """
 
     power_spectrum = np.fft.fftshift(np.fft.fft2(img))
     log_ps = np.log(np.abs(power_spectrum))
     return np.sum(radial_average(log_ps))
+
+
+def nDCTS(img: np.ndarray) -> float:
+    """
+    Normalized Discrente-Cosine Transform Shannon Entropy measure of focus.
+
+    Parameters
+    ----------
+    img: np.ndarray
+    """
+    img_dct = dctn(img)
+    img_norm = np.linalg.norm(img_dct)
+    normalized_dct = img_dct / img_norm
+    abs_normalized_dct = np.abs(normalized_dct)
+    abslog2_normlized_dct = np.where(abs_normalized_dct == 0, 0, np.log2(abs_normalized_dct))
+    return -2 * (abs_normalized_dct * abslog2_normlized_dct).sum()
 
 
 def multiprocess_focus_metric(
