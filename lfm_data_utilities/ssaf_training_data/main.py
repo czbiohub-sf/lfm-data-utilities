@@ -51,6 +51,13 @@ def calc_qf(folder_path: Path):
     qf = np.polynomial.polynomial.Polynomial.fit(
         motor_pos_local_vicinity, metrics_local_vicinity, 2
     )
+
+    curve = qf(motor_pos_local_vicinity)
+    plt.plot(
+        motor_pos_nodup, metrics_normed, label="Focus metric vs. motor position"
+    )
+    plt.plot(motor_pos_local_vicinity, curve, label="Curve fit")
+    plt.savefig(f"curve_fit_{folder_path.name}.png")
     return qf
 
 
@@ -102,7 +109,6 @@ def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     qf = np.polynomial.polynomial.Polynomial.fit(
         motor_pos_local_vicinity, metrics_local_vicinity, 2
     )
-    print(qf.convert().coef)
     curve = qf(motor_pos_local_vicinity)
     peak_focus_motor_position = motor_pos_local_vicinity[np.argmax(curve)]
 
