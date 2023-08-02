@@ -235,6 +235,11 @@ def nDCTS(img: np.ndarray) -> float:
     """
     Normalized Discrente-Cosine Transform Shannon Entropy measure of focus.
 
+    implementing
+        nDCTS_{r_0}(I) = \sum_{x + y < r_0} \left|\frac{DCT(I)_{x,y}}{L_2(DCT(I)_{x,y}))} \right| abslog_2\left( \frac{DCT(I)_{x,y}}{L_2(DCT(I)_{x,y}))}\right)
+    where
+        abslog_2(x) = log_2(|x|) if x != 0 else 0
+
     Parameters
     ----------
     img: np.ndarray
@@ -243,7 +248,8 @@ def nDCTS(img: np.ndarray) -> float:
     img_norm = np.linalg.norm(img_dct)
     normalized_dct = img_dct / img_norm
     abs_normalized_dct = np.abs(normalized_dct)
-    abslog2_normlized_dct = np.where(abs_normalized_dct == 0, 0, np.log2(abs_normalized_dct))
+    # log(1) == 0, so we replace all 0's with 1's to avoid log(0)
+    abslog2_normlized_dct = np.log2(np.where(abs_normalized_dct == 0, 1, abs_normalized_dct))
     return -2 * (abs_normalized_dct * abslog2_normlized_dct).sum()
 
 
