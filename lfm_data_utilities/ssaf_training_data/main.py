@@ -58,6 +58,8 @@ def calc_qf(folder_path: Path):
     )
     plt.plot(motor_pos_local_vicinity, curve, label="Curve fit")
     plt.savefig(f"curve_fit_{folder_path.name}.png")
+    plt.clf()
+    plt.close()
     return qf
 
 
