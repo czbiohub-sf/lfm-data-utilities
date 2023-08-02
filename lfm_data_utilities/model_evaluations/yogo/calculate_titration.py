@@ -55,7 +55,7 @@ def process_prediction(
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
 
-    confidence_values = torch.linspace(0.1, 1, 10).tolist()
+    confidence_values = torch.linspace(0.2, .95, 16).tolist()
     confidence_range_sums = {
         cv: torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
         for cv in confidence_values
@@ -192,7 +192,6 @@ def plot_normalized_parasitemia_multi_confidence_thresh(
 
     for threshold_results in min_confidence_threshold_counts:
         for min_confidence_threshold, tot_counts in threshold_results.items():
-            print(round(min_confidence_threshold, 2), tot_counts)
             dct[round(min_confidence_threshold, 2)].append(tot_counts)
 
     for min_confidence_threshold, counts in dct.items():
