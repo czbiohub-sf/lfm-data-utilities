@@ -185,19 +185,35 @@ def plot_normalized_parasitemia_multi_confidence_thresh(
     )
     ax.set_yscale("log")
 
+    dct = {
+        round(min_confidence_threshold, 2): []
+        for min_confidence_threshold in min_confidence_threshold_counts[0].keys()
+    }
+
     for threshold_results in min_confidence_threshold_counts:
         for min_confidence_threshold, tot_counts in threshold_results.items():
-            ax.plot(
-                points,
-                [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
-                label=min_confidence_threshold,
-            )
+            print(round(min_confidence_threshold, 2), tot_counts)
+            dct[round(min_confidence_threshold, 2)].append(tot_counts)
+
+    for min_confidence_threshold, counts in dct.items():
+        ax.plot(
+            points,
+            [
+                (
+                    c[1:5].sum().item() / c[:5].sum().item()
+                    if c[:5].sum().item() > 0
+                    else 0
+                )
+                for c in counts
+            ],
+            label=min_confidence_threshold,
+        )
 
     ax.plot(
-        points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
+        points, [initial_parasitemia / 2**i for i in range(len(titration_results))], '--', label="Ground Truth"
     )
 
-    ax.legend(["YOGO predictions", "Ground Truth"])
+    ax.legend()
 
     file_name = f"normalized_by_threshold{Path(model_name).with_suffix('.png')}"
     plt.savefig(args.plot_dir / file_name)
