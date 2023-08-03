@@ -189,6 +189,7 @@ def main():
                 f"output folder {args.path_to_output_dir} exists; to overwrite, use --overwrite-previous-thumbnails"
             )
 
+        args.path_to_output_dir.mkdir(parents=True, exist_ok=True)
         class_dirs, tasks_dir = create_folders_for_output_dir(
             args.path_to_output_dir,
             YOGO_CLASS_ORDERING,
