@@ -124,9 +124,19 @@ def main():
     create_thumbnails_parser.add_argument(
         "--max-confidence",
         type=float,
-        default=0.9,
+        default=1.0,
         help=(
-            "if `--thumbnail-type yogo-confidence` is provided, this is the maximum confidence score to include in the thumbnail"
+            "if `--thumbnail-type yogo-confidence` is provided, this is the "
+            "maximum confidence score to include in the thumbnail (default 1)"
+        ),
+    )
+    create_thumbnails_parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.0,
+        help=(
+            "if `--thumbnail-type yogo-confidence` is provided, this is the "
+            "minimum confidence score to include in the thumbnail (default 0)"
         ),
     )
     create_thumbnails_parser.add_argument(
@@ -179,6 +189,7 @@ def main():
                 f"output folder {args.path_to_output_dir} exists; to overwrite, use --overwrite-previous-thumbnails"
             )
 
+        args.path_to_output_dir.mkdir(parents=True, exist_ok=True)
         class_dirs, tasks_dir = create_folders_for_output_dir(
             args.path_to_output_dir,
             YOGO_CLASS_ORDERING,

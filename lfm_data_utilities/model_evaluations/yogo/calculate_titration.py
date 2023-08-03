@@ -48,20 +48,40 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
 def process_prediction(
     predictions: torch.Tensor,
     titration_point: str,
-    result_dict: Dict[str, Dict[str, Union[List[torch.Tensor], torch.Tensor]]],
+    result_dict: Dict[
+        str, Dict[str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]]
+    ],
     min_confidence_threshold: Optional[float] = None,
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
+
+    confidence_values = torch.linspace(0.2, .95, 16).tolist()
+    confidence_range_sums = {
+        cv: torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
+        for cv in confidence_values
+    }
+
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
+
     for pred_slice in predictions:
         pred = format_preds(pred_slice)
+
         if pred.numel() == 0:
             continue  # ignore no predictions
+
         classes = pred[:, 5:]
+
+        for confidence_threshold in confidence_values:
+            image_counts = count_cells_for_formatted_preds(
+                classes, min_confidence_threshold=confidence_threshold
+            )
+            confidence_range_sums[confidence_threshold] += image_counts
+
         image_counts = count_cells_for_formatted_preds(
             classes, min_confidence_threshold=min_confidence_threshold
         )
         tot_class_sum += image_counts
+
         per_image_counts.append(
             tot_class_sum / tot_class_sum.sum()
             if tot_class_sum.sum() > 0
@@ -71,6 +91,7 @@ def process_prediction(
     result_dict[titration_point] = {
         "total_class_sum": tot_class_sum,
         "per_image_counts": per_image_counts,
+        "confidence_range_sums": confidence_range_sums,
     }
 
 
@@ -145,6 +166,58 @@ def plot_normalized_parasitemia(points, counts, plot_dir, model_name):
     plt.savefig(args.plot_dir / file_name)
 
 
+def plot_normalized_parasitemia_multi_confidence_thresh(
+    point, min_confidence_threshold_counts, plot_dir, model_name
+):
+    fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+    fig.suptitle(
+        f"{model_name} titration on {args.path_to_titration_yml.name}",
+        fontsize=16,
+    )
+
+    ax.set_title(
+        f"Normalized parasitemia at given minimum class confidence thresholds, titration point {point}"
+    )
+    ax.set_xlabel("Titration point")
+    ax.set_xticks(points)
+    ax.set_ylabel(
+        f"parasitemia (initial ground-truth parasitemia is {initial_parasitemia})"
+    )
+    ax.set_yscale("log")
+
+    dct = {
+        round(min_confidence_threshold, 2): []
+        for min_confidence_threshold in min_confidence_threshold_counts[0].keys()
+    }
+
+    for threshold_results in min_confidence_threshold_counts:
+        for min_confidence_threshold, tot_counts in threshold_results.items():
+            dct[round(min_confidence_threshold, 2)].append(tot_counts)
+
+    for min_confidence_threshold, counts in dct.items():
+        ax.plot(
+            points,
+            [
+                (
+                    c[1:5].sum().item() / c[:5].sum().item()
+                    if c[:5].sum().item() > 0
+                    else 0
+                )
+                for c in counts
+            ],
+            label=min_confidence_threshold,
+        )
+
+    ax.plot(
+        points, [initial_parasitemia / 2**i for i in range(len(titration_results))], '--', label="Ground Truth"
+    )
+
+    ax.legend()
+
+    file_name = f"normalized_by_threshold{Path(model_name).with_suffix('.png')}"
+    plt.savefig(args.plot_dir / file_name)
+
+
 def per_point_plot_normalized_per_image_counts(
     point, per_image_counts, plot_dir, model_name
 ):
@@ -215,7 +288,7 @@ if __name__ == "__main__":
         raise RuntimeError("invalid key in titration yml file") from e
 
     titration_results: Dict[
-        str, Dict[str, Union[List[torch.Tensor], torch.Tensor]]
+        str, Dict[str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]]
     ] = {}
 
     futs: List[Future] = []
@@ -254,8 +327,10 @@ if __name__ == "__main__":
 
     datapoints = sorted(titration_results.items())
     points, results = zip(*datapoints)
+
     per_image_counts = [r["per_image_counts"] for r in results]
     counts = [r["total_class_sum"] for r in results]
+    thresholded_counts = [r["confidence_range_sums"] for r in results]
 
     model_name = utils.guess_model_name(args.path_to_pth)
 
@@ -263,6 +338,9 @@ if __name__ == "__main__":
 
     plot_titration_curve(points, counts, args.plot_dir, model_name)
     plot_normalized_parasitemia(points, counts, args.plot_dir, model_name)
+    plot_normalized_parasitemia_multi_confidence_thresh(
+        points, thresholded_counts, args.plot_dir, model_name
+    )
 
     N = int(math.log(len(points), 10) + 1)
     for point, per_image_count in zip(points, per_image_counts):

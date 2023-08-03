@@ -8,7 +8,7 @@ import unittest
 
 from pathlib import Path
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, Generator
+from typing import List, Dict, Union
 
 from tqdm import tqdm
 
@@ -23,7 +23,9 @@ class TestResortingThumbnails(unittest.TestCase):
     test_data_dir = Path(__file__).parent / "test_data"
 
     test_labels_dir = Path(__file__).parent / "test_data" / "small_set_of_labels"
-    test_thumbnails_dir = Path(__file__).parent / "test_data" / "small_set_of_thumbnails"
+    test_thumbnails_dir = (
+        Path(__file__).parent / "test_data" / "small_set_of_thumbnails"
+    )
 
     test_labels_zip = Path(__file__).parent / "test_data" / "labels_save.zip"
     test_thumbnails_zip = Path(__file__).parent / "test_data" / "thumbnails_save.zip"
@@ -31,10 +33,7 @@ class TestResortingThumbnails(unittest.TestCase):
     def label_path_to_labels(self, label_path: Path) -> List[List[Union[str, float]]]:
         with open(label_path, "r") as f:
             lines = [line.strip().split() for line in f.readlines()]
-            return [
-                [int(line[0]), *[float(n) for n in line[1:]]]
-                for line in lines
-            ]
+            return [[int(line[0]), *[float(n) for n in line[1:]]] for line in lines]
 
     def random_sort_thumbnails(self) -> Dict[str, int]:
         initial_total_count = 0
@@ -60,15 +59,19 @@ class TestResortingThumbnails(unittest.TestCase):
             target_classes = random.choices(YOGO_CLASS_ORDERING, k=k)
 
             for thumbnail, target_class in zip(thumbnails_to_move, target_classes):
-                target_path = str((self.test_thumbnails_dir / f"corrected_{target_class}").resolve())
-                thumbnail_path =  str(thumbnail.resolve())
-                shutil.move(thumbnail_path,target_path)
+                target_path = str(
+                    (self.test_thumbnails_dir / f"corrected_{target_class}").resolve()
+                )
+                thumbnail_path = str(thumbnail.resolve())
+                shutil.move(thumbnail_path, target_path)
                 moved_thumbnail_counts[target_class] += 1
 
         for class_, moved_count in moved_thumbnail_counts.items():
             final_class_counts[class_] += moved_count
 
-        assert sum(final_class_counts.values()) == initial_total_count, f"Expected {initial_total_count} thumbnails, but found {sum(final_class_counts.values())}"
+        assert (
+            sum(final_class_counts.values()) == initial_total_count
+        ), f"Expected {initial_total_count} thumbnails, but found {sum(final_class_counts.values())}"
         return dict(final_class_counts)
 
     def count_num_classes_in_label_dir(self, label_dir: Path) -> Dict[str, int]:
@@ -105,5 +108,7 @@ class TestResortingThumbnails(unittest.TestCase):
             self.reset_dirs()
             expected_class_counts = self.random_sort_thumbnails()
             sort_thumbnails(self.test_thumbnails_dir, _backup=False)
-            number_of_corrected_labels = self.count_num_classes_in_label_dir(self.test_labels_dir / "labels")
+            number_of_corrected_labels = self.count_num_classes_in_label_dir(
+                self.test_labels_dir / "labels"
+            )
             self.assertEqual(expected_class_counts, number_of_corrected_labels)
