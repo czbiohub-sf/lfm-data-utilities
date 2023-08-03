@@ -37,7 +37,9 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
 
 def backup_vetted(commit: bool = True, _backup: bool = True):
     if commit and _backup:
-        with timing_context_manager(f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"):
+        with timing_context_manager(
+            f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"
+        ):
             vetted_backup_path = str(
                 DEFAULT_LABELS_PATH
                 / "vetted-backup"
@@ -150,7 +152,9 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             continue
 
         # read the json file
-        task_path = path_to_thumbnails / "tasks" / id_to_task_path[task_json_id]["task_name"]
+        task_path = (
+            path_to_thumbnails / "tasks" / id_to_task_path[task_json_id]["task_name"]
+        )
         with open(task_path) as f:
             tasks = json.load(f)
 
@@ -167,8 +171,8 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
                 not_corrected += 1
                 if verbose:
                     print(
-                    f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
-                )
+                        f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
+                    )
                 continue
 
             image_index = original_cell_prediction_indices["image_index"]
@@ -184,10 +188,10 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
                 not_corrected += 1
                 if verbose:
                     print(
-                    f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']} or "
-                    f"original_class {original_class} does not match bbox_pred class "
-                    f"{bbox_pred['value']['rectanglelabels']}"
-                )
+                        f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']} or "
+                        f"original_class {original_class} does not match bbox_pred class "
+                        f"{bbox_pred['value']['rectanglelabels']}"
+                    )
                 continue
 
             bbox_pred["value"]["rectanglelabels"] = [correction["corrected_class"]]
