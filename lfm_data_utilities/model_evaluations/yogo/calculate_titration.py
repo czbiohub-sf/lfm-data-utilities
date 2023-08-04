@@ -55,7 +55,7 @@ def process_prediction(
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
 
-    confidence_values = torch.linspace(0.2, .95, 16).tolist()
+    confidence_values = torch.linspace(0.2, 0.95, 16).tolist()
     confidence_range_sums = {
         cv: torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
         for cv in confidence_values
@@ -209,7 +209,10 @@ def plot_normalized_parasitemia_multi_confidence_thresh(
         )
 
     ax.plot(
-        points, [initial_parasitemia / 2**i for i in range(len(titration_results))], '--', label="Ground Truth"
+        points,
+        [initial_parasitemia / 2**i for i in range(len(titration_results))],
+        "--",
+        label="Ground Truth",
     )
 
     ax.legend()
