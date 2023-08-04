@@ -173,6 +173,14 @@ def main():
         help="actually modify files on the file system instead of reporting what would be changed",
         default=False,
     )
+    sort_thumbnails_parser.add_argument(
+        "--ok-if-class-mismatch",
+        action=boolean_action,
+        help=(
+            "if set, will not raise an error if the class of a thumbnail does not match the folder it is in"
+        ),
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -182,7 +190,7 @@ def main():
                 "--commit not provided, so this will be a dry run - no files will be modified"
             )
 
-        sort_thumbnails(args.path_to_thumbnails, args.commit)
+        sort_thumbnails(args.path_to_thumbnails, args.commit, args.ok_if_class_mismatch)
     elif args.subparser == "create":
         if not args.overwrite_previous_thumbnails and args.path_to_output_dir.exists():
             raise RuntimeError(

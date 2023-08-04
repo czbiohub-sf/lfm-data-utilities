@@ -35,18 +35,18 @@ def parse_thumbnail_name(thumbnail_name: str) -> Tuple[str, str, str]:
     return cast(Tuple[str, str, str], t)
 
 
-def backup_vetted(commit: bool = True, _backup: bool = True):
-    if commit and _backup:
+def backup_vetted(commit: bool = True, backup: bool = True):
+    if commit and backup:
         with timing_context_manager(
             f"creating backup of {DEFAULT_LABELS_PATH / 'vetted'}"
         ):
-            vetted_backup_path = str(
+            vettedbackup_path = str(
                 DEFAULT_LABELS_PATH
                 / "vetted-backup"
                 / f"backup-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
             )
             shutil.make_archive(
-                vetted_backup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
+                vettedbackup_path, "zip", DEFAULT_LABELS_PATH / "vetted"
             )
 
 
@@ -103,7 +103,12 @@ def find_cell_indices_id_map(tasks: Dict) -> Dict[str, Dict[str, int]]:
     return d
 
 
-def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
+def sort_thumbnails(
+    path_to_thumbnails: Path,
+    commit: bool = True,
+    ok_if_class_mismatch: bool = False,
+    backup: bool = False,
+):
     """
     The thumbnails dir should have three things:
         - a set of folders named after the classes ("Class Folder" from now on)
@@ -120,6 +125,15 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
     This function will first create a backup of `LFM_scope/biohub-labels/vetted` into `LFM_scope/biohub-labels/vetted-backup`.
     Then, it goes through the corrected class folders and will correct the tasks.json files. It will then export the
 
+    Parameters:
+        path_to_thumbnails: path to the thumbnails dir
+        commit: if True, will commit the changes to the tasks.json files
+        ok_if_class_mismatch: if True, will not raise an error if the original class of the thumbnail
+            does not match the original class in the tasks.json file. This is useful if the user has already
+            corrected some thumbnails previously.
+        backup: if True, will create a backup of the vetted folder. This is useful if you want to test this function.
+            If False, will not create a backup. This is useful if you are running this function on the server.
+
     TODO hard coding DEFAULT_LABELS_PATH. What should we do with it? All the tasks.json paths should be from there, so this
     information is redundant. Maybe we will use this to verify that the tasks.json files are correct? Need to reconsider this.
     """
@@ -135,7 +149,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             raise ValueError(f"task_path {task_path} does not exist")
 
     # create backup of vetted
-    backup_vetted(commit=commit, _backup=_backup)
+    backup_vetted(commit=commit, backup=backup)
 
     # create a list of all the corrections
     id_to_list_of_corrections = get_list_of_corrections(path_to_thumbnails)
@@ -180,17 +194,23 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
 
             bbox_pred = tasks[image_index]["predictions"][0]["result"][bbox_index]
 
-            id_is_correct = bbox_pred["id"] == cell_id
-            original_class_matches = bbox_pred["value"]["rectanglelabels"] == [
-                original_class
-            ]
-            if not (id_is_correct and original_class_matches):
+            if bbox_pred["id"] != cell_id:
                 not_corrected += 1
                 if verbose:
                     print(
-                        f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']} or "
+                        f"cell_id {cell_id} does not match bbox_pred id {bbox_pred['id']}"
+                    )
+                continue
+
+            original_class_mismatch = (
+                bbox_pred["value"]["rectanglelabels"][0] != original_class
+            )
+            if original_class_mismatch and not ok_if_class_mismatch:
+                not_corrected += 1
+                if verbose:
+                    print(
                         f"original_class {original_class} does not match bbox_pred class "
-                        f"{bbox_pred['value']['rectanglelabels']}"
+                        f"{bbox_pred['value']['rectanglelabels'][0]}"
                     )
                 continue
 
@@ -203,7 +223,7 @@ def sort_thumbnails(path_to_thumbnails: Path, commit=True, _backup=False):
             with open(task_path, "w") as f:
                 json.dump(tasks, f)
         elif verbose:
-            print("would have written corrected tasks.json file to {task_path}")
+            print(f"would have written corrected tasks.json file to {task_path}")
 
     if verbose:
         print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
