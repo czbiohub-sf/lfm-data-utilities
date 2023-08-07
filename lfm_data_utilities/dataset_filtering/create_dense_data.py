@@ -121,6 +121,7 @@ def write_results(
     """
     # flowrate of 1st frame can't be calculated, so set to 0
     flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
+    print(f"writing to {output_dir / 'data.csv'}")
     with open(output_dir / "data.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(
