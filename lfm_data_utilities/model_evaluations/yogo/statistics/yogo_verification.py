@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 
 from yogo.model import YOGO
-from yogo.metrics import Metrics
+from yogo.utils import format_preds_and_labels
 from lfm_data_utilities.model_evaluations.yogo.rank_yogo_loss import get_dataloader
 
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         for img_count, (img, label, image_path, label_path) in enumerate(dataloaders):
             preds = net(img.to(device)).cpu()
 
-            formatted_preds, formatted_labels = Metrics._format_preds_and_labels(
+            formatted_preds, formatted_labels = format_preds_and_labels(
                 preds, label
             )
 

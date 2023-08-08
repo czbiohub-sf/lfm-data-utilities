@@ -18,7 +18,7 @@ from lfm_data_utilities.model_evaluations.yogo.rank_yogo_loss import (
 )
 
 from yogo.model import YOGO
-from yogo.utils.utils import format_preds, format_preds_and_labels
+from yogo.utils import format_preds, format_preds_and_labels
 from yogo.utils.argparsers import unsigned_float
 from yogo.data.image_path_dataset import get_dataset, collate_fn
 from yogo.infer import choose_device, choose_dataloader_num_workers
