@@ -137,5 +137,6 @@ You must provide an output directory (we have been using `.../LFM_scope/thumbnai
 `--min/max-confidence` are the minimum and maximum *class* confidence scores required for a thumbnail to be exported. This is very good for finding instances where YOGO makes mistakes, and for cutting down the number of thumbnails that you have to observe[^1].
 `--obj-threshold` and `--iou-threshold` are the objectness and [intersection over union](https://en.wikipedia.org/wiki/Jaccard_index) (for [non-maximum supression](https://en.wikipedia.org/wiki/Edge_detection#Canny) thresholds, used to filter YOGO predictions. Quite standard, read more about them [here](https://github.com/czbiohub-sf/yogo/blob/main/docs/yogo-high-level.md).
 
+After that point, you should be good to go start [labelling](https://github.com/czbiohub-sf/lfm-data-utilities/blob/main/lfm_data_utilities/thumbnail_labelling/README.md#labelling-guide).
 
 [^1]: My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification.
