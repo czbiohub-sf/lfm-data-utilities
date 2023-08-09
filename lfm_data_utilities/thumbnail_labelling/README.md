@@ -181,6 +181,11 @@ that means that the tool could not find the thumbnail with id `d77a321e95` in it
 
 ## How we correct labels with thumbnails (under the hood)
 
+To create thumbnails, we follow this algorithm. For each run to export:
+- create a new `tasks.json` file based on the creation type (i.e. we filter out YOGO predictions before we create the `tasks.json`) - this will be used as the source of truth for labels, and will give each thumbnail a unique ID (10 base-64 digits)
+- for each prediction/label, crop out the thumbnail and put it in it's predicted/labelled class. Assign the `task.json` as an id (e.g. 0) if exporting multiple runs at once.
+- write down that map in an `id_to_task.json` file
+
 When we want to re-sort our labels, we follow this algorithm:
 - iterate through `corrected_*` folders and create a map of each thumbnail to the corrected class (e.g. if `ring_2a4bee1ecf_0.png` is in `corrected_healthy`, it is actually a healthy cell, so remember that)
 - for each cell in that map of corrections, find the the cell in it's `tasks.json` file and change it's class to the correct class
@@ -191,4 +196,4 @@ Note that we only look at `corrected_*` for corrections; we do not look at the c
 
 [^1]: My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification.
 
-[^2]: The cell IDs are 10 hexidecimal digits, so there is a (1 in 64^10) ~= 8.67 * 10^-19 percent chance of ID collision. So, if we can find the id in it's source `tasks.json` file, we will be able to move it into the correct spot. While writing this document, I actually did this for `d77a321e95`. The thumbnail was in `...LFM_scope/thumbnail-corrections/Uganda-subsets/2023-02-15-042659_/corrected_misc`, so I ran `cd LFM_scope/thumbnail-corrections/Uganda-subsets` and then `grep -rl d77a321e95 */tasks/*`. This immediately gave me `2023-04-27-052714_/tasks/thumbnail_correction_task_0.json` - which is not the same run of the thumbnail's current location! So, just moving the thumbnail from `2023-02-15-042659_/corrected_misc` to `2023-04-27-052714_/corrected_misc` fixed the problem. Be careful to put thumbnails into the correct spot! But more importantly, be able to debug these sorts of issues.
+[^2]: The cell IDs are 10 base-64 digits, so there is a (1 in 64^10) ~= 8.67 * 10^-19 percent chance of ID collision. So, if we can find the id in it's source `tasks.json` file, we will be able to move it into the correct spot. While writing this document, I actually did this for `d77a321e95`. The thumbnail was in `...LFM_scope/thumbnail-corrections/Uganda-subsets/2023-02-15-042659_/corrected_misc`, so I ran `cd LFM_scope/thumbnail-corrections/Uganda-subsets` and then `grep -rl d77a321e95 */tasks/*`. This immediately gave me `2023-04-27-052714_/tasks/thumbnail_correction_task_0.json` - which is not the same run of the thumbnail's current location! So, just moving the thumbnail from `2023-02-15-042659_/corrected_misc` to `2023-04-27-052714_/corrected_misc` fixed the problem. Be careful to put thumbnails into the correct spot! But more importantly, be able to debug these sorts of issues.
