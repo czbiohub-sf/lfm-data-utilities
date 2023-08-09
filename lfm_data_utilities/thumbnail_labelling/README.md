@@ -167,8 +167,6 @@ not corrected: 0, was corrected: 7
 would have overwritten YOGO labels at <path to original labels>
 ```
 
-> [!IMPORTANT]
-
 If you see something like this,
 
 ```console
