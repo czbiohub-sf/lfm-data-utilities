@@ -1,10 +1,8 @@
 # Thumbnail Labelling
 
-## Main Idea
+## Labelling Guide
 
 Given datasets (i.e. folder of images + folder of labels), grab a thumbnail of each cell and put it in folders, sorted by class. A user can then sort those thumbnails into the correct folder. You can then use those corrected thumbnanils to update the original labels.
-
-## Folder Structure
 
 Knowing the folder structure for thumbnails and how this tool uses it is very important for understanding how you can label.
 
@@ -60,3 +58,84 @@ When we want to re-sort our labels, we follow this algorithm:
 - export each `tasks.json` file to the location of the source
 
 Note that we only look at `corrected_*` for corrections; we do not look at the class folders at all, so you can change those in any way that makes labelling easier for you.
+
+We also have two labelling guides to help with classifications:
+
+- [main labelling guide](https://docs.google.com/document/d/1SIrPd26qItAEqbjrFD6go6M3KcSVFFXLJkKim5K4tH0/)
+- [ring -> troph -> schizont transition](https://docs.google.com/document/d/1cH8Bprr64GjiaRhwKqBGlBN8xjNwSHJUYw-AGYtVg6A/)
+
+
+# Creating and sorting thumbnails (i.e. using `thumbnail_sort_labelling.py`)
+
+This section will discuss how to actually *create* and *sort* thumbnails. First,
+
+```console
+thumbnail_labelling (main) | ./thumbnail_sort_labelling.py --help
+usage: thumbnail_sort_labelling.py [-h] {create,sort} ...
+
+positional arguments:
+  {create,sort}
+
+optional arguments:
+  -h, --help     show this help message and exit
+```
+
+Creating thumbnails is a natural place to start. The general idea is that you have a set of images, and one of the three hold
+
+- `labels`: You have labels for the images, and you want to update / correct the labels
+- `yogo-incorrect`: You have labels and you want to update / correct the labels based on YOGO's predictions
+- `yogo-confidence`: You don't *necessarily* have labels, and want to export thumbnails based solely on YOGOs predictions. Labels are not used for this method.
+
+`thumbnail_sort_labelling.py create` can create the thumbnails in each case:
+
+```console
+thumbnail_labelling (main) | ./thumbnail_sort_labelling.py create --help
+usage: thumbnail_sort_labelling.py create [-h] [--path-to-labelled-data-ddf PATH_TO_LABELLED_DATA_DDF | --path-to-run PATH_TO_RUN] [--overwrite-previous-thumbnails] [--ignore-class IGNORE_CLASS]
+                                          [--thumbnail-type {labels,yogo-confidence,yogo-incorrect}] [--path-to-pth PATH_TO_PTH] [--max-confidence MAX_CONFIDENCE] [--min-confidence MIN_CONFIDENCE]
+                                          [--obj-thresh OBJ_THRESH] [--iou-thresh IOU_THRESH] [--image-server-relative-parent-override IMAGE_SERVER_RELATIVE_PARENT_OVERRIDE]
+                                          path_to_output_dir
+
+positional arguments:
+  path_to_output_dir
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --path-to-labelled-data-ddf PATH_TO_LABELLED_DATA_DDF
+                        path to dataset descriptor file for labelled data (default {default_ddf})
+  --path-to-run PATH_TO_RUN
+                        path to dataset descriptor file run
+  --overwrite-previous-thumbnails
+                        if set, will overwrite previous thumbnails
+  --ignore-class IGNORE_CLASS
+                        if set, will ignore this class when creating thumbnails - e.g. `--ignore-class healthy` you can provide this argument multiple times to ignore multiple classes - e.g. `--ignore-class healthy
+                        --ignore-class misc` suggested: `--ignore-class healthy`
+  --thumbnail-type {labels,yogo-confidence,yogo-incorrect}
+                        which type of thumbnail to create - labels: thumbnails with the labels as provided by the human labelers yogo-confidence: thumbnails predicted by YOGO, with high class confidence scores
+                        filtered by `--max-confidence` yogo-incorrect: thumbnails where the yogo model was incorrect
+  --path-to-pth PATH_TO_PTH
+                        if `--thumbnail-type yogo-confidence` or `--thumbnail-type yogo-incorrect` is provided, this is the path to the .pth file containing the model weights
+  --max-confidence MAX_CONFIDENCE
+                        if `--thumbnail-type yogo-confidence` is provided, this is the maximum confidence score to include in the thumbnail (default 1)
+  --min-confidence MIN_CONFIDENCE
+                        if `--thumbnail-type yogo-confidence` is provided, this is the minimum confidence score to include in the thumbnail (default 0)
+  --obj-thresh OBJ_THRESH, --obj-threshold OBJ_THRESH, --objectness-threshold OBJ_THRESH
+                        objectness threshold for YOGO predictions
+  --iou-thresh IOU_THRESH, --iou-threshold IOU_THRESH, --iou-threshold IOU_THRESH
+                        iou threshold for YOGO predictions
+  --image-server-relative-parent-override IMAGE_SERVER_RELATIVE_PARENT_OVERRIDE
+                        override the image server relative parent for generating tasks; if you want the root of the image serverto be different from LFM_Scope, you can provide that here - but don't touch this if
+                        that doesn't make sense
+```
+
+You must provide an output directory (we have been using `.../LFM_scope/thumbnail_corrections/<group of corrections, such as 'Uganda Subsets'>). Other parameters are dependant on what you want to export
+
+- `--thumbnail-type` is the switch for the different export types
+- `--ignore-class` is a flag to ignore a certain class, for example `healthy`. There are *many many* more healthy cells than parasitic cells, and if you are exporting thumbnails to correct parasite labels, you probably don't want to export healthy cells (I suggest exporting healthy cells with `--max-confidence 0.8` or below). This can be chained: eg `--ignore-class healthy --ignore-class misc --ignore-class wbc`
+- `--path-to-run` and `--path-to-labelled-data-ddf` are mutually exclusive. If you are exporting thumbnails from only one run, you can simply use `--path-to-run`. If you are exporting thumbnails for many runs, it can be nice to define which runs you want to export via a [dataset definition file](https://github.com/czbiohub-sf/yogo/blob/main/docs/dataset-definition.md).
+- `--path-to-pth` is the path to the YOGO model that you want to use if your thumbnail type is `yogo-incorrect` or `yogo-confidence`. Often the best models are in `.../LFM_scope/yogo_models`
+
+`--min/max-confidence` are the minimum and maximum *class* confidence scores required for a thumbnail to be exported. This is very good for finding instances where YOGO makes mistakes, and for cutting down the number of thumbnails that you have to observe[^1].
+`--obj-threshold` and `--iou-threshold` are the objectness and [intersection over union](https://en.wikipedia.org/wiki/Jaccard_index) (for [non-maximum supression](https://en.wikipedia.org/wiki/Edge_detection#Canny) thresholds, used to filter YOGO predictions. Quite standard, read more about them [here](https://github.com/czbiohub-sf/yogo/blob/main/docs/yogo-high-level.md).
+
+
+[^1] My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification. 
