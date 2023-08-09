@@ -49,16 +49,6 @@ Namely,
 - `id_to_task_path.json` is used to map which dataset each cell is from. It should also not be touched.
 - `see_in_context.py` can be used to see the original image for a given thumbnail. For example, `see_in_context.py ring_2a4bee1ecf_0.png` will show you the image to which that thumbnail belongs.
 
-## How we correct labels with thumbnails
-
-When we want to re-sort our labels, we follow this algorithm:
-- iterate through `corrected_*` folders and create a map of each thumbnail to the corrected class (e.g. if `ring_2a4bee1ecf_0.png` is in `corrected_healthy`, it is actually a healthy cell, so remember that)
-- for each cell in that map of corrections, find the the cell in it's `tasks.json` file and change it's class to the correct class
-  - in the name `ring_2a4bee1ecf_0.png`, `ring` is the originally predicted class, `2a4bee1ecf` is the id of that thumbnail in it's `task.json` file, and `0` is the `tasks.json` file that was used, as defined by `id_to_task_path.json`
-- export each `tasks.json` file to the location of the source
-
-Note that we only look at `corrected_*` for corrections; we do not look at the class folders at all, so you can change those in any way that makes labelling easier for you.
-
 We also have two labelling guides to help with classifications:
 
 - [main labelling guide](https://docs.google.com/document/d/1SIrPd26qItAEqbjrFD6go6M3KcSVFFXLJkKim5K4tH0/)
@@ -79,6 +69,8 @@ positional arguments:
 optional arguments:
   -h, --help     show this help message and exit
 ```
+
+## `thumbnail_sort_labelling.py create`
 
 Creating thumbnails is a natural place to start. The general idea is that you have a set of images, and one of the three hold
 
@@ -138,5 +130,41 @@ You must provide an output directory (we have been using `.../LFM_scope/thumbnai
 `--obj-threshold` and `--iou-threshold` are the objectness and [intersection over union](https://en.wikipedia.org/wiki/Jaccard_index) (for [non-maximum supression](https://en.wikipedia.org/wiki/Edge_detection#Canny) thresholds, used to filter YOGO predictions. Quite standard, read more about them [here](https://github.com/czbiohub-sf/yogo/blob/main/docs/yogo-high-level.md).
 
 After that point, you should be good to go start [labelling](https://github.com/czbiohub-sf/lfm-data-utilities/blob/main/lfm_data_utilities/thumbnail_labelling/README.md#labelling-guide).
+
+## `thumbnail_sort_labelling.py sort`
+
+Alright, you have sorted a set of thumbnails. Now we want to update our labels for training.
+
+[!WARNING]
+If you are correcting labels, heed this: first, and most importantly, our labels live in a git repo ([here](https://github.com/czbiohub-sf/lfm-human-labels)) at the path `.../LFM_scope/biohub-labels/vetted`. **Make sure that there are no changes in the labels before sorting thumbnails**. The repo on Github is considered correct, and after updating labels, you can verify the changes with `git diff`.
+
+Here is the sorting tool:
+
+```console
+thumbnail_labelling (main) | ./thumbnail_sort_labelling.py sort --help
+usage: thumbnail_sort_labelling.py sort [-h] [--commit | --no-commit] [--ok-if-class-mismatch | --no-ok-if-class-mismatch] path_to_thumbnails
+
+positional arguments:
+  path_to_thumbnails
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --commit, --no-commit
+                        actually modify files on the file system instead of reporting what would be changed (default: False)
+  --ok-if-class-mismatch, --no-ok-if-class-mismatch
+                        if set, will not raise an error if the class of a thumbnail does not match the folder it is in (default: False)
+```
+
+Much simpler than the tool for creation, you simply give it the path to the thumbnail directory. By default, no changes will be made, and you will have to append `--commit` to your command in order to make changes. Also, if you are importing the labels in multiple steps (eg you are correcting a huge number of thumbnails and you wanted to import corrections after fixing the ring predictions), you have to append `--ok-if-class-mismatch`. This is a check that verifies that a corrected thumbnail had the expected original class.
+
+## How we correct labels with thumbnails (under the hood)
+
+When we want to re-sort our labels, we follow this algorithm:
+- iterate through `corrected_*` folders and create a map of each thumbnail to the corrected class (e.g. if `ring_2a4bee1ecf_0.png` is in `corrected_healthy`, it is actually a healthy cell, so remember that)
+- for each cell in that map of corrections, find the the cell in it's `tasks.json` file and change it's class to the correct class
+  - in the name `ring_2a4bee1ecf_0.png`, `ring` is the originally predicted class, `2a4bee1ecf` is the id of that thumbnail in it's `task.json` file, and `0` is the `tasks.json` file that was used, as defined by `id_to_task_path.json`
+- export each `tasks.json` file to the location of the source
+
+Note that we only look at `corrected_*` for corrections; we do not look at the class folders at all, so you can change those in any way that makes labelling easier for you.
 
 [^1]: My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification.
