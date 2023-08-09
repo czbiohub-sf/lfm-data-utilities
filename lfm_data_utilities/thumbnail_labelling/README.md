@@ -167,6 +167,8 @@ not corrected: 0, was corrected: 7
 would have overwritten YOGO labels at <path to original labels>
 ```
 
+> [!IMPORTANT]
+
 If you see something like this,
 
 ```console
@@ -177,7 +179,7 @@ not corrected: 1, was corrected: 138
 would have overwritten YOGO labels at <path to original labels>
 ```
 
-that means that the tool could not find the thumbnail with id `d77a321e95` in it's `tasks.json` file. This is not good, as that means that we can't the source for that thumbnail, and therefore we can't correct its label. **However, the other thumbnails that were found can be corrected**. When this occurs, please ping Axel, [open an issue](https://github.com/czbiohub-sf/lfm-data-utilities/issues/new), or carefully try to debug the issue.
+that means that the tool could not find the thumbnail with id `d77a321e95` in it's `tasks.json` file. This is not good, as that means that we can't the source for that thumbnail, and therefore we can't correct its label. **However, the other thumbnails that were found can be corrected**. When this occurs, please ping Axel, [open an issue](https://github.com/czbiohub-sf/lfm-data-utilities/issues/new), or carefully try to debug the issue[^2].
 
 ## How we correct labels with thumbnails (under the hood)
 
@@ -190,3 +192,5 @@ When we want to re-sort our labels, we follow this algorithm:
 Note that we only look at `corrected_*` for corrections; we do not look at the class folders at all, so you can change those in any way that makes labelling easier for you.
 
 [^1]: My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification.
+
+[^2]: The cell IDs are 10 hexidecimal digits, so there is a (1 in 64^10) ~= 8.67 * 10^-19 percent chance of ID collision. So, if we can find the id in it's source `tasks.json` file, we will be able to move it into the correct spot. While writing this document, I actually did this for `d77a321e95`. The thumbnail was in `...LFM_scope/thumbnail-corrections/Uganda-subsets/2023-02-15-042659_/corrected_misc`, so I ran `cd LFM_scope/thumbnail-corrections/Uganda-subsets` and then `grep -rl d77a321e95 */tasks/*`. This immediately gave me `2023-04-27-052714_/tasks/thumbnail_correction_task_0.json` - which is not the same run of the thumbnail's current location! So, just moving the thumbnail from `2023-02-15-042659_/corrected_misc` to `2023-04-27-052714_/corrected_misc` fixed the problem. Be careful to put thumbnails into the correct spot! But more importantly, be able to debug these sorts of issues.
