@@ -157,6 +157,28 @@ optional arguments:
 
 Much simpler than the tool for creation, you simply give it the path to the thumbnail directory. By default, no changes will be made, and you will have to append `--commit` to your command in order to make changes. Also, if you are importing the labels in multiple steps (eg you are correcting a huge number of thumbnails and you wanted to import corrections after fixing the ring predictions), you have to append `--ok-if-class-mismatch`. This is a check that verifies that a corrected thumbnail had the expected original class.
 
+After running it without `--commit`, you'll see something like this:
+
+```console
+(eeeeeee) [axel.jacobsen@login-02 thumbnail_labelling]$ ./thumbnail_sort_labelling.py sort <path to thumbnails>
+--commit not provided, so this will be a dry run - no files will be modified
+would have written corrected tasks.json file to <path to thumbnails>/tasks/thumbnail_correction_task_0.json
+not corrected: 0, was corrected: 7
+would have overwritten YOGO labels at <path to original labels>
+```
+
+If you see something like this,
+
+```console
+(eeeeeee) [axel.jacobsen@login-02 thumbnail_labelling]$ ./thumbnail_sort_labelling.py sort <path to thumbnails>
+--commit not provided, so this will be a dry run - no files will be modified
+could not find cell_id d77a321e95 in task {'label_path': '<path to original labels>', 'task_name': 'thumbnail_correction_task_0.json', 'task_num': 0}                                          
+not corrected: 1, was corrected: 138
+would have overwritten YOGO labels at <path to original labels>
+```
+
+that means that the tool could not find the thumbnail with id `d77a321e95` in it's `tasks.json` file. This is not good, as that means that we can't the source for that thumbnail, and therefore we can't correct its label. **However, the other thumbnails that were found can be corrected**. When this occurs, please ping Axel, [open an issue](https://github.com/czbiohub-sf/lfm-data-utilities/issues/new), or carefully try to debug the issue.
+
 ## How we correct labels with thumbnails (under the hood)
 
 When we want to re-sort our labels, we follow this algorithm:
