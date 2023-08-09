@@ -26,7 +26,7 @@ from pathlib import Path
 
 from yogo.data import YOGO_CLASS_ORDERING
 
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails import (
+from lfm_data_utilities.thumbnail_labelling.sort_thumbnails import (
     sort_thumbnails,
 )
 
@@ -36,12 +36,12 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
 )
 
 
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.yogo_filters import (
+from lfm_data_utilities.thumbnail_labelling.yogo_filters import (
     create_confidence_filtered_tasks_file_from_YOGO,
     create_correctness_filtered_tasks_file_from_YOGO,
 )
 
-from lfm_data_utilities.malaria_labelling.thumbnail_labelling.create_thumbnails import (
+from lfm_data_utilities.thumbnail_labelling.create_thumbnails import (
     create_tasks_files_from_path_to_labelled_data_ddf,
     create_tasks_file_from_path_to_run,
     create_thumbnails_from_tasks_maps,
