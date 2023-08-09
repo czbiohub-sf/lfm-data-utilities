@@ -39,9 +39,7 @@ if __name__ == "__main__":
         for img_count, (img, label, image_path, label_path) in enumerate(dataloaders):
             preds = net(img.to(device)).cpu()
 
-            formatted_preds, formatted_labels = format_preds_and_labels(
-                preds, label
-            )
+            formatted_preds, formatted_labels = format_preds_and_labels(preds, label)
 
             num_preds = formatted_labels[0].shape[0]
 
