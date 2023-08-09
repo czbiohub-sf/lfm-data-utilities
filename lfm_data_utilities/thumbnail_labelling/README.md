@@ -138,4 +138,4 @@ You must provide an output directory (we have been using `.../LFM_scope/thumbnai
 `--obj-threshold` and `--iou-threshold` are the objectness and [intersection over union](https://en.wikipedia.org/wiki/Jaccard_index) (for [non-maximum supression](https://en.wikipedia.org/wiki/Edge_detection#Canny) thresholds, used to filter YOGO predictions. Quite standard, read more about them [here](https://github.com/czbiohub-sf/yogo/blob/main/docs/yogo-high-level.md).
 
 
-[^1] My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification. 
+[^1]: My hypothesis is that you can start with a low maximum confidence for healthy cells, correct the parasites that were classified as healthy, retrain, and re-export thumbnails at a similar confidence to find a new batch of parasites in the healthy classification.
