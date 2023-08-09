@@ -135,7 +135,7 @@ After that point, you should be good to go start [labelling](https://github.com/
 
 Alright, you have sorted a set of thumbnails. Now we want to update our labels for training.
 
-[!WARNING]
+[!WARNING]  
 If you are correcting labels, heed this: first, and most importantly, our labels live in a git repo ([here](https://github.com/czbiohub-sf/lfm-human-labels)) at the path `.../LFM_scope/biohub-labels/vetted`. **Make sure that there are no changes in the labels before sorting thumbnails**. The repo on Github is considered correct, and after updating labels, you can verify the changes with `git diff`.
 
 Here is the sorting tool:
