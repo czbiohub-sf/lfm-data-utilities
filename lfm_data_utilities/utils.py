@@ -165,6 +165,9 @@ def make_video(dataset: Dataset, save_dir: PathLike):
 
     for i, _ in enumerate(tqdm(range(num_frames))):
         img = zf[:, :, i]
+        img = cv2.putText(
+            img, f"img {i}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1
+        )
         writer.write(img)
     writer.release()
 
