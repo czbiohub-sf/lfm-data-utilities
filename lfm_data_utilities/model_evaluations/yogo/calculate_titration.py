@@ -1,17 +1,16 @@
 #! /usr/bin/env python3
 
-import math
-import warnings
 import argparse
-
-import torch
+from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
+import math
+from pathlib import Path
+import pickle
+from typing import Dict, List, Tuple, Union, Optional
+import warnings
 
 import matplotlib.pyplot as plt
-
 from ruamel import yaml
-from pathlib import Path
-from typing import Dict, List, Tuple, Union, Optional
-from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
+import torch
 
 from yogo.infer import (
     predict,
@@ -55,7 +54,7 @@ def process_prediction(
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
 
-    confidence_values = torch.linspace(0.2, 0.95, 16).tolist()
+    confidence_values = [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
     confidence_range_sums = {
         cv: torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
         for cv in confidence_values
@@ -279,8 +278,7 @@ if __name__ == "__main__":
 
     if torch.multiprocessing.cpu_count() < 32 or not torch.cuda.is_available():
         warnings.warn(
-            "for best performance, we suggest running this script with >= 32 cpus "
-            "and a gpu"
+            "Note: this will probably run out of memory and crash if you don't have enough cpus. Go to ondemand and request >32 CPUs and a GPU."
         )
 
     try:
@@ -350,3 +348,17 @@ if __name__ == "__main__":
         per_point_plot_normalized_per_image_counts(
             f"{point:0{N}}", per_image_count, args.plot_dir, model_name
         )
+
+    # Dump raw data
+    try:
+        raw_data_folder: Path = args.plot_dir / Path("raw_data")
+        raw_data_folder.mkdir(exist_ok=True, parents=True)
+
+        with open(str(raw_data_folder / "points.pkl"), "wb") as f:
+            pickle.dump(points, f)
+        with open(str(raw_data_folder / "counts.pkl"), "wb") as f:
+            pickle.dump(counts, f)
+        with open(str(raw_data_folder / "thresholded_counts.pkl"), "wb") as f:
+            pickle.dump(thresholded_counts, f)
+    except Exception as e:
+        print(f"Error when dumping raw data: {e}!")
