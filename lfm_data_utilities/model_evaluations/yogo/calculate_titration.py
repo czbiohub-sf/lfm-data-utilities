@@ -354,11 +354,22 @@ if __name__ == "__main__":
     try:
         raw_data_folder: Path = args.plot_dir / Path("raw_data")
         raw_data_folder.mkdir(exist_ok=True, parents=True)
-
-        with open(
-            str(raw_data_folder / f"{model_name}-thresholded_counts.csv"), "w"
-        ) as csvfile:
+        filename = str(raw_data_folder / f"{model_name}-thresholded_counts.csv")
+        print(f"Writing raw data to csv: {filename}")
+        with open(filename, "w") as csvfile:
+            header = [
+                "tpoint",
+                "confidence_threshold",
+                "healthy",
+                "ring",
+                "troph",
+                "schizont",
+                "gametocyte",
+                "wbc",
+                "misc",
+            ]
             writer = csv.writer(csvfile)
+            writer.writerow(header)
             for i, vals in enumerate(thresholded_counts):
                 for conf in vals:
                     # Counts for all classes for this confidence value (conf) for this titration point (i)
