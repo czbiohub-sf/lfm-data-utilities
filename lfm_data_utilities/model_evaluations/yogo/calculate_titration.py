@@ -2,13 +2,14 @@
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
+import csv
 import math
 from pathlib import Path
-import pickle
 from typing import Dict, List, Tuple, Union, Optional
 import warnings
 
 import matplotlib.pyplot as plt
+import numpy as np
 from ruamel import yaml
 import torch
 
@@ -354,11 +355,22 @@ if __name__ == "__main__":
         raw_data_folder: Path = args.plot_dir / Path("raw_data")
         raw_data_folder.mkdir(exist_ok=True, parents=True)
 
-        with open(str(raw_data_folder / "points.pkl"), "wb") as f:
-            pickle.dump(points, f)
-        with open(str(raw_data_folder / "counts.pkl"), "wb") as f:
-            pickle.dump(counts, f)
         with open(str(raw_data_folder / "thresholded_counts.pkl"), "wb") as f:
             pickle.dump(thresholded_counts, f)
+
+        with open(str(raw_data_folder / "thresholded_counts.csv"), "w") as csvfile:
+            writer = csv.writer(csvfile)
+            for i, vals in enumerate(thresholded_counts):
+                for conf in vals:
+                    # Counts for all classes for this confidence value (conf) for this titration point (i)
+                    counts = np.asarray(vals[conf])
+
+                    # numerator: rings + trophs + schizonts only
+                    # denominator: healthy + rings + trophs + schizonts + gametocytes
+                    perc_parasitemia = np.sum(counts[1:4]) / np.sum(counts[:5])
+
+                    row = np.concatenate(([i, conf, perc_parasitemia], counts))
+                    writer.writerow(list(row))
+
     except Exception as e:
         print(f"Error when dumping raw data: {e}!")
