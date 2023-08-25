@@ -355,10 +355,9 @@ if __name__ == "__main__":
         raw_data_folder: Path = args.plot_dir / Path("raw_data")
         raw_data_folder.mkdir(exist_ok=True, parents=True)
 
-        with open(str(raw_data_folder / "thresholded_counts.pkl"), "wb") as f:
-            pickle.dump(thresholded_counts, f)
-
-        with open(str(raw_data_folder / "thresholded_counts.csv"), "w") as csvfile:
+        with open(
+            str(raw_data_folder / f"{model_name}-thresholded_counts.csv"), "w"
+        ) as csvfile:
             writer = csv.writer(csvfile)
             for i, vals in enumerate(thresholded_counts):
                 for conf in vals:
