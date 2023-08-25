@@ -360,6 +360,7 @@ if __name__ == "__main__":
             header = [
                 "tpoint",
                 "confidence_threshold",
+                "perc_parasitemia",
                 "healthy",
                 "ring",
                 "troph",
