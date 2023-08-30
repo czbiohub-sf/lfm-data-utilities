@@ -23,8 +23,24 @@ from yogo.data import YOGO_CLASS_ORDERING
 from lfm_data_utilities import utils
 
 
-def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], float]:
+def load_titration_yml(
+    path_to_titration_yml: Path,
+) -> Tuple[Dict[str, Path], float, Dict[str, Path]]:
+    """
+    Returns
+    -------
+    Tuple of the following:
+        Dict[str, Path]
+            Path to each titration point's images folder
+        float
+            Starting parasitemia
+        Dict[str, Path]
+            Paths to the heatmap_masks (will return mappings to None objects if the heatmap_masks key isn't provided in the yaml file)
+    """
+
     point_to_path: Dict[str, Path] = dict()
+    point_to_heatmap_mask_path: Dict[str, Path] = dict()
+
     with open(path_to_titration_yml, "r") as f:
         yaml_data = yaml.safe_load(f)
         points: Dict[str, str] = yaml_data["titration-points"]
@@ -42,7 +58,21 @@ def load_titration_yml(path_to_titration_yml: Path) -> Tuple[Dict[str, Path], fl
                 )
             point_to_path[titration_point] = tpoint_path
 
-    return point_to_path, initial_parasitemia
+        if "heatmap_masks" in yaml_data.keys():
+            print("Loading in heatmap masks...")
+            heatmap_mask_points = yaml_data["heatmap_masks"]
+            for titration_point, path in heatmap_mask_points:
+                heatmap_mask_path = Path(path)
+                if not heatmap_mask_path.exists():
+                    raise ValueError(
+                        f"'heatmap_masks' is present as a key in the yaml file, but the path doesn't seem to exist: {heatmap_mask_path}"
+                    )
+                point_to_heatmap_mask_path[titration_point] = heatmap_mask_path
+        else:
+            for titration_point, _ in points.items():
+                point_to_heatmap_mask_path[titration_point] = None
+
+    return point_to_path, initial_parasitemia, point_to_heatmap_mask_path
 
 
 def process_prediction(
@@ -52,6 +82,7 @@ def process_prediction(
         str, Dict[str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]]
     ],
     min_confidence_threshold: Optional[float] = None,
+    heatmap_mask: Optional[np.ndarray] = None,
 ) -> None:
     per_image_counts: List[torch.Tensor] = []
 
@@ -64,7 +95,9 @@ def process_prediction(
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
 
     for pred_slice in predictions:
-        pred = format_preds(pred_slice)
+        if heatmap_mask != None:
+            heatmap_mask = torch.from_numpy(heatmap_mask)
+        pred = format_preds(pred_slice, heatmap_mask=heatmap_mask)
 
         if pred.numel() == 0:
             continue  # ignore no predictions
@@ -283,7 +316,7 @@ if __name__ == "__main__":
         )
 
     try:
-        titration_points, initial_parasitemia = load_titration_yml(
+        titration_points, initial_parasitemia, heatmap_masks = load_titration_yml(
             args.path_to_titration_yml
         )
     except KeyError as e:
@@ -295,7 +328,16 @@ if __name__ == "__main__":
 
     futs: List[Future] = []
     tpe = ThreadPoolExecutor(max_workers=4)
-    for titration_point, path in titration_points.items():
+    for (titration_point, path), (mask_titration_point, mask_path) in zip(
+        titration_points.items(), heatmap_masks.items()
+    ):
+        if not titration_point == mask_titration_point:
+            raise ValueError(
+                f"Titration point for {path} did not match titration point for the corresponding mask: {mask_path}. Got {titration_point} and {mask_titration_point}. Double check the yaml file!"
+            )
+        if mask_path is not None:
+            mask = np.load(mask_path)
+
         # let's error out asap
         check_for_exceptions(futs)
         # predict synchronously
@@ -318,6 +360,7 @@ if __name__ == "__main__":
             titration_point,
             titration_results,
             args.min_confidence_threshold,
+            mask,
         )
         futs.append(fut)
 
