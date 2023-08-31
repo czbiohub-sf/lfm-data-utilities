@@ -60,8 +60,8 @@ def load_titration_yml(
 
         if "heatmap_masks" in yaml_data.keys():
             print("Loading in heatmap masks...")
-            heatmap_mask_points = yaml_data["heatmap_masks"]
-            for titration_point, path in heatmap_mask_points:
+            heatmap_mask_points: Dict[str, str] = yaml_data["heatmap_masks"]
+            for titration_point, path in heatmap_mask_points.items():
                 heatmap_mask_path = Path(path)
                 if not heatmap_mask_path.exists():
                     raise ValueError(
