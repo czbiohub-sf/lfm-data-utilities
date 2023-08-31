@@ -335,6 +335,8 @@ if __name__ == "__main__":
             )
         if mask_path is not None:
             mask = np.load(mask_path)
+        else:
+            mask = None
 
         # let's error out asap
         check_for_exceptions(futs)
