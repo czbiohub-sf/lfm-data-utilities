@@ -421,7 +421,7 @@ if __name__ == "__main__":
                     # denominator: healthy + rings + trophs + schizonts + gametocytes
                     perc_parasitemia = np.sum(counts[1:4]) / np.sum(counts[:5])
 
-                    row = np.concatenate(([i, conf, perc_parasitemia], counts))
+                    row = np.concatenate(([i + 1, conf, perc_parasitemia], counts))
                     writer.writerow(list(row))
 
     except Exception as e:
