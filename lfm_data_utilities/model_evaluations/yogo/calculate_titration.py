@@ -95,7 +95,7 @@ def process_prediction(
     tot_class_sum = torch.zeros(len(YOGO_CLASS_ORDERING), dtype=torch.long)
 
     for pred_slice in predictions:
-        if heatmap_mask != None:
+        if heatmap_mask is not None:
             heatmap_mask = torch.from_numpy(heatmap_mask)
         pred = format_preds(pred_slice, heatmap_mask=heatmap_mask)
 
