@@ -213,7 +213,7 @@ if __name__ == "__main__":
         "--save_dir", type=Path, help="Where to save the plots and .npy files"
     )
 
-    parser.add_argument("--target_dataset", type=Path, help="Path to .zarr file")
+    parser.add_argument("--target_dataset", type=Path, help="Path to zarr (.zip) file")
 
     args = parser.parse_args()
     args.save_dir.mkdir(exist_ok=True, parents=True)
