@@ -121,7 +121,7 @@ if __name__ == "__main__":
         )
     elif args.subparser == "verify":
         try:
-            from yogo.data.dataloader import (
+            from yogo.data.dataset_description_file import (
                 load_dataset_description,
                 InvalidDatasetDescriptionFile,
             )
