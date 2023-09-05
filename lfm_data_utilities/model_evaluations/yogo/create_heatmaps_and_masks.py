@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Union
 
 import cv2
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 from scipy import ndimage
 import torch
@@ -161,6 +163,49 @@ def generate_masks(
     return masks.astype(bool)
 
 
+def create_and_save_heatmap_and_mask_plot(
+    heatmap: np.ndarray,
+    mask: np.ndarray,
+    fn: Path,
+) -> None:
+    fig = plt.figure(figsize=(6, 12))
+    gs = gridspec.GridSpec(4, 2)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    ax3 = fig.add_subplot(gs[1, 0])
+    ax4 = fig.add_subplot(gs[1, 1])
+    ax5 = fig.add_subplot(gs[2, 0])
+    ax6 = fig.add_subplot(gs[2, 1])
+    ax7 = fig.add_subplot(gs[3, 0])
+    ax8 = fig.add_subplot(gs[3, 1])
+
+    ax1.set_title("Ring heatmap")
+    ax1.imshow(heatmap[:, :, 1])
+    ax2.set_title("Ring hotspot mask")
+    ax2.imshow(mask[:, :, 1])
+
+    ax3.set_title("Troph heatmap")
+    ax3.imshow(heatmap[:, :, 2])
+    ax4.set_title("Troph hotspot mask")
+    ax4.imshow(mask[:, :, 2])
+
+    ax5.set_title("Schizont heatmap")
+    ax5.imshow(heatmap[:, :, 3])
+    ax6.set_title("Schizont hotspot mask")
+    ax6.imshow(mask[:, :, 3])
+
+    ax7.set_title("Gametocyte heatmap")
+    ax7.imshow(heatmap[:, :, 4])
+    ax8.set_title("Gametocyte hotspot mask")
+    ax8.imshow(mask[:, :, 4])
+
+    plt.tight_layout()
+    _ = plt.suptitle(f"{fn.stem} - heatmaps and masks")
+    fig.subplots_adjust(top=0.95)
+    plt.savefig(f"{fn}")
+    plt.close()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Generate heatmap masks")
     parser.add_argument("--path_to_pth", type=Path, help="Path to YOGO .pth file")
@@ -177,13 +222,20 @@ if __name__ == "__main__":
     plots_dir = args.save_dir / "plots"
     [x.mkdir(exist_ok=True, parents=True) for x in [heatmaps_dir, masks_dir, plots_dir]]
 
-    print(f"Loading model: {args.path_to_pth.stem}")
+    print(f"Loading model: {args.path_to_pth}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = load_model(args.path_to_pth, device)
     zf = zarr.open(args.target_dataset, "r")
+
+    if not zf.initialized > 0:
+        print(f"Empty dataset - {args.target_dataset}")
+        quit()
+
     heatmap = generate_heatmap(zf, model)
     mask = generate_masks(heatmap)
 
     filename = args.target_dataset.stem + ".npy"
+    plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
     np.save(heatmaps_dir / filename, heatmap)
     np.save(masks_dir / filename, mask)
+    create_and_save_heatmap_and_mask_plot(heatmap, mask, plots_dir)
