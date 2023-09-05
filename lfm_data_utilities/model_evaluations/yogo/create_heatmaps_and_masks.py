@@ -179,7 +179,7 @@ if __name__ == "__main__":
 
     print(f"Loading model: {args.path_to_pth.stem}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_model(args.path_to_pth)
+    model = load_model(args.path_to_pth, device)
     zf = zarr.open(args.target_dataset, "r")
     heatmap = generate_heatmap(zf, model)
     mask = generate_masks(heatmap)
