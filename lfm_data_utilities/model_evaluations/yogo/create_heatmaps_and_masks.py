@@ -182,5 +182,6 @@ if __name__ == "__main__":
     heatmap = generate_heatmap(zf, model)
     mask = generate_masks(heatmap)
 
-    np.save(heatmaps_dir / args.target_dataset.with_suffix(".npy"), heatmap)
-    np.save(masks_dir / args.target_dataset.with_suffix(".npy"), mask)
+    filename = args.target_dataset.stem + ".npy"
+    np.save(heatmaps_dir / filename, heatmap)
+    np.save(masks_dir / filename, mask)
