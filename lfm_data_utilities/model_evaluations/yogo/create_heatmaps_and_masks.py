@@ -177,6 +177,8 @@ if __name__ == "__main__":
     plots_dir = args.save_dir / "plots"
     [x.mkdir(exist_ok=True, parents=True) for x in [heatmaps_dir, masks_dir, plots_dir]]
 
+    print(f"Loading model: {args.path_to_pth.stem}")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = load_model(args.path_to_pth)
     zf = zarr.open(args.target_dataset, "r")
     heatmap = generate_heatmap(zf, model)
