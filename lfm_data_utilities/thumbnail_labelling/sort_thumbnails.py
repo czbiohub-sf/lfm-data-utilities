@@ -74,6 +74,7 @@ def get_list_of_corrections(
                     "cell_id": cell_id,
                     "original_class": original_class,
                     "corrected_class": class_,
+                    "filename": thumbnail.name,
                 }
             )
     return id_to_list_of_corrections
@@ -123,7 +124,8 @@ def sort_thumbnails(
     true class for that cell.
 
     This function will first create a backup of `LFM_scope/biohub-labels/vetted` into `LFM_scope/biohub-labels/vetted-backup`.
-    Then, it goes through the corrected class folders and will correct the tasks.json files. It will then export the
+    Then, it goes through the corrected class folders and will correct the tasks.json files. It will then export the tasks.json
+    files.
 
     Parameters:
         path_to_thumbnails: path to the thumbnails dir
@@ -185,7 +187,7 @@ def sort_thumbnails(
                 not_corrected += 1
                 if verbose:
                     print(
-                        f"could not find cell_id {cell_id} in task {id_to_task_path[task_json_id]}"
+                        f"could not find cell id {cell_id} (file name {correction['filename']}) in task {id_to_task_path[task_json_id]}"
                     )
                 continue
 
