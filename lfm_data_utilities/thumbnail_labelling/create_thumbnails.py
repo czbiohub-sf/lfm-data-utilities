@@ -31,6 +31,7 @@ def create_tasks_file_from_path_to_run(
     path_to_run: Path,
     tasks_path: Path,
     func: TasksJsonGenerationFunc,
+    throw_if_no_labels: bool = True,
 ) -> Dict[str, Union[int, str]]:
     """
     creates task.json files from datasets defined by `path_to_labelled_data_ddf` in  `tasks_dir`,
@@ -49,9 +50,13 @@ def create_tasks_file_from_path_to_run(
     elif (path_to_run / "labels").exists():
         path_to_labels = path_to_run / "labels"
     else:
-        raise ValueError(
-            f"run folder {path_to_run} doesn't include a 'labels' nor a 'yogo_labels' directory"
-        )
+        if throw_if_no_labels:
+            raise ValueError(
+                f"run folder {path_to_run} doesn't include a 'labels' nor a 'yogo_labels' directory"
+            )
+        # default to setting to path to run - yogo confidence filtering doesn't require
+        # this, so we don't want to throw an error here
+        path_to_labels = path_to_run
 
     func(
         image_path=path_to_run / "images",

@@ -253,7 +253,10 @@ def main():
 
         if args.path_to_run:
             tasks_information = create_tasks_file_from_path_to_run(
-                args.path_to_run, tasks_dir / "thumbnail_correction_task_0.json", func
+                args.path_to_run,
+                tasks_dir / "thumbnail_correction_task_0.json",
+                func,
+                throw_if_no_labels=(args.thumbnail_type != "yogo-confidence"),
             )
             tasks_and_labels_paths = [tasks_information]
         elif args.path_to_labelled_data_ddf:
