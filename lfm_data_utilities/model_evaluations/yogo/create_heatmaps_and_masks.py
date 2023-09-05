@@ -109,7 +109,7 @@ def generate_heatmap(
         for i in range(num_classes):
             maps[:, :, i] += pred[5 + i, :, :].detach().cpu().numpy()
 
-    return maps
+    return maps.astype(np.uint16)
 
 
 def generate_masks(
