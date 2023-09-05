@@ -238,4 +238,4 @@ if __name__ == "__main__":
     plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
     np.save(heatmaps_dir / filename, heatmap)
     np.save(masks_dir / filename, mask)
-    create_and_save_heatmap_and_mask_plot(heatmap, mask, plots_dir)
+    create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
