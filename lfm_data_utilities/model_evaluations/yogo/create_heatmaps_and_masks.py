@@ -41,13 +41,13 @@ def load_model(path_to_pth_file: str, device: Union[str, torch.device] = "cpu") 
     return model
 
 
-def get_img_from_zarr_in_torch_format(zf: zarr.Core.Array, id: int) -> torch.Tensor:
+def get_img_from_zarr_in_torch_format(zf: zarr.core.Array, id: int) -> torch.Tensor:
     """Convenience function for loading an image from zarr in a format
     ready for GPU-inference.
 
     Parameters
     ----------
-    zf: zarr.Core.Array (i.e the zarr file, zarr.open("filename", "r"))
+    zf: zarr.core.Array (i.e the zarr file, zarr.open("filename", "r"))
     id: int
         Which image to pull from the zarr (zf[:, :, id])
 
@@ -80,7 +80,7 @@ def circ_kernel(radius):
 
 
 def generate_heatmap(
-    zf: zarr.Core.Array,
+    zf: zarr.core.Array,
     model: YOGO,
     sx: int = 129,
     sy: int = 97,
@@ -91,7 +91,7 @@ def generate_heatmap(
 
     Parameters
     ----------
-    zf: zarr.Core.Array
+    zf: zarr.core.Array
         Zarr dataset (i.e the result of zarr.open(filename, "r"))
     model: YOGO
     sx: int = 129
