@@ -216,11 +216,22 @@ if __name__ == "__main__":
     parser.add_argument("--target_dataset", type=Path, help="Path to zarr (.zip) file")
 
     args = parser.parse_args()
+
     args.save_dir.mkdir(exist_ok=True, parents=True)
+
+    # Make directories
     heatmaps_dir = args.save_dir / "heatmaps_npy"
     masks_dir = args.save_dir / "masks_npy"
     plots_dir = args.save_dir / "plots"
     [x.mkdir(exist_ok=True, parents=True) for x in [heatmaps_dir, masks_dir, plots_dir]]
+
+    # Check if file has already been created, if so, skip
+    print(f"Working on {args.target_dataset}")
+    filename = args.target_dataset.stem + ".npy"
+    plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
+    if plot_filename.exists():
+        print(f"{plot_filename} already created, skipping!")
+        quit()
 
     print(f"Loading model: {args.path_to_pth}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -234,8 +245,6 @@ if __name__ == "__main__":
     heatmap = generate_heatmap(zf, model)
     mask = generate_masks(heatmap)
 
-    filename = args.target_dataset.stem + ".npy"
-    plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
     np.save(heatmaps_dir / filename, heatmap)
     np.save(masks_dir / filename, mask)
     create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
