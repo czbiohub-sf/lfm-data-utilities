@@ -1,12 +1,13 @@
 #! /usr/bin/env python3
 
-import argparse
-from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 import csv
 import math
+import warnings
+import argparse
+
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Optional
-import warnings
+from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
 import matplotlib.pyplot as plt
 import numpy as np
