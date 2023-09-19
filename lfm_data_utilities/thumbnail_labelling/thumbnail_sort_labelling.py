@@ -228,6 +228,7 @@ def main():
                     output_path=tasks_path,
                     obj_thresh=args.obj_thresh,
                     iou_thresh=args.iou_thresh,
+                    min_class_confidence_thresh=args.min_confidence,
                     max_class_confidence_thresh=args.max_confidence,
                 )
 
