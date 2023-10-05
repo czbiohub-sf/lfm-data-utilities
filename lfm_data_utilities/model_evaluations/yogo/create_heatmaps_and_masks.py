@@ -8,19 +8,20 @@ The heatmap is saved as a `.npy` file, array of shape (Sx * Sy * NUM_CLASSES),
 where Sx and Sy are the shape of YOGO's output grid size. At the time of writing, Sx = 129, Sy = 97.
 """
 
-import argparse
 from pathlib import Path
 from typing import Union
 
 import cv2
+import zarr
+import torch
+import argparse
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import numpy as np
-from scipy import ndimage
-import torch
-from tqdm import tqdm
-import zarr
 
+from tqdm import tqdm
+from scipy import ndimage
 from yogo.model import YOGO
 
 
