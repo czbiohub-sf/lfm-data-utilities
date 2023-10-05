@@ -114,7 +114,7 @@ def generate_heatmap(
         img = get_img_from_zarr_in_torch_format(zf, i)
         pred = model(img).squeeze()
         for i in range(num_classes):
-            thresh_mask = pred[5 + i, :, :] > 0.9
+            thresh_mask = pred[5 + i, :, :] > thresh
             pred[5 + i, ~thresh_mask] = 0
             maps[:, :, i] += pred[5 + i, :, :].detach().cpu().numpy()
 
