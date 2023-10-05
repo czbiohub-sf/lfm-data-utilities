@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """
 Run YOGO on the given dataset(s) and for each, return a heatmap of
 where each class is detected (spatially).
@@ -212,9 +214,9 @@ def create_and_save_heatmap_and_mask_plot(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Generate heatmap masks")
-    parser.add_argument("--path_to_pth", type=Path, help="Path to YOGO .pth file")
+    parser.add_argument("path_to_pth", type=Path, help="Path to YOGO .pth file")
     parser.add_argument(
-        "--save_dir", type=Path, help="Where to save the plots and .npy files"
+        "save_dir", type=Path, help="Where to save the plots and .npy files"
     )
 
     parser.add_argument("--target_dataset", type=Path, help="Path to zarr (.zip) file")
