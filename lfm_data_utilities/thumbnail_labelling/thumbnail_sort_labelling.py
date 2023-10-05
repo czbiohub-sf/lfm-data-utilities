@@ -60,13 +60,6 @@ def main():
     except AttributeError:
         boolean_action = "store_true"  # type: ignore
 
-    default_ddf = (
-        DEFAULT_LABELS_PATH
-        / "dataset_defs"
-        / "human-labels"
-        / "all-labelled-data-train-only.yml"
-    )
-
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest="subparser")
@@ -78,9 +71,8 @@ def main():
     input_source.add_argument(
         "--path-to-labelled-data-ddf",
         help=(
-            "path to dataset descriptor file for labelled data (default {default_ddf})"
+            "path to dataset descriptor file for labelled data"
         ),
-        default=default_ddf,
         type=Path,
     )
     input_source.add_argument(
