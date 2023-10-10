@@ -18,7 +18,7 @@ from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
 
 
 DEFAULT_LABELS_PATH = Path(
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
+    "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
 

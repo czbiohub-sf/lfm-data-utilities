@@ -10,6 +10,7 @@ from lfm_data_utilities.malaria_labelling.labelling_constants import (
     IMG_WIDTH,
     IMG_HEIGHT,
     IMAGE_SERVER_PORT,
+    LFM_SCOPE_PATH,
 )
 from lfm_data_utilities.utils import (
     multiprocess_fn,
@@ -20,9 +21,6 @@ from lfm_data_utilities.utils import (
 from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_yolo_to_ls import (
     convert_yolo_to_ls,
 )
-
-
-LFM_SCOPE_PATH = Path("/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/")
 
 
 def generate_tasks_for_runset_by_parent_folder(

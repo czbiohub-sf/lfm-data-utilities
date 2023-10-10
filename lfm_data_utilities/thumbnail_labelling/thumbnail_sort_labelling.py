@@ -50,7 +50,7 @@ from lfm_data_utilities.thumbnail_labelling.create_thumbnails import (
 
 
 DEFAULT_LABELS_PATH = Path(
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
+    "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
 
@@ -70,9 +70,7 @@ def main():
     input_source = create_thumbnails_parser.add_mutually_exclusive_group()
     input_source.add_argument(
         "--path-to-labelled-data-ddf",
-        help=(
-            "path to dataset descriptor file for labelled data"
-        ),
+        help=("path to dataset descriptor file for labelled data"),
         type=Path,
     )
     input_source.add_argument(
