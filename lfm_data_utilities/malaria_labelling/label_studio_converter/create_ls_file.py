@@ -136,9 +136,7 @@ if __name__ == "__main__":
     # example usage
     tasks_file = LabelStudioTasksFile()
     tasks_file.add_prediction(
-        Path(
-            "/hpc/projects/group.bioengineering/LFM_scope/notapath/test_data/1.png"
-        ),
+        Path("/hpc/projects/group.bioengineering/LFM_scope/notapath/test_data/1.png"),
         [("ring", 0.5, 0.5, 0.5, 0.5)],
     )
     tasks_file.write(Path("test_tasks.json"))

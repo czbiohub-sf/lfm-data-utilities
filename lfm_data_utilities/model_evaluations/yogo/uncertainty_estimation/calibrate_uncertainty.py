@@ -13,9 +13,7 @@ def sigmoid(x, a, b):
 
 
 if __name__ == "__main__":
-    base_dir = Path(
-        "/hpc/projects/group.bioengineering/LFM_scope/misc/yogo-statistics"
-    )
+    base_dir = Path("/hpc/projects/group.bioengineering/LFM_scope/misc/yogo-statistics")
     folder = Path(sys.argv[1])
     data_file = base_dir / folder / "res.csv"
     bins_file = base_dir / folder / "bins.png"

@@ -23,7 +23,6 @@ from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_yolo_to
 )
 
 
-
 def generate_tasks_for_runset_by_parent_folder(
     path_to_runset_folder: Path,
     path_to_parent_for_image_server: Path,

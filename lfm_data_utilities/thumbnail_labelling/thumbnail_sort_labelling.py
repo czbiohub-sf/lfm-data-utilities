@@ -70,9 +70,7 @@ def main():
     input_source = create_thumbnails_parser.add_mutually_exclusive_group()
     input_source.add_argument(
         "--path-to-labelled-data-ddf",
-        help=(
-            "path to dataset descriptor file for labelled data"
-        ),
+        help=("path to dataset descriptor file for labelled data"),
         type=Path,
     )
     input_source.add_argument(
