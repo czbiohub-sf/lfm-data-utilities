@@ -18,7 +18,7 @@ from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_ls_to_y
 
 
 DEFAULT_LABELS_PATH = Path(
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
+    "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
 

@@ -137,7 +137,7 @@ if __name__ == "__main__":
     tasks_file = LabelStudioTasksFile()
     tasks_file.add_prediction(
         Path(
-            "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/notapath/test_data/1.png"
+            "/hpc/projects/group.bioengineering/LFM_scope/notapath/test_data/1.png"
         ),
         [("ring", 0.5, 0.5, 0.5, 0.5)],
     )

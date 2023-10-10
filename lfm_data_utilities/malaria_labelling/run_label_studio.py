@@ -93,7 +93,7 @@ if __name__ == "__main__":
         )
     elif path_to_run_folder.name != "LFM_scope":
         raise ValueError(
-            "provided path must be to `flexo/MicroscopyData/Bioengineering/LFM_scope`.\n"
+            "provided path must be to `group.bioengineering/LFM_scope`.\n"
             "When running on OnDemand, this should default to the correct location. Otherwise, make sure you've mounted\n"
             "Flexo, and provide the path to `run-sets`.\n"
             f"got path {path_to_run_folder}"
