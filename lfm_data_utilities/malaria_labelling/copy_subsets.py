@@ -12,7 +12,7 @@ from lfm_data_utilities.utils import (
 )
 
 
-def does_the_path_match(path: Path, num_images_to_copy: int) -> bool:
+def does_the_path_match(path: Path, num_images_to_move: int) -> bool:
     """
     we expect some sort of path to an image with a filename
     like `img_72798.png`.
@@ -25,16 +25,22 @@ def does_the_path_match(path: Path, num_images_to_copy: int) -> bool:
         )
 
     num = int(path.stem.replace("img_", ""))
-    return num % (20_000 // num_images_to_copy) == 0
+    return num % (20_000 // num_images_to_move) == 0
 
 
 def move_images(
     path_to_image_dir: Path,
     path_to_image_subsets_dir: Path,
     min_num_images_in_image_dir: int = 5000,
-    num_images_to_copy: int = 300,
+    num_images_to_move: int = 300,
     dry_run: bool = True,
-):
+) -> int:
+    """
+    moves `num_images_to_move` images from `path_to_image_dir` to a directory
+    of the same name structure (i.e. it copies the directory structure)
+    in `path_to_image_subsets_dir`. If `path_to_image_dir` has less than
+    `min_num_images_in_image_dir`, it will be skipped.
+    """
     # create the target directories
     image_subset_dir = (
         path_to_image_subsets_dir / path_to_image_dir.parent.name / "images"
@@ -50,12 +56,12 @@ def move_images(
         print(
             f"{len(source_imgs)} imgs in {path_to_image_dir} (need at least {min_num_images_in_image_dir})"
         )
-        return
+        return 0
 
     source_imgs = [
         img_path
         for img_path in source_imgs
-        if does_the_path_match(img_path, num_images_to_copy)
+        if does_the_path_match(img_path, num_images_to_move)
     ]
 
     for source_img in source_imgs:
@@ -74,7 +80,9 @@ def move_images(
             try:
                 shutil.move(source_label, label_subset_dir / source_label.name)
             except FileNotFoundError:
-                print(f"could not find label file {source_label}")
+                pass
+
+    return len(source_imgs)
 
 
 if __name__ == "__main__":
@@ -111,7 +119,7 @@ if __name__ == "__main__":
         help="if set, will not move any files, just print the commands",
     )
     parser.add_argument(
-        "--num-images-to-copy",
+        "--num-images-to-move",
         type=int,
         default=300,
         help=(
@@ -134,15 +142,16 @@ if __name__ == "__main__":
         if len(folders) == 0:
             raise ValueError(f"no image folders found in directory {run_set}")
 
-        multithread_map_unordered(
+        v = multithread_map_unordered(
             folders,
             partial(
                 move_images,
                 path_to_image_subsets_dir=args.image_dir,
-                num_images_to_copy=args.num_images_to_copy,
+                num_images_to_move=args.num_images_to_move,
                 dry_run=args.dry_run,
             ),
         )
+        print(f"{sum(v)} images {'would have been' if args.dry_run else ''} moved")
     elif args.from_list:
         run_list = args.from_list
         if not run_list.exists():
@@ -158,14 +167,15 @@ if __name__ == "__main__":
         if len(given_folders) == 0:
             raise ValueError(f"no paths given in file {run_list}")
 
-        multithread_map_unordered(
+        v = multithread_map_unordered(
             given_folders,
             partial(
                 move_images,
                 path_to_image_subsets_dir=args.image_dir,
-                num_images_to_copy=args.num_images_to_copy,
+                num_images_to_move=args.num_images_to_move,
                 dry_run=args.dry_run,
             ),
         )
+        print(f"{sum(v)} images {'would have been' if args.dry_run else ''} moved")
     else:
         raise ValueError("This shouldn't be possible!")
