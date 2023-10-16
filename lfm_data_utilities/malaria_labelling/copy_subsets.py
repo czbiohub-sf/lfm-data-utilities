@@ -8,6 +8,7 @@ from functools import partial
 
 from lfm_data_utilities.utils import (
     multiprocess_fn,
+    multithread_map_unordered,
     is_not_hidden_path,
 )
 
@@ -136,7 +137,7 @@ if __name__ == "__main__":
         if len(given_folders) == 0:
             raise ValueError(f"no paths given in file {run_list}")
 
-        multiprocess_fn(
+        multithread_map_unordered(
             given_folders,
             partial(
                 move_images,
@@ -144,7 +145,6 @@ if __name__ == "__main__":
                 regex_str=r"img_00\d\d\d.png",
                 dry_run=args.dry_run,
             ),
-            ordered=False,
         )
     else:
         raise ValueError("This shouldn't be possible!")
