@@ -150,6 +150,7 @@ if __name__ == "__main__":
                 num_images_to_move=args.num_images_to_move,
                 dry_run=args.dry_run,
             ),
+            verbose=not args.dry_run
         )
         print(f"{sum(v)} images {'would have been' if args.dry_run else ''} moved")
     elif args.from_list:
@@ -175,6 +176,7 @@ if __name__ == "__main__":
                 num_images_to_move=args.num_images_to_move,
                 dry_run=args.dry_run,
             ),
+            verbose=not args.dry_run
         )
         print(f"{sum(v)} images {'would have been' if args.dry_run else ''} moved")
     else:
