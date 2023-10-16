@@ -7,21 +7,32 @@ from pathlib import Path
 from functools import partial
 
 from lfm_data_utilities.utils import (
-    multiprocess_fn,
     multithread_map_unordered,
     is_not_hidden_path,
 )
 
 
-def does_the_path_match(pattern: str, path: Path) -> bool:
-    return re.fullmatch(pattern, path.name) is not None
+def does_the_path_match(path: Path, num_images_to_copy: int) -> bool:
+    """
+    we expect some sort of path to an image with a filename
+    like `img_72798.png`.
+    """
+    if not re.fullmatch(r"img_\d+\.png", path.name):
+        raise ValueError(
+            f"path {path} doesn't seem to be an image that we expect: "
+            "we expect an image like img_0123.png (specifically, the "
+            "regex is r'img_\d+\.png')"
+        )
+
+    num = int(path.stem.replace("img_", ""))
+    return num % (20_000 // num_images_to_copy) == 0
 
 
 def move_images(
     path_to_image_dir: Path,
     path_to_image_subsets_dir: Path,
-    regex_str: str,
     min_num_images_in_image_dir: int = 5000,
+    num_images_to_copy: int = 300,
     dry_run: bool = True,
 ):
     # create the target directories
@@ -42,7 +53,9 @@ def move_images(
         return
 
     source_imgs = [
-        img_path for img_path in source_imgs if does_the_path_match(regex_str, img_path)
+        img_path
+        for img_path in source_imgs
+        if does_the_path_match(img_path, num_images_to_copy)
     ]
 
     for source_img in source_imgs:
@@ -68,7 +81,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        "move subsets of images from `images` folders to a folder in a new directory"
+        "move a subset of images from `images` folders to a folder in a new directory"
     )
 
     group = parser.add_mutually_exclusive_group()
@@ -97,6 +110,15 @@ if __name__ == "__main__":
         default=True,
         help="if set, will not move any files, just print the commands",
     )
+    parser.add_argument(
+        "--num-images-to-copy",
+        type=int,
+        default=300,
+        help=(
+            "number of images to move to the subset, evenly sampled through "
+            "the set of images"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -112,15 +134,14 @@ if __name__ == "__main__":
         if len(folders) == 0:
             raise ValueError(f"no image folders found in directory {run_set}")
 
-        multiprocess_fn(
+        multithread_map_unordered(
             folders,
             partial(
                 move_images,
                 path_to_image_subsets_dir=args.image_dir,
-                regex_str=r"img_00\d\d\d.png",
+                num_images_to_copy=args.num_images_to_copy,
                 dry_run=args.dry_run,
             ),
-            ordered=False,
         )
     elif args.from_list:
         run_list = args.from_list
@@ -142,7 +163,7 @@ if __name__ == "__main__":
             partial(
                 move_images,
                 path_to_image_subsets_dir=args.image_dir,
-                regex_str=r"img_00\d\d\d.png",
+                num_images_to_copy=args.num_images_to_copy,
                 dry_run=args.dry_run,
             ),
         )
