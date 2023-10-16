@@ -41,6 +41,13 @@ def move_images(
     in `path_to_image_subsets_dir`. If `path_to_image_dir` has less than
     `min_num_images_in_image_dir`, it will be skipped.
     """
+    source_imgs = list(path_to_image_dir.glob("*.png"))
+    if len(source_imgs) < min_num_images_in_image_dir:
+        print(
+            f"{len(source_imgs)} imgs in {path_to_image_dir} (need at least {min_num_images_in_image_dir})"
+        )
+        return 0
+
     # create the target directories
     image_subset_dir = (
         path_to_image_subsets_dir / path_to_image_dir.parent.name / "images"
@@ -50,13 +57,6 @@ def move_images(
     )
     image_subset_dir.mkdir(parents=True, exist_ok=True)
     label_subset_dir.mkdir(parents=True, exist_ok=True)
-
-    source_imgs = list(path_to_image_dir.glob("*.png"))
-    if len(source_imgs) < min_num_images_in_image_dir:
-        print(
-            f"{len(source_imgs)} imgs in {path_to_image_dir} (need at least {min_num_images_in_image_dir})"
-        )
-        return 0
 
     source_imgs = [
         img_path
