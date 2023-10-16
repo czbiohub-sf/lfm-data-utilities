@@ -1,20 +1,13 @@
 #! /usr/bin/env python3
 
 import re
-import sys
-import zarr
-import math
 import shutil
 
-from PIL import Image
 from pathlib import Path
-from typing import Optional
 from functools import partial
 
 from lfm_data_utilities.utils import (
     multiprocess_fn,
-    multithread_map_unordered,
-    path_relative_to,
     is_not_hidden_path,
 )
 
@@ -27,33 +20,40 @@ def move_images(
     path_to_image_dir: Path,
     path_to_image_subsets_dir: Path,
     regex_str: str,
-    min_num_images: int = 5000,
+    min_num_images_in_image_dir: int = 5000,
     dry_run: bool = True,
 ):
+    # create the target directories
     image_subset_dir = (
         path_to_image_subsets_dir / path_to_image_dir.parent.name / "images"
     )
-    image_subset_dir.mkdir(parents=True, exist_ok=True)
-
     label_subset_dir = (
         path_to_image_subsets_dir / path_to_image_dir.parent.name / "labels"
     )
+    image_subset_dir.mkdir(parents=True, exist_ok=True)
     label_subset_dir.mkdir(parents=True, exist_ok=True)
 
     source_imgs = list(path_to_image_dir.glob("*.png"))
-    if len(source_imgs) < min_num_images:
+    if len(source_imgs) < min_num_images_in_image_dir:
+        print(
+            f"{len(source_imgs)} imgs in {path_to_image_dir} (need at least {min_num_images_in_image_dir})"
+        )
         return
 
-    source_imgs = list(filter(partial(does_the_path_match, regex_str), source_imgs))
+    source_imgs = [
+        img_path for img_path in source_imgs if does_the_path_match(regex_str, img_path)
+    ]
 
     for source_img in source_imgs:
         source_label = (
             source_img.parent.parent / "labels" / source_img.with_suffix(".txt").name
         )
         if dry_run:
-            print(f"shutil.move({source_img}, {image_subset_dir / source_img.name})")
             print(
-                f"shutil.move({source_label}, {label_subset_dir / source_label.name})"
+                f"[DRY] shutil.move({source_img}, {image_subset_dir / source_img.name})"
+            )
+            print(
+                f"[DRY] shutil.move({source_label}, {label_subset_dir / source_label.name})"
             )
         else:
             shutil.move(source_img, image_subset_dir / source_img.name)
@@ -77,7 +77,9 @@ if __name__ == "__main__":
         type=Path,
         help=(
             "a text file where each line is the path to one run that "
-            "will be processed"
+            "will be processed. note that this is the path to the run "
+            "folder, which is the folder that has the `images` folder "
+            "and optionally the `labels` folder"
         ),
     )
     parser.add_argument(
@@ -126,7 +128,9 @@ if __name__ == "__main__":
 
         with open(run_list) as f:
             given_folders = [
-                Path(p) for p in f.read().splitlines() if (Path(p) / "images").exists()
+                Path(p) / "images"
+                for p in f.read().splitlines()
+                if (Path(p) / "images").exists()
             ]
 
         if len(given_folders) == 0:
