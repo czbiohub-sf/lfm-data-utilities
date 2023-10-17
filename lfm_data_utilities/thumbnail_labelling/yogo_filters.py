@@ -51,7 +51,7 @@ def create_confidence_filtered_tasks_file_from_YOGO(
         drop_last=False,
         pin_memory=True,
         collate_fn=collate_fn,
-        num_workers=choose_dataloader_num_workers(len(image_dataset)),
+        num_workers=choose_dataloader_num_workers(len(image_dataset), 32),
     )
 
     tasks_file_writer = LabelStudioTasksFile()

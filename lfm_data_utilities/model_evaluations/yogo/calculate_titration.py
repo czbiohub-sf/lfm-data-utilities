@@ -1,12 +1,18 @@
 #! /usr/bin/env python3
 
-import argparse
-from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
+"""
+Gargantuan, gross script to calculate titration curves for a given model
+"""
+
+
 import csv
 import math
+import warnings
+import argparse
+
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Optional
-import warnings
+from concurrent.futures import ThreadPoolExecutor, Future, TimeoutError
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -403,6 +409,7 @@ if __name__ == "__main__":
             header = [
                 "tpoint",
                 "confidence_threshold",
+                "actual_parasitemia",
                 "perc_parasitemia",
                 "healthy",
                 "ring",
@@ -422,8 +429,12 @@ if __name__ == "__main__":
                     # numerator: rings + trophs + schizonts only
                     # denominator: healthy + rings + trophs + schizonts + gametocytes
                     perc_parasitemia = np.sum(counts[1:4]) / np.sum(counts[:5])
+                    actual_parasitemia = initial_parasitemia * (2 ** (i - 1))
 
-                    row = np.concatenate(([i + 1, conf, perc_parasitemia], counts))
+                    row = np.concatenate(
+                        ([i + 1, conf, actual_parasitemia, perc_parasitemia], counts)
+                    )
+
                     writer.writerow(list(row))
 
     except Exception as e:

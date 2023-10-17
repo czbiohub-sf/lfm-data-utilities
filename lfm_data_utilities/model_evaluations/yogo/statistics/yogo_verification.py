@@ -14,7 +14,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     base_dir = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/"
+        "/hpc/projects/group.bioengineering/LFM_scope/misc/yogo-statistics/"
     )
     folder = Path(sys.argv[1])
     data_file = base_dir / folder / "res.csv"
@@ -22,13 +22,13 @@ if __name__ == "__main__":
         os.makedirs(base_dir / folder)
 
     net, cfg = YOGO.from_pth(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/yogo_models/honest-sweep-51/best.pth",
+        "/hpc/projects/group.bioengineering/LFM_scope/yogo_models/honest-sweep-51/best.pth",
         inference=True,
     )
     net.to(device)
 
     dataloaders = get_dataloader(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/dataset_defs/4verification-all-labelled-data-test.yml",
+        "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/dataset_defs/4verification-all-labelled-data-test.yml",
         1,
         Sx=129,
         Sy=97,

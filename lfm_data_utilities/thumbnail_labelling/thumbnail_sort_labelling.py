@@ -50,7 +50,7 @@ from lfm_data_utilities.thumbnail_labelling.create_thumbnails import (
 
 
 DEFAULT_LABELS_PATH = Path(
-    "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/biohub-labels/"
+    "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
 
@@ -59,13 +59,6 @@ def main():
         boolean_action = argparse.BooleanOptionalAction  # type: ignore
     except AttributeError:
         boolean_action = "store_true"  # type: ignore
-
-    default_ddf = (
-        DEFAULT_LABELS_PATH
-        / "dataset_defs"
-        / "human-labels"
-        / "all-labelled-data-train-only.yml"
-    )
 
     parser = argparse.ArgumentParser()
 
@@ -77,10 +70,7 @@ def main():
     input_source = create_thumbnails_parser.add_mutually_exclusive_group()
     input_source.add_argument(
         "--path-to-labelled-data-ddf",
-        help=(
-            "path to dataset descriptor file for labelled data (default {default_ddf})"
-        ),
-        default=default_ddf,
+        help=("path to dataset descriptor file for labelled data"),
         type=Path,
     )
     input_source.add_argument(
@@ -228,6 +218,7 @@ def main():
                     output_path=tasks_path,
                     obj_thresh=args.obj_thresh,
                     iou_thresh=args.iou_thresh,
+                    min_class_confidence_thresh=args.min_confidence,
                     max_class_confidence_thresh=args.max_confidence,
                 )
 

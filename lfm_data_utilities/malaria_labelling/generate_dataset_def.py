@@ -134,12 +134,12 @@ if __name__ == "__main__":
         # if InvalidDatasetDescriptionFile is raised, then the file is invalid
         # if path_to_dataset_defn_file is a directory, iterate over yml files and check all of them
         if args.path_to_dataset_defn_file.is_dir():
-            for path in args.path_to_dataset_defn_file.glob("*.yml"):
+            for path in args.path_to_dataset_defn_file.rglob("*.yml"):
                 try:
                     load_dataset_description(path)
+                    print(f"{path} passed")
                 except InvalidDatasetDescriptionFile as e:
                     print(f"{path} is invalid: {e}")
-                    sys.exit(1)
         else:
             try:
                 load_dataset_description(args.path_to_dataset_defn_file)

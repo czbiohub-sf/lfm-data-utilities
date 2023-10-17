@@ -16,7 +16,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     base_dir = Path(
-        "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/misc/yogo-statistics/"
+        "/hpc/projects/group.bioengineering/LFM_scope/misc/yogo-statistics/"
     )
     folder = Path(sys.argv[1])
     data_file = base_dir / folder / "res.csv"
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     if not os.path.exists(base_dir / folder):
         os.makedirs(base_dir / folder)
 
-    model_file = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/yogo_models/twilight-aardvark-1094/best.pth"
+    model_file = "/hpc/projects/group.bioengineering/LFM_scope/yogo_models/twilight-aardvark-1094/best.pth"
     dataset_def_file = "dataset_defs/all-labelled-data.yml"
 
     git_branch = (

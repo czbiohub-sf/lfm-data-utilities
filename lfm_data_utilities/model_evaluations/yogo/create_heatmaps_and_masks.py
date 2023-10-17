@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """
 Run YOGO on the given dataset(s) and for each, return a heatmap of
 where each class is detected (spatially).
@@ -6,19 +8,20 @@ The heatmap is saved as a `.npy` file, array of shape (Sx * Sy * NUM_CLASSES),
 where Sx and Sy are the shape of YOGO's output grid size. At the time of writing, Sx = 129, Sy = 97.
 """
 
-import argparse
 from pathlib import Path
 from typing import Union
 
 import cv2
+import zarr
+import torch
+import argparse
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import numpy as np
-from scipy import ndimage
-import torch
-from tqdm import tqdm
-import zarr
 
+from tqdm import tqdm
+from scipy import ndimage
 from yogo.model import YOGO
 
 
@@ -111,7 +114,7 @@ def generate_heatmap(
         img = get_img_from_zarr_in_torch_format(zf, i)
         pred = model(img).squeeze()
         for i in range(num_classes):
-            thresh_mask = pred[5 + i, :, :] > 0.9
+            thresh_mask = pred[5 + i, :, :] > thresh
             pred[5 + i, ~thresh_mask] = 0
             maps[:, :, i] += pred[5 + i, :, :].detach().cpu().numpy()
 
@@ -212,12 +215,11 @@ def create_and_save_heatmap_and_mask_plot(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Generate heatmap masks")
-    parser.add_argument("--path_to_pth", type=Path, help="Path to YOGO .pth file")
+    parser.add_argument("path_to_pth", type=Path, help="Path to YOGO .pth file")
     parser.add_argument(
-        "--save_dir", type=Path, help="Where to save the plots and .npy files"
+        "save_dir", type=Path, help="Where to save the plots and .npy files"
     )
-
-    parser.add_argument("--target_dataset", type=Path, help="Path to zarr (.zip) file")
+    parser.add_argument("target_dataset", type=Path, help="Path to zarr (.zip) file")
 
     args = parser.parse_args()
 
