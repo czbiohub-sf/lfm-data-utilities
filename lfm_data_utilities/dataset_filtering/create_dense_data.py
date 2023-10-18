@@ -183,15 +183,6 @@ if __name__ == "__main__":
         help="path to autofocus pth file",
     )
     parser.add_argument(
-        "--expected-class-probabilities",
-        action="store_true",
-        default=False,
-        help=(
-            "if set, calculate expected number of cells per class instead of the sum "
-            "of argmax of class probabilities (default)"
-        ),
-    )
-    parser.add_argument(
         "--objectness-threshold",
         type=float,
         default=0.5,
