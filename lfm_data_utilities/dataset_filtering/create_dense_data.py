@@ -268,5 +268,5 @@ if __name__ == "__main__":
                     flowrate_results=flowrate_results,
                     autofocus_results=autofocus_results,
                     yogo_results=yogo_results,
-                    threshold_class_probabilities=False,
+                    threshold_class_probabilities=True,
                 )
