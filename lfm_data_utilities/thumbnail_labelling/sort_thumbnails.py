@@ -59,7 +59,7 @@ def get_list_of_corrections(
     for class_ in YOGO_CLASS_ORDERING:
         corrected_class_dir = path_to_thumbnails / f"corrected_{class_}"
         if not corrected_class_dir.exists():
-            # user ignored this class, so just skipp it
+            # user ignored this class, so just skip it
             continue
 
         for thumbnail in corrected_class_dir.iterdir():
@@ -153,7 +153,7 @@ def sort_thumbnails(
     # create backup of vetted
     backup_vetted(commit=commit, backup=backup)
 
-    # create a list of all the corrections
+    # create a dict of all the corrections
     id_to_list_of_corrections = get_list_of_corrections(path_to_thumbnails)
 
     # Iterate through the corrections tasks-wise
