@@ -57,7 +57,7 @@ def run_xcorr(
     return corr_coeffs, corr_locs
 
 
-def plot(no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thresh_locs):
+def plot(zarr_path: Path, no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thresh_locs):
     fig, ax = plt.subplots(2, 2, figsize=(12, 5))
     bin_width = 0.01
     bins = np.arange(
@@ -119,7 +119,8 @@ def plot(no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thresh_locs):
     ax[1, 1].set_ylim(ymin, ymax)
     plt.tight_layout()
 
-    plt.show()
+    plt.savefig(f"{zarr_path.stem}.png")
+    plt.clf()
 
 
 if __name__ == "__main__":
@@ -141,4 +142,4 @@ if __name__ == "__main__":
     no_thresh_coeffs, no_thresh_locs = run_xcorr(args.zarr)
     thresh_coeffs, thresh_locs = run_xcorr(args.zarr, threshold=True)
 
-    plot(no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thresh_locs)
+    plot(args.zarr, no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thresh_locs)
