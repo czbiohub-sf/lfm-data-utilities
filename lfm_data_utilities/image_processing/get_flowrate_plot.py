@@ -40,7 +40,7 @@ def run_xcorr(
     counts, bins = np.histogram(zf[:, :, 1000], bins=255)
     thresh_val = bins[np.argmax(counts)]
 
-    for i in tqdm(range(0, zf.initialized)):
+    for i in tqdm(range(0, zf.initialized - 1)):
         img = zf[:, :, i]
         img2 = zf[:, :, i + 1]
         slices1 = downsample_and_slice(img, ds_factor, n_slices, threshold, thresh_val)
