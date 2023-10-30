@@ -1,5 +1,5 @@
 initial-titration-parasitemia: 0.151
-wb-titraion: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-195509_/images
+wb-titraion: /hpc/projects/group.bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-185602/2023-06-21-195509_/images
 titration-points:
-  1: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-142543_/images
-  2: /hpc/projects/flexo/MicroscopyData/Bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-144545_/images
+  1: /hpc/projects/group.bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-142543_/images
+  2: /hpc/projects/group.bioengineering/LFM_scope/titrations/titration_data_20230621/2023-06-21-142453/2023-06-21-144545_/images
