@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     path_to_runset = sys.argv[1]
     path_to_save = Path(sys.argv[2])
-    datasets = utils.load_datasets(path_to_runset)
+    datasets = utils.load_datasets(path_to_runset, fail_silently=True)
     valid_datasets = [d for d in datasets if d.successfully_loaded]
 
     print("Generating videos...")
