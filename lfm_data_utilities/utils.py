@@ -3,12 +3,14 @@ import multiprocessing as mp
 import time
 import git
 import types
+
 from csv import DictReader
 from datetime import datetime
 from functools import partial
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import (
     List,
     Dict,
@@ -17,10 +19,10 @@ from typing import (
     Any,
     Callable,
     Union,
+    Iterator,
     Sequence,
     Generator,
 )
-from pathlib import Path
 
 from tqdm import tqdm
 import cv2
@@ -49,6 +51,15 @@ class DatasetPaths:
                 f"invalid results for dataset paths - data are from different dirs for {self.zarr_path}"
             )
         return self.zarr_path.parent
+
+    def __iter__(self) -> Iterator[Path]:
+        return iter(map(lambda field: getattr(self, field.name), fields(self)))
+
+    def is_valid(self, blame: bool = False) -> bool:
+        for path in self:
+            if not path.exists():
+                return False
+        return True
 
 
 class Dataset:
@@ -234,11 +245,11 @@ def get_all_dataset_paths(
         Top level directory path to search
     """
 
-    def get_path_or_none(paths: List[PathLike]) -> Optional[PathLike]:
+    def get_path_or_none(paths: Sequence[PathLike]) -> Optional[Path]:
         if len(paths) == 0:
             return None
         elif len(paths) == 1:
-            return paths[0]
+            return Path(paths[0])
         raise ValueError(f"more than one possible path: {paths}")
 
     dataset_paths: List[DatasetPaths] = []
