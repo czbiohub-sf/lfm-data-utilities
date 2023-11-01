@@ -23,6 +23,32 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("pth_path", type=Path)
     parser.add_argument("dataset_defn_path", type=Path)
+    parser.add_argument(
+        "--wandb",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "log to wandb - this will create a new run. If neither this nor "
+            "--wandb-resume-id are provided, the run will be saved to a new folder"
+        ),
+    )
+    parser.add_argument(
+        "--wandb-resume-id",
+        type=str,
+        default=None,
+        help=(
+            "wandb run id - this will essentially append the results to an "
+            "existing run, given by this run id"
+        ),
+    )
+    parser.add_argument(
+        "--dump-to-disk",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "dump results to disk as a pkl file"
+         )
+    )
     args = parser.parse_args()
 
     y, cfg = YOGO.from_pth(args.pth_path, inference=False)
@@ -68,13 +94,16 @@ if __name__ == "__main__":
         "test_set": args.dataset_defn_path,
     }
 
-    wandb.init(
-        project="yogo",
-        entity="bioengineering",
-        config=config,
-        notes="testing",
-        tags=("test",),
-    )
+    if args.wandb or args.wandb_resume_id:
+        wandb.init(
+            project="yogo",
+            entity="bioengineering",
+            config=config,
+            notes="testing",
+            tags=("test",),
+            id=args.wandb_resume_id,
+            resume="must" if args.wandb_resume_id else "allow",
+        )
 
     test_metrics = Trainer._test(
         test_dataloader,
@@ -82,4 +111,10 @@ if __name__ == "__main__":
         config,
         y,
     )
-    Trainer._log_test_metrics(*test_metrics)
+
+    if args.wandb or args.wandb_resume_id:
+        Trainer._log_test_metrics(*test_metrics)
+
+    if args.dump_to_disk:
+        import pickle
+        pickle.dump(test_metrics, open("test_metrics.pkl", "wb"))
