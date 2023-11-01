@@ -114,7 +114,7 @@ def generate_heatmap(
         img = get_img_from_zarr_in_torch_format(zf, i)
         pred = model(img).squeeze()
         for i in range(num_classes):
-            thresh_mask = pred[5 + i, :, :] > thresh
+            thresh_mask = pred[5 + i, :, :] >= thresh
             pred[5 + i, ~thresh_mask] = 0
             maps[:, :, i] += pred[5 + i, :, :].detach().cpu().numpy()
 
@@ -163,7 +163,7 @@ def generate_masks(
             255,
             cv2.THRESH_BINARY + cv2.THRESH_OTSU,
         )
-        thresh = max(thresh, mean + 3 * sd)
+        thresh = max(thresh, mean + 3 * sd, 2)
         mask = heatmap > thresh
         dilated = ndimage.binary_dilation(mask.astype(bool), dilation_kernel)
         masks[:, :, idx] = dilated
