@@ -98,7 +98,10 @@ def write_test_results(
 
 def normalize_confusion_matrix(confusion_matrix: npt.NDArray) -> npt.NDArray:
     row_sum = confusion_matrix.sum(axis=1, keepdims=True)
-    return np.divide(confusion_matrix, row_sum, where=row_sum != 0)
+    mat = np.divide(confusion_matrix, row_sum, where=row_sum != 0)
+    assert np.all(mat.sum(axis=1) == 1)
+    assert np.isfinite(mat).all()
+    return mat
 
 
 if __name__ == "__main__":
@@ -149,6 +152,7 @@ if __name__ == "__main__":
     confusion_matricies = []
     for i, dataloader in tqdm(enumerate(dataloaders)):
         y, cfg = YOGO.from_pth(args.pth_path)
+        y.eval()
         y.to(device)
         (
             mean_loss,

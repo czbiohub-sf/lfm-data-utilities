@@ -7,14 +7,15 @@ class_names:
   - wbc
   - misc
 dataset_split_fractions:
-  test: 0.5
-  val: 0.5
+  train: 0.1
+  test: 0.45
+  val: 0.45
 thumbnail_agumentation:
   schizont: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/schizont
-  gametocyte: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/gametocyte
   misc: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/toner-blobs
   wbc: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/wbc
 dataset_paths:
+  # original label-studio annotations
   2022-12-14-111221__chip0570-D3_S_annotations:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-parasite-data/run-sets/2022-12-14-111221-Aditi-parasites/2022-12-14-111221__chip0570-D3_S/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2022-12-14-111221__chip0570-D3_S_annotations/labels
@@ -69,10 +70,11 @@ dataset_paths:
   2023-05-03-133313_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-124131/2023-05-03-133313_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-05-03-133313_/labels
-  2023-03-30-133745_:
+  2023-03-30-133745_pre_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-03-30-133106/2023-03-30-133745_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-03-30-133745_/labels
 
+  # original uganda thumbnail corrections
   thumbnail-corrections/Uganda-subsets/2023-04-27-045323_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-04-27-045323_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-04-27-045323_/labels
@@ -95,14 +97,257 @@ dataset_paths:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-13-053952_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-13-053952_/labels
 
+  # DeRisi healthy labels
+  2023-05-03-113232_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-113144/2023-05-03-113232_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-03-113144/2023-05-03-113232_/yogo_labels
+  2023-05-03-113729_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-113144/2023-05-03-113729_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-03-113144/2023-05-03-113729_/yogo_labels
+  2023-05-18-125014_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-18-123816/2023-05-18-125014_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-18-123816/2023-05-18-125014_/yogo_labels
+  2023-05-18-125712_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-18-123816/2023-05-18-125712_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-18-123816/2023-05-18-125712_/yogo_labels
+  2023-03-30-140753_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-03-30-133106/2023-03-30-140753_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-03-30-133106/2023-03-30-140753_/yogo_labels
+  2023-05-16-111635_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-16-105452/2023-05-16-111635_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-16-105452/2023-05-16-111635_/yogo_labels
+  2023-05-16-105820_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-16-105452/2023-05-16-105820_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-16-105452/2023-05-16-105820_/yogo_labels
+  2023-05-16-110604_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-16-105452/2023-05-16-110604_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-16-105452/2023-05-16-110604_/yogo_labels
+  2023-05-16-110237_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-16-105452/2023-05-16-110237_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-16-105452/2023-05-16-110237_/yogo_labels
+  2023-05-30-134337_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-30-132417/2023-05-30-134337_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-30-132417/2023-05-30-134337_/yogo_labels
+  2023-05-30-132508_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-30-132417/2023-05-30-132508_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-30-132417/2023-05-30-132508_/yogo_labels
+  2023-05-30-133703_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-30-132417/2023-05-30-133703_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-30-132417/2023-05-30-133703_/yogo_labels
+  2023-05-30-133218_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-30-132417/2023-05-30-133218_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-30-132417/2023-05-30-133218_/yogo_labels
+  2023-05-03-132715_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-124131/2023-05-03-132715_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-03-124131/2023-05-03-132715_/yogo_labels
+  2023-03-30-133745_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-03-30-133106/2023-03-30-133745_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-03-30-133745_/labels
+
+  # initial uganda healthy subsets
   uganda-healthy-many-yogo-mistakes-2023-05-09-053433_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-05-09-053433_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-05-09-053433_/yogo_labels
   uganda-healthy-many-yogo-mistakes-2023-03-27-063637_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-03-27-063637_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-03-27-063637_/yogo_labels
+  uganda-healthy-many-yogo-mistakes-2023-02-21-044222_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-21-044222_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-21-044222_/labels
+  uganda-healthy-many-yogo-mistakes-2023-02-28-014537_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-28-014537_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-28-014537_/labels
+  uganda-healthy-many-yogo-mistakes-2023-03-01-072139_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-03-01-072139_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/subsets-for-labelling/2023-03-01-072139_/labels
 
-test_paths:
+  # second, more diverse uganda healthy subsets
+  2023-03-07-065745_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-065745_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-065745_/yogo_labels
+  2023-02-20-040337_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-040337_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-040337_/yogo_labels
+  2023-04-24-055639_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-24-055639_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-24-055639_/yogo_labels
+  2023-03-01-072139_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-072139_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-072139_/yogo_labels
+  2023-02-22-005753_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-005753_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-005753_/yogo_labels
+  2023-03-07-034351_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-034351_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-034351_/yogo_labels
+  2023-02-20-055023_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-055023_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-055023_/yogo_labels
+  2023-02-20-063029_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-063029_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-063029_/yogo_labels
+  2023-02-20-054320_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-054320_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-054320_/yogo_labels
+  2023-02-22-042609_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-042609_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-042609_/yogo_labels
+  2023-04-28-044900_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-28-044900_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-28-044900_/yogo_labels
+  2023-02-22-003635_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-003635_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-003635_/yogo_labels
+  2023-03-01-022218_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-022218_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-022218_/yogo_labels
+  2023-03-01-080352_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-080352_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-080352_/yogo_labels
+  2023-03-27-023000_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-023000_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-023000_/yogo_labels
+  2023-03-31-020659_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-31-020659_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-31-020659_/yogo_labels
+  2023-03-27-053511_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-053511_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-053511_/yogo_labels
+  2023-03-01-051936_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-051936_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-051936_/yogo_labels
+  2023-02-11-024952_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-11-024952_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-11-024952_/yogo_labels
+  2023-03-08-034759_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-034759_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-034759_/yogo_labels
+  2023-03-30-051905_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-30-051905_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-30-051905_/yogo_labels
+  2023-03-13-112411_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-13-112411_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-13-112411_/yogo_labels
+  2023-03-04-063233_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-063233_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-063233_/yogo_labels
+  2023-04-03-015222_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-015222_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-015222_/yogo_labels
+  2023-03-28-035603_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-035603_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-035603_/yogo_labels
+  2023-02-22-050243_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-050243_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-050243_/yogo_labels
+  2023-02-21-035605_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-035605_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-035605_/yogo_labels
+  2023-03-08-023931_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-023931_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-023931_/yogo_labels
+  2023-02-15-055151_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-055151_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-055151_/yogo_labels
+  2023-03-07-070901_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-070901_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-070901_/yogo_labels
+  2023-03-07-005657_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-005657_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-005657_/yogo_labels
+  2023-03-07-011259_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-011259_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-011259_/yogo_labels
+  2023-03-07-023655_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-023655_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-023655_/yogo_labels
+  2023-03-06-001129_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-001129_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-001129_/yogo_labels
+  2023-03-01-053609_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-053609_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-053609_/yogo_labels
+  2023-02-13-013505_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-013505_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-013505_/yogo_labels
+  2023-02-22-032043_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-032043_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-032043_/yogo_labels
+  2023-03-01-055138_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-055138_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-055138_/yogo_labels
+  2023-03-01-031922_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-031922_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-031922_/yogo_labels
+  2023-02-13-023805_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-023805_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-023805_/yogo_labels
+  2023-03-03-023953_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-023953_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-023953_/yogo_labels
+  2023-02-15-025736_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-025736_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-025736_/yogo_labels
+  2023-03-01-043503_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-043503_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-01-043503_/yogo_labels
+  2023-03-15-004441_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-15-004441_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-15-004441_/yogo_labels
+  2023-03-27-014623_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-014623_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-014623_/yogo_labels
+  2023-03-31-025703_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-31-025703_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-31-025703_/yogo_labels
+  2023-03-28-044947_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-044947_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-044947_/yogo_labels
+  2023-04-05-055235_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-055235_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-055235_/yogo_labels
+  2023-03-27-063637_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-063637_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-063637_/yogo_labels
+  2023-02-20-005458_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-005458_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-005458_/yogo_labels
+  2023-02-22-034154_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-034154_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-034154_/yogo_labels
+  2023-04-13-053119_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-13-053119_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-13-053119_/yogo_labels
+  2023-03-08-024230_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-024230_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-024230_/yogo_labels
+  2023-04-18-052056_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-18-052056_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-18-052056_/yogo_labels
+  2023-03-27-052242_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-052242_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-052242_/yogo_labels
+  2023-03-21-013354_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-21-013354_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-21-013354_/yogo_labels
+  2023-02-22-021333_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-021333_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-021333_/yogo_labels
+  2023-03-08-063240_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-063240_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-063240_/yogo_labels
+  2023-04-28-043457_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-28-043457_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-28-043457_/yogo_labels
+  2023-03-28-061423_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-061423_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-061423_/yogo_labels
+  2023-03-06-041411_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-041411_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-041411_/yogo_labels
+  2023-03-07-002310_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-002310_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-002310_/yogo_labels
   2023-03-11-104146_chip0935-C8_annotations:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-parasite-data/run-sets/2023-03-11-100507/2023-03-11-104146_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-03-11-104146_chip0935-C8_annotations/labels
@@ -118,9 +363,6 @@ test_paths:
   2023-05-03-124911_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-124131/2023-05-03-124911_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-05-03-124911_/labels
-  2023-05-18-125712_:
-    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-18-123816/2023-05-18-125712_/images
-    label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-05-18-125712_/labels
 
   thumbnail-corrections/Uganda-subsets/2023-02-13-021919_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-13-021919_/images
@@ -128,3 +370,187 @@ test_paths:
   thumbnail-corrections/Uganda-subsets/2023-02-15-042659_/:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-15-042659_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/subsets-for-labelling/2023-02-15-042659_/labels
+
+  2023-03-13-105029_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-13-105029_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-13-105029_/yogo_labels
+  2023-04-05-045412_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-045412_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-045412_/yogo_labels
+  2023-04-17-042524_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-17-042524_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-17-042524_/yogo_labels
+  2023-02-22-000414_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-000414_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-000414_/yogo_labels
+  2023-04-15-032726_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-15-032726_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-15-032726_/yogo_labels
+  2023-03-29-032750_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-032750_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-032750_/yogo_labels
+  2023-02-22-035325_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-035325_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-035325_/yogo_labels
+  2023-02-20-062311_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-062311_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-062311_/yogo_labels
+  2023-02-22-005324_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-005324_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-22-005324_/yogo_labels
+  2023-03-07-053751_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-053751_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-053751_/yogo_labels
+  2023-03-08-021948_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-021948_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-021948_/yogo_labels
+  2023-04-29-020732_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-29-020732_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-29-020732_/yogo_labels
+  2023-03-21-015830_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-21-015830_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-21-015830_/yogo_labels
+  2023-04-25-081934_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-25-081934_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-25-081934_/yogo_labels
+  2023-03-15-014833_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-15-014833_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-15-014833_/yogo_labels
+  2023-03-28-040044_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-040044_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-040044_/yogo_labels
+  2023-03-28-041020_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-041020_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-041020_/yogo_labels
+  2023-03-28-025702_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-025702_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-025702_/yogo_labels
+  2023-02-13-035203_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-035203_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-035203_/yogo_labels
+  2023-02-21-031829_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-031829_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-031829_/yogo_labels
+  2023-02-21-042913_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-042913_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-042913_/yogo_labels
+  2023-02-13-071515_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-071515_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-071515_/yogo_labels
+  2023-02-13-014308_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-014308_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-014308_/yogo_labels
+  2023-04-05-043319_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-043319_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-05-043319_/yogo_labels
+  2023-03-07-031534_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-031534_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-031534_/yogo_labels
+  2023-03-27-012543_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-012543_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-012543_/yogo_labels
+  2023-02-21-033221_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-033221_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-033221_/yogo_labels
+  2023-02-10-222936_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-10-222936_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-10-222936_/yogo_labels
+  2023-04-04-035043_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-04-035043_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-04-035043_/yogo_labels
+  2023-03-07-063038_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-063038_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-063038_/yogo_labels
+  2023-03-08-055758_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-055758_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-055758_/yogo_labels
+  2023-04-11-050906_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-11-050906_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-11-050906_/yogo_labels
+  2023-03-03-044728_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-044728_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-044728_/yogo_labels
+  2023-03-29-013848_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-013848_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-013848_/yogo_labels
+  2023-03-04-045258_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-045258_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-045258_/yogo_labels
+  2023-03-06-030909_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-030909_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-030909_/yogo_labels
+  2023-03-07-011601_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-011601_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-011601_/yogo_labels
+  2023-03-29-013526_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-013526_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-013526_/yogo_labels
+  2023-02-21-024628_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-024628_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-024628_/yogo_labels
+  2023-03-28-031418_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-031418_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-28-031418_/yogo_labels
+  2023-03-29-022847_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-022847_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-29-022847_/yogo_labels
+  2023-02-23-010208_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-23-010208_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-23-010208_/yogo_labels
+  2023-02-20-015127_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-015127_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-20-015127_/yogo_labels
+  2023-03-06-072815_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-072815_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-072815_/yogo_labels
+  2023-04-03-044305_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-044305_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-044305_/yogo_labels
+  2023-03-04-045033_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-045033_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-04-045033_/yogo_labels
+  2023-02-13-021526_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-021526_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-13-021526_/yogo_labels
+  2023-03-07-033705_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-033705_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-033705_/yogo_labels
+  2023-03-27-024927_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-024927_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-024927_/yogo_labels
+  2023-03-08-040305_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-040305_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-040305_/yogo_labels
+  2023-02-21-051754_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-051754_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-21-051754_/yogo_labels
+  2023-03-07-042433_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-042433_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-042433_/yogo_labels
+  2023-03-03-020259_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-020259_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-03-020259_/yogo_labels
+  2023-03-06-044624_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-044624_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-044624_/yogo_labels
+  2023-02-15-055729_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-055729_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-055729_/yogo_labels
+  2023-03-06-012318_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-012318_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-06-012318_/yogo_labels
+  2023-02-15-060838_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-060838_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-02-15-060838_/yogo_labels
+  2023-04-03-075241_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-075241_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-04-03-075241_/yogo_labels
+  2023-03-27-051240_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-051240_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-27-051240_/yogo_labels
+  2023-03-07-044344_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-044344_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-07-044344_/yogo_labels
+  2023-03-08-031344_:
+    image_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-031344_/images
+    label_path: /hpc/projects/group.bioengineering/LFM_scope/Uganda_run_subsets/2023-03-08-031344_/yogo_labels
