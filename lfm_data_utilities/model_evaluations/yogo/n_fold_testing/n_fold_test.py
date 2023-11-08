@@ -2,9 +2,12 @@
 
 import torch
 import argparse
+import warnings
 
 import numpy as np
+import numpy.typing as npt
 
+from tqdm import tqdm
 from pathlib import Path
 from functools import partial
 
@@ -13,6 +16,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Subset
 from yogo.model import YOGO
 from yogo.train import Trainer
 from yogo.utils import choose_device
+from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import ObjectDetectionDataset
 from yogo.data.yogo_dataloader import choose_dataloader_num_workers, collate_batch
 from yogo.data.data_transforms import DualInputId
@@ -54,7 +58,6 @@ def load_description_to_dataloader(
         )
         for dsp in all_dataset_paths
     )
-    print(f"{len(dataset)=}")
 
     dataset_indicies = np.arange(len(dataset))
     dataset_splits = np.array_split(dataset_indicies, num_folds)
@@ -77,6 +80,27 @@ def load_description_to_dataloader(
     ]
 
 
+def write_test_results(
+    output_dir: Path,
+    mean_loss,
+    mAP,
+    confusion_data,
+    accuracy,
+    roc_curves,
+    precision,
+    recall,
+    calibration_error,
+    class_names,
+):
+    output_dir.mkdir(parents=True, exist_ok=True)
+    np.save(output_dir / "confusion_data.npy", confusion_data.cpu().numpy())
+
+
+def normalize_confusion_matrix(confusion_matrix: npt.NDArray) -> npt.NDArray:
+    row_sum = confusion_matrix.sum(axis=1, keepdims=True)
+    return np.divide(confusion_matrix, row_sum, where=row_sum != 0)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="N-fold test of YOGO")
     parser.add_argument(
@@ -89,8 +113,16 @@ if __name__ == "__main__":
         type=str,
         help="path to yml dataset descriptor file",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="path to output directory - defaults to parent dir of pth_path",
+        default=None,
+    )
     parser.add_argument("-N", "--N", type=int, help="number of folds", default=5)
     args = parser.parse_args()
+
+    output_dir = args.output_dir or args.pth_path.parent
 
     y_, cfg = YOGO.from_pth(args.pth_path)
 
@@ -100,23 +132,24 @@ if __name__ == "__main__":
 
     device = choose_device()
     if str(device) == "cpu":
-        import warnings
-
         warnings.warn("no gpu found; this will be slow :(")
 
-    # These are just some standard
+    # These are just some standard opts weeee
     config = {
-        "class_names": range(int(y_.num_classes.item())),  # type: ignore
+        "class_names": YOGO_CLASS_ORDERING,
         "no_classify": False,
         "healthy_weight": df.HEALTHY_WEIGHT,
         "iou_weight": df.IOU_WEIGHT,
         "no_obj_weight": df.NO_OBJ_WEIGHT,
         "classify_weight": df.CLASSIFY_WEIGHT,
         "label_smoothing": df.LABEL_SMOOTHING,
+        "half": False,
     }
 
-    for dataloader in dataloaders:
+    confusion_matricies = []
+    for i, dataloader in tqdm(enumerate(dataloaders)):
         y, cfg = YOGO.from_pth(args.pth_path)
+        y.to(device)
         (
             mean_loss,
             mAP,
@@ -128,3 +161,28 @@ if __name__ == "__main__":
             calibration_error,
             class_names,
         ) = Trainer._test(dataloader, device, config, y)
+
+        write_test_results(
+            output_dir / f"{i}",
+            mean_loss,
+            mAP,
+            confusion_data,
+            accuracy,
+            roc_curves,
+            precision,
+            recall,
+            calibration_error,
+            class_names,
+        )
+
+        confusion_matricies.append(np.array(confusion_data.cpu().numpy()))
+
+    normalized_matricies = [
+        normalize_confusion_matrix(confusion_matrix)
+        for confusion_matrix in confusion_matricies
+    ]
+    normalized_mean = np.mean(normalized_matricies, axis=0)
+    normalized_std = np.std(normalized_matricies, axis=0, ddof=1)
+
+    np.save(output_dir / "normalized_mean.npy", normalized_mean)
+    np.save(output_dir / "normalized_std.npy", normalized_std)
