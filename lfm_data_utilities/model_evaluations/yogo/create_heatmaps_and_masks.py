@@ -213,40 +213,33 @@ def create_and_save_heatmap_and_mask_plot(
     plt.close()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Generate heatmap masks")
-    parser.add_argument("path_to_pth", type=Path, help="Path to YOGO .pth file")
-    parser.add_argument(
-        "save_dir", type=Path, help="Where to save the plots and .npy files"
-    )
-    parser.add_argument("target_dataset", type=Path, help="Path to zarr (.zip) file")
-
-    args = parser.parse_args()
-
-    args.save_dir.mkdir(exist_ok=True, parents=True)
-
-    # Make directories
-    heatmaps_dir = args.save_dir / "heatmaps_npy"
-    masks_dir = args.save_dir / "masks_npy"
-    plots_dir = args.save_dir / "plots"
-    [x.mkdir(exist_ok=True, parents=True) for x in [heatmaps_dir, masks_dir, plots_dir]]
-
-    # Check if file has already been created, if so, skip
-    print(f"Working on {args.target_dataset}")
-    filename = args.target_dataset.stem + ".npy"
-    plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
-    if plot_filename.exists():
+def create_heatmaps_and_masks(
+    path_to_pth: Path,
+    target_dataset: Path,
+    heatmaps_dir: Path,
+    masks_dir: Path,
+    plots_dir: Path,
+    overwrite_existing: bool = False,
+) -> None:
+    print(f"Working on {target_dataset}")
+    filename = target_dataset.stem + ".npy"
+    plot_filename = plots_dir / (target_dataset.stem + ".jpg")
+    if plot_filename.exists() and not overwrite_existing:
         print(f"{plot_filename} already created, skipping!")
-        quit()
+        return
 
-    print(f"Loading model: {args.path_to_pth}")
+    print(f"Loading model: {path_to_pth}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_model(args.path_to_pth, device)
-    zf = zarr.open(args.target_dataset, "r")
+    model = load_model(str(path_to_pth), device)
+    try:
+        zf = zarr.open(target_dataset, "r")
+    except Exception as e:
+        print(f"Failed to open target dataset - most likely corrupt; {target_dataset}: {e}")
+        return
 
     if not zf.initialized > 0:
-        print(f"Empty dataset - {args.target_dataset}")
-        quit()
+        print(f"Empty dataset - {target_dataset}")
+        return
 
     heatmap = generate_heatmap(zf, model)
     mask = generate_masks(heatmap)
@@ -254,3 +247,44 @@ if __name__ == "__main__":
     np.save(heatmaps_dir / filename, heatmap)
     np.save(masks_dir / filename, mask)
     create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Generate heatmap masks")
+    parser.add_argument("path_to_pth", type=Path, help="Path to YOGO .pth file")
+    parser.add_argument(
+        "save_dir", type=Path, help="Where to save the plots and .npy files"
+    )
+    parser.add_argument(
+        "--overwrite-existing",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Overwrite existing npy files (defaults to False)",
+    )
+    meg = parser.add_mutually_exclusive_group(required=True)
+    meg.add_argument("--target-zip", type=Path, help="Path to zarr (.zip) file")
+    meg.add_argument("--list-of-target-zip", type=Path, help="Path to file with one zip file on each line")
+
+    args = parser.parse_args()
+
+    args.save_dir.mkdir(exist_ok=True, parents=True)
+
+    heatmaps_dir = args.save_dir / "heatmaps_npy"
+    masks_dir = args.save_dir / "masks_npy"
+    plots_dir = args.save_dir / "plots"
+
+    for x in (heatmaps_dir, masks_dir, plots_dir):
+        x.mkdir(exist_ok=True, parents=True)
+
+    if args.target_zip:
+        create_heatmaps_and_masks(
+            args.path_to_pth, args.target_zip, heatmaps_dir, masks_dir, plots_dir
+        )
+    elif args.list_of_target_zip:
+        with open(args.list_of_target_zip, "r") as f:
+            zip_paths = [Path(x.strip()) for x in f.readlines()]
+
+        for zip_path in zip_paths:
+            create_heatmaps_and_masks(
+                args.path_to_pth, zip_path, heatmaps_dir, masks_dir, plots_dir
+            )
