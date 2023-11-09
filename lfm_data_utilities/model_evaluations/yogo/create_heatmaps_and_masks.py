@@ -220,6 +220,7 @@ def create_heatmaps_and_masks(
     masks_dir: Path,
     plots_dir: Path,
     overwrite_existing: bool = False,
+    thresh: float = 0.9,
 ) -> None:
     print(f"Working on {target_dataset}")
     filename = target_dataset.stem + ".npy"
@@ -234,14 +235,16 @@ def create_heatmaps_and_masks(
     try:
         zf = zarr.open(target_dataset, "r")
     except Exception as e:
-        print(f"Failed to open target dataset - most likely corrupt; {target_dataset}: {e}")
+        print(
+            f"Failed to open target dataset - most likely corrupt; {target_dataset}: {e}"
+        )
         return
 
     if not zf.initialized > 0:
         print(f"Empty dataset - {target_dataset}")
         return
 
-    heatmap = generate_heatmap(zf, model)
+    heatmap = generate_heatmap(zf, model, thresh=thresh)
     mask = generate_masks(heatmap)
 
     np.save(heatmaps_dir / filename, heatmap)
@@ -261,9 +264,20 @@ if __name__ == "__main__":
         default=False,
         help="Overwrite existing npy files (defaults to False)",
     )
+    parser.add_argument(
+        "--conf-thresh",
+        type=float,
+        default=0.9,
+        help="Confidence threshold for heatmaps",
+    )
+
     meg = parser.add_mutually_exclusive_group(required=True)
     meg.add_argument("--target-zip", type=Path, help="Path to zarr (.zip) file")
-    meg.add_argument("--list-of-target-zip", type=Path, help="Path to file with one zip file on each line")
+    meg.add_argument(
+        "--list-of-target-zip",
+        type=Path,
+        help="Path to file with one zip file on each line",
+    )
 
     args = parser.parse_args()
 
@@ -278,7 +292,13 @@ if __name__ == "__main__":
 
     if args.target_zip:
         create_heatmaps_and_masks(
-            args.path_to_pth, args.target_zip, heatmaps_dir, masks_dir, plots_dir
+            args.path_to_pth,
+            args.target_zip,
+            heatmaps_dir,
+            masks_dir,
+            plots_dir,
+            thresh=args.conf_thresh,
+            overwrite_existing=args.overwrite_existing,
         )
     elif args.list_of_target_zip:
         with open(args.list_of_target_zip, "r") as f:
@@ -286,5 +306,11 @@ if __name__ == "__main__":
 
         for zip_path in zip_paths:
             create_heatmaps_and_masks(
-                args.path_to_pth, zip_path, heatmaps_dir, masks_dir, plots_dir
+                args.path_to_pth,
+                zip_path,
+                heatmaps_dir,
+                masks_dir,
+                plots_dir,
+                thresh=args.conf_thresh,
+                overwrite_existing=args.overwrite_existing,
             )
