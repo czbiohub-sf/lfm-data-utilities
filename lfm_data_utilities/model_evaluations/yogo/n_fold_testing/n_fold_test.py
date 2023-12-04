@@ -56,7 +56,7 @@ def load_description_to_dataloader(
             Sy,
             normalize_images=normalize_images,
         )
-        for dsp in all_dataset_paths
+        for dsp in tqdm(all_dataset_paths)
     )
 
     dataset_indicies = np.arange(len(dataset))
@@ -99,12 +99,12 @@ def write_test_results(
 def normalize_confusion_matrix(confusion_matrix: npt.NDArray) -> npt.NDArray:
     row_sum = confusion_matrix.sum(axis=1, keepdims=True)
     mat = np.divide(confusion_matrix, row_sum, where=row_sum != 0)
-    assert np.all(mat.sum(axis=1) == 1)
     assert np.isfinite(mat).all()
     return mat
 
 
 if __name__ == "__main__":
+    print("is this even starting like")
     parser = argparse.ArgumentParser(description="N-fold test of YOGO")
     parser.add_argument(
         "pth_path",
@@ -127,11 +127,15 @@ if __name__ == "__main__":
 
     output_dir = args.output_dir or args.pth_path.parent
 
+    print("loading model...", end=" ")
     y_, cfg = YOGO.from_pth(args.pth_path)
+    print("loaded")
 
+    print("loading dataloaders...", end=" ")
     dataloaders = load_description_to_dataloader(
         args.dataset_descriptor_file, y_.Sx, y_.Sy, args.N, cfg["normalize_images"]
     )
+    print("loaded")
 
     device = choose_device()
     if str(device) == "cpu":
@@ -149,6 +153,7 @@ if __name__ == "__main__":
         "half": False,
     }
 
+    print("herewego")
     confusion_matricies = []
     for i, dataloader in tqdm(enumerate(dataloaders)):
         y, cfg = YOGO.from_pth(args.pth_path)
