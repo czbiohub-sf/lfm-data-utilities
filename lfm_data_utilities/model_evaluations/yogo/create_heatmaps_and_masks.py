@@ -92,7 +92,6 @@ def generate_heatmap(
     sy: int = 97,
     num_classes: int = 7,
     thresh: float = 0.9,
-    crop_height: float = 1,
 ) -> np.ndarray:
     """
     Create a heatmap for each class for the given dataset.
@@ -111,8 +110,6 @@ def generate_heatmap(
     maps: np.ndarray
     """
 
-    sy = math.ceil(sy * crop_height)
-
     maps = np.zeros((sy, sx, num_classes))
     for i in tqdm(range(zf.initialized)):
         img = get_img_from_zarr_in_torch_format(zf, i)
@@ -130,7 +127,6 @@ def generate_masks(
     sx: int = 129,
     sy: int = 97,
     num_classes: int = 7,
-    crop_height: float = 1,
 ) -> np.ndarray:
     """
     Heatmaps should be a numpy array of shape (sx * sx * NUM_CLASSES). The By default, sy and sx are 97, 129
@@ -155,7 +151,6 @@ def generate_masks(
         If 1, mask OUT that grid spot (i.e don't keep it). If 0, keep that grid spot.
     """
 
-    sy = math.ceil(sy * crop_height)
     masks = np.zeros((sy, sx, num_classes))
     inset_offset = 5  # Crop out the edges of the heatmap before finding threshold value
 
@@ -222,6 +217,17 @@ def create_and_save_heatmap_and_mask_plot(
     plt.close()
 
 
+def vertical_crop(masks, crop_perc: float = 1, h: int = 97):
+    if crop_perc == 1:
+        return masks
+
+    center_y = h // 2
+    lower_lim = int(center_y - (crop_perc / 2 * h))
+    upper_lim = int(center_y + (crop_perc / 2 * h))
+
+    return masks[lower_lim:upper_lim, :, :]
+
+
 def create_heatmaps_and_masks(
     path_to_pth: Path,
     target_dataset: Path,
@@ -254,11 +260,12 @@ def create_heatmaps_and_masks(
         print(f"Empty dataset - {target_dataset}")
         return
 
-    heatmap = generate_heatmap(zf, model, thresh=thresh, crop_height=crop_height)
-    mask = generate_masks(heatmap, crop_height=crop_height)
+    heatmap = generate_heatmap(zf, model, thresh=thresh)
+    mask = generate_masks(heatmap)
+    cropped_mask = vertical_crop(mask, crop_height)
 
     np.save(heatmaps_dir / filename, heatmap)
-    np.save(masks_dir / filename, mask)
+    np.save(masks_dir / filename, cropped_mask)
     create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
 
 
