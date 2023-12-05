@@ -260,7 +260,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--overwrite-existing",
-        action=argparse.BooleanOptionalAction,
         default=False,
         help="Overwrite existing npy files (defaults to False)",
     )
