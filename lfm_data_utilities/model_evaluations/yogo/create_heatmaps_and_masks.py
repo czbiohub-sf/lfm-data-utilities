@@ -10,6 +10,7 @@ where Sx and Sy are the shape of YOGO's output grid size. At the time of writing
 
 from pathlib import Path
 from typing import Union
+import math
 
 import cv2
 import zarr
@@ -91,6 +92,7 @@ def generate_heatmap(
     sy: int = 97,
     num_classes: int = 7,
     thresh: float = 0.9,
+    crop_height: float = 1,
 ) -> np.ndarray:
     """
     Create a heatmap for each class for the given dataset.
@@ -109,6 +111,8 @@ def generate_heatmap(
     maps: np.ndarray
     """
 
+    sy = math.ceil(sy * crop_height)
+
     maps = np.zeros((sy, sx, num_classes))
     for i in tqdm(range(zf.initialized)):
         img = get_img_from_zarr_in_torch_format(zf, i)
@@ -122,7 +126,11 @@ def generate_heatmap(
 
 
 def generate_masks(
-    heatmaps: np.ndarray, sx: int = 129, sy: int = 97, num_classes: int = 7
+    heatmaps: np.ndarray,
+    sx: int = 129,
+    sy: int = 97,
+    num_classes: int = 7,
+    crop_height: float = 1,
 ) -> np.ndarray:
     """
     Heatmaps should be a numpy array of shape (sx * sx * NUM_CLASSES). The By default, sy and sx are 97, 129
@@ -147,6 +155,7 @@ def generate_masks(
         If 1, mask OUT that grid spot (i.e don't keep it). If 0, keep that grid spot.
     """
 
+    sy = math.ceil(sy * crop_height)
     masks = np.zeros((sy, sx, num_classes))
     inset_offset = 5  # Crop out the edges of the heatmap before finding threshold value
 
@@ -221,6 +230,7 @@ def create_heatmaps_and_masks(
     plots_dir: Path,
     overwrite_existing: bool = False,
     thresh: float = 0.9,
+    crop_height: float = 1,
 ) -> None:
     print(f"Working on {target_dataset}")
     filename = target_dataset.stem + ".npy"
@@ -244,8 +254,8 @@ def create_heatmaps_and_masks(
         print(f"Empty dataset - {target_dataset}")
         return
 
-    heatmap = generate_heatmap(zf, model, thresh=thresh)
-    mask = generate_masks(heatmap)
+    heatmap = generate_heatmap(zf, model, thresh=thresh, crop_height=crop_height)
+    mask = generate_masks(heatmap, crop_height=crop_height)
 
     np.save(heatmaps_dir / filename, heatmap)
     np.save(masks_dir / filename, mask)
@@ -268,6 +278,9 @@ if __name__ == "__main__":
         type=float,
         default=0.9,
         help="Confidence threshold for heatmaps",
+    )
+    parser.add_argument(
+        "--vertical-crop-height", type=float, default=1, help="Vertical crop height"
     )
 
     meg = parser.add_mutually_exclusive_group(required=True)
@@ -298,6 +311,7 @@ if __name__ == "__main__":
             plots_dir,
             thresh=args.conf_thresh,
             overwrite_existing=args.overwrite_existing,
+            crop_height=args.vertical_crop_height,
         )
     elif args.list_of_target_zip:
         with open(args.list_of_target_zip, "r") as f:
@@ -312,4 +326,5 @@ if __name__ == "__main__":
                 plots_dir,
                 thresh=args.conf_thresh,
                 overwrite_existing=args.overwrite_existing,
+                crop_height=args.vertical_crop_height,
             )
