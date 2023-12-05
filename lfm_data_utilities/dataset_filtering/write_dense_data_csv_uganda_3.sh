@@ -13,8 +13,8 @@ env | grep "^SLURM" | sort
 
 echo "writing dense data w/ args"
 
-SOURCE_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2"
-TARGET_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2_images/dense-data"
+SOURCE_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full_3"
+TARGET_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full_3_images/dense-data"
 YOGO_MODEL="/home/axel.jacobsen/celldiagnosis/yogo/trained_models/frightful-wendigo-1931/best.pth"
 AUTOFOCUS_MODEL="/home/axel.jacobsen/autofocus/ulc-malaria-autofocus/trained_models/polished-dragon-468/best.pth"
 
