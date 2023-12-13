@@ -20,6 +20,7 @@ that run from label studio, since it will no longer have correct files.
 """
 
 import shutil
+import logging
 import argparse
 
 from pathlib import Path
@@ -53,6 +54,7 @@ DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
+logging.getLogger('PIL').setLevel(logging.WARNING)  # quiet, you!
 
 def main():
     try:
