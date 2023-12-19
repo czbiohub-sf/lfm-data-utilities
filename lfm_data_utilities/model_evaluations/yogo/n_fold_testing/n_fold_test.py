@@ -9,6 +9,7 @@ import numpy.typing as npt
 
 from tqdm import tqdm
 from pathlib import Path
+from typing import Sequence
 from functools import partial
 
 from torch.utils.data import ConcatDataset, DataLoader, Subset
@@ -60,7 +61,13 @@ def load_description_to_dataloader(
     )
 
     dataset_indicies = np.arange(len(dataset))
-    dataset_splits = np.array_split(dataset_indicies, num_folds)
+    np.random.shuffle(dataset_indicies)
+    disjoint_splits = np.array_split(dataset_indicies, num_folds)
+    dataset_splits: list[Sequence[int]] = [
+        np.concatenate(disjoint_splits[:i] + disjoint_splits[i + 1 :]).tolist()
+        for i in range(num_folds)
+    ]
+
     num_workers = choose_dataloader_num_workers(len(dataset), 8)
 
     return [
@@ -153,7 +160,6 @@ if __name__ == "__main__":
         "half": False,
     }
 
-    print("herewego")
     confusion_matricies = []
     for i, dataloader in tqdm(enumerate(dataloaders)):
         y, cfg = YOGO.from_pth(args.pth_path)
