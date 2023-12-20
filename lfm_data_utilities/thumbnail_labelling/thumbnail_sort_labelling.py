@@ -54,7 +54,8 @@ DEFAULT_LABELS_PATH = Path(
     "/hpc/projects/group.bioengineering/LFM_scope/biohub-labels/"
 )
 
-logging.getLogger('PIL').setLevel(logging.WARNING)  # quiet, you!
+logging.getLogger("PIL").setLevel(logging.WARNING)  # quiet, you!
+
 
 def main():
     try:

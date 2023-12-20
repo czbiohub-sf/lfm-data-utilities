@@ -9,6 +9,7 @@ import numpy.typing as npt
 
 from tqdm import tqdm
 from pathlib import Path
+from typing import Sequence
 from functools import partial
 
 from torch.utils.data import ConcatDataset, DataLoader, Subset
@@ -36,6 +37,10 @@ standard deviation for the confusion matrix is really high, then we can't trust 
 """
 
 
+def empty_img(_):
+    return torch.empty(0)
+
+
 def load_description_to_dataloader(
     dataset_description_file: Path,
     Sx: int,
@@ -58,9 +63,25 @@ def load_description_to_dataloader(
         )
         for dsp in tqdm(all_dataset_paths)
     )
+    print(f"dataset size: {len(dataset)}")
 
     dataset_indicies = np.arange(len(dataset))
-    dataset_splits = np.array_split(dataset_indicies, num_folds)
+
+    # shuffle the dataset - strangely, it's not a functional interface
+    assert np.random.shuffle(dataset_indicies) is None
+
+    disjoint_splits = np.array_split(dataset_indicies, num_folds)
+    dataset_splits: list[Sequence[int]] = [
+        np.concatenate(disjoint_splits[:i] + disjoint_splits[i + 1 :]).tolist()
+        for i in range(num_folds)
+    ]
+    print("DATAET SPLIT sizes", [len(d) for d in dataset_splits])
+
+    # sanity
+    for subset in dataset_splits:
+        assert len(subset) > 0
+        assert len(subset) < len(dataset)
+
     num_workers = choose_dataloader_num_workers(len(dataset), 8)
 
     return [
@@ -153,7 +174,6 @@ if __name__ == "__main__":
         "half": False,
     }
 
-    print("herewego")
     confusion_matricies = []
     for i, dataloader in tqdm(enumerate(dataloaders)):
         y, cfg = YOGO.from_pth(args.pth_path)

@@ -243,4 +243,6 @@ def sort_thumbnails(
                 download_images=False,
             )
         elif verbose:
-            print(f"would have overwritten YOGO labels at {label_path.parent.resolve()}")
+            print(
+                f"would have overwritten YOGO labels at {label_path.parent.resolve()}"
+            )
