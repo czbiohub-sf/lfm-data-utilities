@@ -39,7 +39,7 @@ def convert_zarr_to_image_folder(
             "image_runset_dir and path_to_runset must both have a value or must both be None"
         )
 
-    data = zarr.open(str(path_to_zarr_zip), "r")
+    data = zarr.open(str(path_to_zarr_zip), mode="r")
 
     if image_runset_dir is None:
         image_dir = path_to_zarr_zip.parent / "images"
