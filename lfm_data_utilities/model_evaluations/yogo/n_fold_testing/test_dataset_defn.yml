@@ -7,9 +7,9 @@ class_names:
   - wbc
   - misc
 dataset_split_fractions:
-  train: 0.1
-  test: 0.45
-  val: 0.45
+  train: 1
+  test: 0
+  val: 0
 thumbnail_agumentation:
   schizont: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/schizont
   misc: /hpc/projects/group.bioengineering/LFM_scope/training-data-thumbnails/toner-blobs
