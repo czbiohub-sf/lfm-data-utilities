@@ -6,7 +6,6 @@ import wandb
 import argparse
 
 from pathlib import Path
-from typing import Iterable
 
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
@@ -22,12 +21,9 @@ from yogo.data.yogo_dataloader import (
     collate_batch,
 )
 from yogo.utils import (
-    draw_yogo_prediction,
-    get_wandb_confusion,
-    get_wandb_roc,
     get_free_port,
-    choose_device,
 )
+
 
 def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
     y, cfg = YOGO.from_pth(args.pth_path, inference=False)
@@ -49,7 +45,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
     test_dataset: Dataset[ObjectDetectionDataset] = ConcatDataset(
         [dataloaders["val"].dataset, dataloaders["test"].dataset]
     )
-    sampler: Iterable = DistributedSampler(
+    DistributedSampler(
         test_dataset,
         rank=rank,
         num_replicas=world_size,
@@ -114,6 +110,4 @@ if __name__ == "__main__":
 
     os.environ["MASTER_ADDR"] = "0.0.0.0"
     os.environ["MASTER_PORT"] = str(get_free_port())
-    mp.spawn(
-        test_model, args=(world_size, args), nprocs=world_size, join=True
-    )
+    mp.spawn(test_model, args=(world_size, args), nprocs=world_size, join=True)

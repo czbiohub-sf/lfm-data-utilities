@@ -10,7 +10,6 @@ where Sx and Sy are the shape of YOGO's output grid size. At the time of writing
 
 from pathlib import Path
 from typing import Union
-import math
 
 import cv2
 import zarr
