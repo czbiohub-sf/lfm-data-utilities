@@ -20,9 +20,7 @@ from yogo.data.yogo_dataloader import (
     choose_dataloader_num_workers,
     collate_batch,
 )
-from yogo.utils import (
-    get_free_port,
-)
+from yogo.utils import get_free_port
 
 
 def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
@@ -78,13 +76,16 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
         "test_set": args.dataset_defn_path,
     }
 
-    wandb.init(
-        project="yogo",
-        entity="bioengineering",
-        config=config,
-        notes="testing",
-        tags=("test",),
-    )
+    if args.wandb or args.wandb_resume_id and rank == 0:
+        wandb.init(
+            project="yogo",
+            entity="bioengineering",
+            config=config,
+            id=args.wandb_resume_id,
+            resume="must" if args.wandb_resume_id else "allow",
+        )
+        assert wandb.run is not None
+        wandb.run.tags += ["resumed for test"]
 
     test_metrics = Trainer._test(
         test_dataloader,
@@ -92,13 +93,44 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
         config,
         y,
     )
-    Trainer._log_test_metrics(*test_metrics)
+
+    if args.wandb or args.wandb_resume_id and rank == 0:
+        Trainer._log_test_metrics(*test_metrics)
+
+    if args.dump_to_disk and rank == 0:
+        import pickle
+
+        pickle.dump(test_metrics, open("test_metrics.pkl", "wb"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("pth_path", type=Path)
     parser.add_argument("dataset_defn_path", type=Path)
+    parser.add_argument(
+        "--wandb",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "log to wandb - this will create a new run. If neither this nor "
+            "--wandb-resume-id are provided, the run will be saved to a new folder"
+        ),
+    )
+    parser.add_argument(
+        "--wandb-resume-id",
+        type=str,
+        default=None,
+        help=(
+            "wandb run id - this will essentially append the results to an "
+            "existing run, given by this run id"
+        ),
+    )
+    parser.add_argument(
+        "--dump-to-disk",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=("dump results to disk as a pkl file"),
+    )
     args = parser.parse_args()
 
     world_size = torch.cuda.device_count()
