@@ -81,11 +81,11 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
             project="yogo",
             entity="bioengineering",
             config=config,
-            notes="testing",
-            tags=("test",),
             id=args.wandb_resume_id,
             resume="must" if args.wandb_resume_id else "allow",
         )
+        assert wandb.run is not None
+        wandb.run.tags += ["resumed for test"]
 
     test_metrics = Trainer._test(
         test_dataloader,
