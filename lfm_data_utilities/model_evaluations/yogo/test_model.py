@@ -99,6 +99,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
 
     if args.dump_to_disk and rank == 0:
         import pickle
+
         pickle.dump(test_metrics, open("test_metrics.pkl", "wb"))
 
 
@@ -128,9 +129,7 @@ if __name__ == "__main__":
         "--dump-to-disk",
         action=argparse.BooleanOptionalAction,
         default=False,
-        help=(
-            "dump results to disk as a pkl file"
-         )
+        help=("dump results to disk as a pkl file"),
     )
     args = parser.parse_args()
 
