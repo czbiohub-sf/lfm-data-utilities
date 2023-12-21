@@ -1,8 +1,11 @@
 #! /usr/bin/env python3
 
+import os
 import sys
 import zarr
 import math
+import shutil
+import zipfile
 
 from PIL import Image
 from pathlib import Path
@@ -22,6 +25,7 @@ def convert_zarr_to_image_folder(
     skip: bool = True,
     image_runset_dir: Optional[Path] = None,
     path_to_runset: Optional[Path] = None,
+    attempt_zipfile_fix: bool = False,
 ):
     """
     this will convert the specified zarr file to a folder of images. if the
@@ -33,21 +37,35 @@ def convert_zarr_to_image_folder(
     structure of `path_to_runset` will be copied. `image_runset_dir` and `path_to_runset`
     must both have a value or must both be None
     """
+
+    def _create_image_runset_dir() -> Path:
+        if image_runset_dir is None:
+            return path_to_zarr_zip.parent / "images"
+        else:
+            assert path_to_runset is not None  # for mypy
+            return (
+                image_runset_dir / path_relative_to(path_to_zarr_zip, path_to_runset)
+            ).parent / "images"
+
     paths_are_valid = (image_runset_dir is None) == (path_to_runset is None)
     if not paths_are_valid:
         raise ValueError(
             "image_runset_dir and path_to_runset must both have a value or must both be None"
         )
 
-    data = zarr.open(str(path_to_zarr_zip), mode="r")
+    try:
+        data = zarr.open(str(path_to_zarr_zip), mode="r")
+    except zipfile.BadZipFile as e:
+        if not attempt_zipfile_fix:
+            raise e
 
-    if image_runset_dir is None:
-        image_dir = path_to_zarr_zip.parent / "images"
-    else:
-        assert path_to_runset is not None  # for mypy
-        image_dir = (
-            image_runset_dir / path_relative_to(path_to_zarr_zip, path_to_runset)
-        ).parent / "images"
+        print(f"attempting to fix zipfile {path_to_zarr_zip}")
+        # first copy the bad zipfile to the output location
+        image_dir = _create_image_runset_dir()
+        shutil.copyfile(path_to_zarr_zip, image_dir / path_to_zarr_zip.name)
+        # next, we use the unix command `zip -FF` to fix the zipfile.
+
+    image_dir = _create_image_runset_dir()
 
     if image_dir.exists() and len(list(image_dir.iterdir())) > 0 and skip:
         print(f"skipping {image_dir} because images already exist!")
@@ -140,6 +158,14 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--attempt-zipfile-repair",
+        action="store_true",
+        help=(
+            "Attempt to fix bad / corrupted zipfiles. This will be done by "
+            "copying the zipfile to the output directory and using "
+        ),
+    )
+    parser.add_argument(
         "--existing-image-action",
         "-e",
         choices=["skip", "overwrite"],
@@ -181,6 +207,7 @@ if __name__ == "__main__":
                     args.path_to_runset if args.image_dir is not None else None
                 ),
                 skip=False,
+                attempt_zipfile_fix=args.attempt_zipfile_repair,
             ),
             ordered=False,
         )
@@ -196,6 +223,7 @@ if __name__ == "__main__":
                     args.path_to_runset if args.image_dir is not None else None
                 ),
                 skip=skip,
+                attempt_zipfile_fix=args.attempt_zipfile_repair,
             ),
             ordered=False,
         )
