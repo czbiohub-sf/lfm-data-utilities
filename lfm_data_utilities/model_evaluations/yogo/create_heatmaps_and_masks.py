@@ -114,7 +114,7 @@ def generate_heatmap(
         img = get_img_from_zarr_in_torch_format(zf, i)
         pred = model(img).squeeze()
         for i in range(num_classes):
-            thresh_mask = pred[5 + i, :, :] > thresh
+            thresh_mask = pred[5 + i, :, :] >= thresh
             pred[5 + i, ~thresh_mask] = 0
             maps[:, :, i] += pred[5 + i, :, :].detach().cpu().numpy()
 
@@ -122,7 +122,10 @@ def generate_heatmap(
 
 
 def generate_masks(
-    heatmaps: np.ndarray, sx: int = 129, sy: int = 97, num_classes: int = 7
+    heatmaps: np.ndarray,
+    sx: int = 129,
+    sy: int = 97,
+    num_classes: int = 7,
 ) -> np.ndarray:
     """
     Heatmaps should be a numpy array of shape (sx * sx * NUM_CLASSES). The By default, sy and sx are 97, 129
@@ -163,7 +166,7 @@ def generate_masks(
             255,
             cv2.THRESH_BINARY + cv2.THRESH_OTSU,
         )
-        thresh = max(thresh, mean + 3 * sd)
+        thresh = max(thresh, mean + 3 * sd, 2)
         mask = heatmap > thresh
         dilated = ndimage.binary_dilation(mask.astype(bool), dilation_kernel)
         masks[:, :, idx] = dilated
@@ -213,44 +216,121 @@ def create_and_save_heatmap_and_mask_plot(
     plt.close()
 
 
+def vertical_crop(masks, crop_perc: float = 1, h: int = 97):
+    if crop_perc == 1:
+        return masks
+
+    center_y = h // 2
+    lower_lim = int(center_y - (crop_perc / 2 * h))
+    upper_lim = int(center_y + (crop_perc / 2 * h))
+
+    return masks[lower_lim:upper_lim, :, :]
+
+
+def create_heatmaps_and_masks(
+    path_to_pth: Path,
+    target_dataset: Path,
+    heatmaps_dir: Path,
+    masks_dir: Path,
+    plots_dir: Path,
+    overwrite_existing: bool = False,
+    thresh: float = 0.9,
+    crop_height: float = 1,
+) -> None:
+    print(f"Working on {target_dataset}")
+    filename = target_dataset.stem + ".npy"
+    plot_filename = plots_dir / (target_dataset.stem + ".jpg")
+    if plot_filename.exists() and not overwrite_existing:
+        print(f"{plot_filename} already created, skipping!")
+        return
+
+    print(f"Loading model: {path_to_pth}")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = load_model(str(path_to_pth), device)
+    try:
+        zf = zarr.open(target_dataset, "r")
+    except Exception as e:
+        print(
+            f"Failed to open target dataset - most likely corrupt; {target_dataset}: {e}"
+        )
+        return
+
+    if not zf.initialized > 0:
+        print(f"Empty dataset - {target_dataset}")
+        return
+
+    heatmap = generate_heatmap(zf, model, thresh=thresh)
+    mask = generate_masks(heatmap)
+    cropped_mask = vertical_crop(mask, crop_height)
+
+    np.save(heatmaps_dir / filename, heatmap)
+    np.save(masks_dir / filename, cropped_mask)
+    create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Generate heatmap masks")
     parser.add_argument("path_to_pth", type=Path, help="Path to YOGO .pth file")
     parser.add_argument(
         "save_dir", type=Path, help="Where to save the plots and .npy files"
     )
-    parser.add_argument("target_dataset", type=Path, help="Path to zarr (.zip) file")
+    parser.add_argument(
+        "--overwrite-existing",
+        default=False,
+        help="Overwrite existing npy files (defaults to False)",
+    )
+    parser.add_argument(
+        "--conf-thresh",
+        type=float,
+        default=0.9,
+        help="Confidence threshold for heatmaps",
+    )
+    parser.add_argument(
+        "--vertical-crop-height", type=float, default=1, help="Vertical crop height"
+    )
+
+    meg = parser.add_mutually_exclusive_group(required=True)
+    meg.add_argument("--target-zip", type=Path, help="Path to zarr (.zip) file")
+    meg.add_argument(
+        "--list-of-target-zip",
+        type=Path,
+        help="Path to file with one zip file on each line",
+    )
 
     args = parser.parse_args()
 
     args.save_dir.mkdir(exist_ok=True, parents=True)
 
-    # Make directories
     heatmaps_dir = args.save_dir / "heatmaps_npy"
     masks_dir = args.save_dir / "masks_npy"
     plots_dir = args.save_dir / "plots"
-    [x.mkdir(exist_ok=True, parents=True) for x in [heatmaps_dir, masks_dir, plots_dir]]
 
-    # Check if file has already been created, if so, skip
-    print(f"Working on {args.target_dataset}")
-    filename = args.target_dataset.stem + ".npy"
-    plot_filename = plots_dir / (args.target_dataset.stem + ".jpg")
-    if plot_filename.exists():
-        print(f"{plot_filename} already created, skipping!")
-        quit()
+    for x in (heatmaps_dir, masks_dir, plots_dir):
+        x.mkdir(exist_ok=True, parents=True)
 
-    print(f"Loading model: {args.path_to_pth}")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_model(args.path_to_pth, device)
-    zf = zarr.open(args.target_dataset, "r")
+    if args.target_zip:
+        create_heatmaps_and_masks(
+            args.path_to_pth,
+            args.target_zip,
+            heatmaps_dir,
+            masks_dir,
+            plots_dir,
+            thresh=args.conf_thresh,
+            overwrite_existing=args.overwrite_existing,
+            crop_height=args.vertical_crop_height,
+        )
+    elif args.list_of_target_zip:
+        with open(args.list_of_target_zip, "r") as f:
+            zip_paths = [Path(x.strip()) for x in f.readlines()]
 
-    if not zf.initialized > 0:
-        print(f"Empty dataset - {args.target_dataset}")
-        quit()
-
-    heatmap = generate_heatmap(zf, model)
-    mask = generate_masks(heatmap)
-
-    np.save(heatmaps_dir / filename, heatmap)
-    np.save(masks_dir / filename, mask)
-    create_and_save_heatmap_and_mask_plot(heatmap, mask, plot_filename)
+        for zip_path in zip_paths:
+            create_heatmaps_and_masks(
+                args.path_to_pth,
+                zip_path,
+                heatmaps_dir,
+                masks_dir,
+                plots_dir,
+                thresh=args.conf_thresh,
+                overwrite_existing=args.overwrite_existing,
+                crop_height=args.vertical_crop_height,
+            )

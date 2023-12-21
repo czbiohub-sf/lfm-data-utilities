@@ -66,7 +66,7 @@ def plot(zarr_path: Path, no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thres
         bin_width,
     )
 
-    ax[0, 0].axhline(0)
+    ax[0, 0].axhline(0, color="k")
     ax[0, 0].hist(no_thresh_coeffs, bins=bins, label="Original", edgecolor="k")
     ax[0, 0].hist(
         thresh_coeffs,
@@ -85,7 +85,7 @@ def plot(zarr_path: Path, no_thresh_coeffs, no_thresh_locs, thresh_coeffs, thres
         np.max([no_thresh_locs, thresh_locs]) + bin_width,
         bin_width,
     )
-    ax[0, 1].axhline(0)
+    ax[0, 1].axhline(0, color="k")
     ax[0, 1].hist(no_thresh_locs, bins=bins, label="Original", edgecolor="k")
     ax[0, 1].hist(
         thresh_locs,
