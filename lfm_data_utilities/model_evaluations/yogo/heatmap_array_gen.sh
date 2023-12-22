@@ -18,17 +18,15 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-ZARR_PATH=$(sed -n "$SLURM_ARRAY_TASK_ID"p "$1")
+ZARR_PATH=$(fd zip $(sed -n "$SLURM_ARRAY_TASK_ID"p "$1") -1)
 
 echo "ZARR_PATH: $ZARR_PATH"
 
-
 out=$(
   ./create_heatmaps_and_masks.py \
-    ~/celldiagnosis/yogo/trained_models/frightful-wendigo-1931/best.pth \
-    /hpc/projects/group.bioengineering/LFM_scope/Uganda_heatmaps/thresh_90_2 \
+    ~/celldiagnosis/yogo/trained_models/confused-river-1979/best.pth \
+    /hpc/projects/group.bioengineering/LFM_scope/Uganda_heatmaps/confused-river-1979 \
     --target-zip "$ZARR_PATH" \
-    --overwrite-existing
 )
 
 if [ $? -eq 0 ]; then
