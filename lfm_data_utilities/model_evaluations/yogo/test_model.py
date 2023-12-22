@@ -85,13 +85,14 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
             resume="must" if args.wandb_resume_id else "allow",
         )
         assert wandb.run is not None
-        wandb.run.tags += ["resumed for test"]
+        wandb.run.tags += type(wandb.run.tags)(["resumed for test"])
 
     test_metrics = Trainer.test(
         test_dataloader,
         "cuda",
         config,
         y,
+        include_mAP=False,
     )
 
     if args.wandb or args.wandb_resume_id and rank == 0:
