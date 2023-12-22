@@ -189,7 +189,7 @@ if __name__ == "__main__":
             recall,
             calibration_error,
             class_names,
-        ) = Trainer._test(dataloader, device, config, y)
+        ) = Trainer.test(dataloader, device, config, y, include_mAP=False)
 
         write_test_results(
             output_dir / f"{i}",
