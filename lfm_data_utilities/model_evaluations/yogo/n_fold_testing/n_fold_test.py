@@ -221,5 +221,8 @@ if __name__ == "__main__":
 
     np.save(output_dir / "normalized_mean.npy", normalized_mean)
     np.save(output_dir / "normalized_std.npy", normalized_std)
-    np.save(output_dir / "relative_std.npy", np.divide(normalized_std, normalized_mean, where=normalized_mean != 0))
+    np.save(
+        output_dir / "relative_std.npy",
+        np.divide(normalized_std, normalized_mean, where=normalized_mean != 0),
+    )
     np.save(output_dir / "std_invs_normalized.npy", std_invs)
