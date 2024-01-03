@@ -75,7 +75,6 @@ def load_description_to_dataloader(
         np.concatenate(disjoint_splits[:i] + disjoint_splits[i + 1 :]).tolist()
         for i in range(num_folds)
     ]
-    print("DATAET SPLIT sizes", [len(d) for d in dataset_splits])
 
     # sanity
     for subset in dataset_splits:
@@ -125,7 +124,6 @@ def normalize_confusion_matrix(confusion_matrix: npt.NDArray) -> npt.NDArray:
 
 
 if __name__ == "__main__":
-    print("is this even starting like")
     parser = argparse.ArgumentParser(description="N-fold test of YOGO")
     parser.add_argument(
         "pth_path",
