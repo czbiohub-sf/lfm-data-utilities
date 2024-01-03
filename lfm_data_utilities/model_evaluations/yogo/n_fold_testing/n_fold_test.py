@@ -28,6 +28,7 @@ from yogo.utils.default_hyperparams import DefaultHyperparams as df
 # each job could pick a separate fold for calculation
 torch.manual_seed(7271978)
 np.random.seed(7271978)
+np.set_printoptions(precision=5, suppress=True, linewidth=160)
 
 """ The purpose of this file is to try to understand the stability of the YOGO confusion matrix.
 
@@ -114,6 +115,11 @@ def write_test_results(
 ):
     output_dir.mkdir(parents=True, exist_ok=True)
     np.save(output_dir / "confusion_data.npy", confusion_data.cpu().numpy())
+
+
+def write_readable_matrix(fname: Path, mat: npt.NDArray):
+    with open(fname, "w") as f:
+        f.write(repr(mat))
 
 
 def normalize_confusion_matrix(confusion_matrix: npt.NDArray) -> npt.NDArray:
@@ -218,11 +224,15 @@ if __name__ == "__main__":
         axis=0,
         ddof=1,
     )
+    relative_std = np.divide(
+        normalized_std, normalized_mean, where=normalized_mean != 0
+    )
 
     np.save(output_dir / "normalized_mean.npy", normalized_mean)
     np.save(output_dir / "normalized_std.npy", normalized_std)
-    np.save(
-        output_dir / "relative_std.npy",
-        np.divide(normalized_std, normalized_mean, where=normalized_mean != 0),
-    )
+    np.save(output_dir / "relative_std.npy", relative_std)
     np.save(output_dir / "std_invs_normalized.npy", std_invs)
+    write_readable_matrix(output_dir / "normalized_mean.txt", normalized_mean)
+    write_readable_matrix(output_dir / "normalized_std.txt", normalized_std)
+    write_readable_matrix(output_dir / "relative_std.txt", relative_std)
+    write_readable_matrix(output_dir / "std_invs_normalized.txt", std_invs)
