@@ -210,6 +210,15 @@ if __name__ == "__main__":
     ]
     normalized_mean = np.mean(normalized_matricies, axis=0)
     normalized_std = np.std(normalized_matricies, axis=0, ddof=1)
+    std_invs = np.std(
+        [
+            np.linalg.inv(normalize_confusion_matrix(confusion_matrix))
+            for confusion_matrix in confusion_matricies
+        ],
+        axis=0,
+        ddof=1,
+    )
 
     np.save(output_dir / "normalized_mean.npy", normalized_mean)
     np.save(output_dir / "normalized_std.npy", normalized_std)
+    np.save(output_dir / "std_invs_normalized.npy", std_invs)
