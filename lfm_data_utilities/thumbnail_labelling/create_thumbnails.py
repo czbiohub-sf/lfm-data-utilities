@@ -10,7 +10,7 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union, Protocol
 
-from yogo.data.dataset_description_file import load_dataset_description
+from yogo.data.dataset_definition_file import DatasetDefinition
 
 from lfm_data_utilities.malaria_labelling.generate_labelstudio_tasks import (
     LFM_SCOPE_PATH,
@@ -85,14 +85,14 @@ def create_tasks_files_from_path_to_labelled_data_ddf(
     - `label_path: Path`, path to labels
     - `tasks_path: Path`, path to output location
     """
-    ddf = load_dataset_description(path_to_labelled_data_ddf)
+    ddf = DatasetDefinition.from_yaml(path_to_labelled_data_ddf)
     dataset_paths = ddf.dataset_paths + (ddf.test_dataset_paths or [])
 
     task_paths: List[Dict[str, Union[int, str]]] = []
     for i, d in enumerate(tqdm(dataset_paths, desc="creating task.json files")):
         func(
-            image_path=d["image_path"],
-            label_path=d["label_path"],
+            image_path=d.image_path,
+            label_path=d.label_path,
             tasks_path=tasks_dir / f"thumbnail_correction_task_{i}.json",
         )
         task_paths.append(

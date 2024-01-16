@@ -26,7 +26,7 @@ from yogo.model import YOGO
 from yogo.yogo_loss import YOGOLoss
 from yogo.utils.utils import bbox_colour
 from yogo.utils import draw_yogo_prediction
-from yogo.data.dataset_description_file import load_dataset_description
+from yogo.data.dataset_definition_file import DatasetDefinition
 from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import (
     ObjectDetectionDataset,
@@ -67,11 +67,11 @@ def get_dataset(
     Sy: int,
     normalize_images: bool = False,
 ) -> Dataset[Any]:
-    dataset_description = load_dataset_description(dataset_description_file)
+    dataset_description = DatasetDefinition.from_yaml(dataset_description_file)
     full_dataset: ConcatDataset[ObjectDetectionDataset] = ConcatDataset(
         ObjectDetectionDatasetWithPaths(
-            dsp["image_path"],
-            dsp["label_path"],
+            dsp.image_path,
+            dsp.label_path,
             Sx,
             Sy,
             normalize_images=normalize_images,

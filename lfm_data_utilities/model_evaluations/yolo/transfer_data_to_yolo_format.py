@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 from pathlib import Path
 
 from yogo.utils import Timer
-from yogo.data.dataset_description_file import load_dataset_description
+from yogo.data.dataset_definition_file import DatasetDefinition
 
 """
 In my opinion, Ultralytic's dataset handling is clunky. We need to copy a bunch of data
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     (args.output_dataset_path / "labels").mkdir(exist_ok=True)
 
     with Timer("loading dataset description"):
-        dataset_description = load_dataset_description(args.dataset_description_file)
+        dataset_description = DatasetDefinition.from_yaml(args.dataset_description_file)
 
     with Timer("copying training dataset"):
         (args.output_dataset_path / "images" / "train").mkdir(exist_ok=True)
@@ -46,8 +46,8 @@ if __name__ == "__main__":
 
         for image_and_label_dir_dict in dataset_description.dataset_paths:
             image_dir, label_dir = (
-                image_and_label_dir_dict["image_path"],
-                image_and_label_dir_dict["label_path"],
+                image_and_label_dir_dict.image_path,
+                image_and_label_dir_dict.label_path,
             )
             for label in label_dir.glob("*.txt"):
                 run_name = image_dir.parent.name
@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
         for image_and_label_dir_dict in dataset_description.test_dataset_paths:
             image_dir, label_dir = (
-                image_and_label_dir_dict["image_path"],
-                image_and_label_dir_dict["label_path"],
+                image_and_label_dir_dict.image_path,
+                image_and_label_dir_dict.label_path,
             )
             for label in label_dir.glob("*.txt"):
                 run_name = label.parents[2].name
