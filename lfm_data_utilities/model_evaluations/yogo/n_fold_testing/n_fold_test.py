@@ -21,7 +21,7 @@ from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import ObjectDetectionDataset
 from yogo.data.yogo_dataloader import choose_dataloader_num_workers, collate_batch
 from yogo.data.data_transforms import DualInputId
-from yogo.data.dataset_description_file import load_dataset_description
+from yogo.data.dataset_definition_file import DatasetDefinition
 from yogo.utils.default_hyperparams import DefaultHyperparams as df
 
 # set seeds so we can reproduce + if we do this w/ slurm arrays,
@@ -49,15 +49,15 @@ def load_description_to_dataloader(
     num_folds: int,
     normalize_images: bool,
 ) -> list[DataLoader]:
-    dataset_descriptor = load_dataset_description(str(dataset_description_file))
+    dataset_descriptor = DatasetDefinition.from_yaml(dataset_description_file)
     all_dataset_paths = dataset_descriptor.dataset_paths + (
         dataset_descriptor.test_dataset_paths or []
     )
 
     dataset: ConcatDataset[ObjectDetectionDataset] = ConcatDataset(
         ObjectDetectionDataset(
-            dsp["image_path"],
-            dsp["label_path"],
+            dsp.image_path,
+            dsp.label_path,
             Sx,
             Sy,
             normalize_images=normalize_images,
