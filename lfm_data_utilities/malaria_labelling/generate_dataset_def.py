@@ -121,8 +121,8 @@ if __name__ == "__main__":
         )
     elif args.subparser == "verify":
         try:
-            from yogo.data.dataset_description_file import (
-                load_dataset_description,
+            from yogo.data.dataset_definition_file import (
+                DatasetDefinition,
                 InvalidDatasetDescriptionFile,
             )
         except ImportError:
@@ -136,13 +136,13 @@ if __name__ == "__main__":
         if args.path_to_dataset_defn_file.is_dir():
             for path in args.path_to_dataset_defn_file.rglob("*.yml"):
                 try:
-                    load_dataset_description(path)
+                    DatasetDefinition.from_yaml(path)
                     print(f"{path} passed")
                 except InvalidDatasetDescriptionFile as e:
                     print(f"{path} is invalid: {e}")
         else:
             try:
-                load_dataset_description(args.path_to_dataset_defn_file)
+                DatasetDefinition.from_yaml(args.path_to_dataset_defn_file)
             except InvalidDatasetDescriptionFile as e:
                 print(f"{args.path_to_dataset_defn_file} is invalid: {e}")
                 sys.exit(1)
