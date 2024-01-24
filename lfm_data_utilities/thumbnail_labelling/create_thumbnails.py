@@ -97,7 +97,7 @@ def create_tasks_files_from_path_to_labelled_data_ddf(
         )
         task_paths.append(
             {
-                "label_path": str(d["label_path"]),
+                "label_path": str(d.label_path),
                 "task_name": f"thumbnail_correction_task_{i}.json",
                 "task_num": i,
             }
