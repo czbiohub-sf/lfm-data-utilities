@@ -9,7 +9,6 @@ import numpy.typing as npt
 
 from tqdm import tqdm
 from pathlib import Path
-from typing import Sequence
 from functools import partial
 
 from torch.utils.data import ConcatDataset, DataLoader, Subset
@@ -38,10 +37,6 @@ standard deviation for the confusion matrix is really high, then we can't trust 
 """
 
 
-def empty_img(_):
-    return torch.empty(0)
-
-
 def load_description_to_dataloader(
     dataset_description_file: Path,
     Sx: int,
@@ -50,10 +45,6 @@ def load_description_to_dataloader(
     normalize_images: bool,
 ) -> list[DataLoader]:
     dataset_descriptor = DatasetDefinition.from_yaml(dataset_description_file)
-    all_dataset_paths = dataset_descriptor.dataset_paths + (
-        dataset_descriptor.test_dataset_paths or []
-    )
-
     dataset: ConcatDataset[ObjectDetectionDataset] = ConcatDataset(
         ObjectDetectionDataset(
             dsp.image_path,
@@ -62,7 +53,7 @@ def load_description_to_dataloader(
             Sy,
             normalize_images=normalize_images,
         )
-        for dsp in tqdm(all_dataset_paths)
+        for dsp in tqdm(dataset_descriptor.test_dataset_paths)
     )
     print(f"dataset size: {len(dataset)}")
 
@@ -71,11 +62,7 @@ def load_description_to_dataloader(
     # shuffle the dataset - strangely, it's not a functional interface
     assert np.random.shuffle(dataset_indicies) is None
 
-    disjoint_splits = np.array_split(dataset_indicies, num_folds)
-    dataset_splits: list[Sequence[int]] = [
-        np.concatenate(disjoint_splits[:i] + disjoint_splits[i + 1 :]).tolist()
-        for i in range(num_folds)
-    ]
+    dataset_splits = np.array_split(dataset_indicies, num_folds)
 
     # sanity
     for subset in dataset_splits:

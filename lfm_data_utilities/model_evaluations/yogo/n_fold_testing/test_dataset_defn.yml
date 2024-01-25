@@ -140,9 +140,6 @@ dataset_paths:
   2023-05-03-132715_:
     image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-05-03-124131/2023-05-03-132715_/images
     label_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-set-labels/2023-05-03-124131/2023-05-03-132715_/yogo_labels
-  2023-03-30-133745_:
-    image_path: /hpc/projects/group.bioengineering/LFM_scope/scope-healthy-data/run-sets/2023-03-30-133106/2023-03-30-133745_/images
-    label_path: /hpc/projects/group.bioengineering/LFM_scope/biohub-labels/vetted/2023-03-30-133745_/labels
 
   # initial uganda healthy subsets
   uganda-healthy-many-yogo-mistakes-2023-05-09-053433_:
