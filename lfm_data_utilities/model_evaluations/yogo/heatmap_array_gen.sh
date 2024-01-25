@@ -18,21 +18,20 @@ if [ "$#" -lt 2 ]; then
   exit 1
 fi
 
-# ZARR_PATH=$(fd zip $(sed -n "$SLURM_ARRAY_TASK_ID"p "$1") -1)
 ZARR_PATH=$(sed -n "$SLURM_ARRAY_TASK_ID"p "$1")
 YOGO_MODEL_NAME="$2"
-
-echo "ZARR_PATH: $ZARR_PATH"
+OUTPUT_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_heatmaps/$YOGO_MODEL_NAME"
+PTH_FILE="~/celldiagnosis/yogo/trained_models/$YOGO_MODEL_NAME/best.pth"
 
 out=$(
   ./create_heatmaps_and_masks.py \
-    ~/celldiagnosis/yogo/trained_models/$YOGO_MODEL_NAME/best.pth \
-    /hpc/projects/group.bioengineering/LFM_scope/Uganda_heatmaps/$YOGO_MODEL_NAME \
+    "$PTH_FILE" \
+    "$OUTPUT_DIR" \
     --target-zip "$ZARR_PATH" \
 )
 
 if [ $? -eq 0 ]; then
-  echo "Successfully created heatmaps and masks on $IMAGES_PARENT_DIR_PATH"
+  echo "Successfully created heatmaps and masks for $ZARR_PATH" to "$OUTPUT_DIR"
 else
   echo "Error occurred during inference on $IMAGES_PARENT_DIR_PATH" >&2
   echo "$out" >&2
