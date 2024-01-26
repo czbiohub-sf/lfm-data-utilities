@@ -31,8 +31,8 @@ out=$(
 )
 
 if [ $? -eq 0 ]; then
-  echo "Successfully created heatmaps and masks for $ZARR_PATH" to "$OUTPUT_DIR"
+  echo "Successfully created heatmaps and masks for \"$ZARR_PATH\" to \"$OUTPUT_DIR\""
 else
-  echo "Error occurred during inference on $IMAGES_PARENT_DIR_PATH" >&2
+  echo "Error occurred during inference on \"$ZARR_PATH\"" >&2
   echo "$out" >&2
 fi
