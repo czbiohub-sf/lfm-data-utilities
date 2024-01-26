@@ -221,6 +221,7 @@
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full/phoenix/2023-02-22-014339/2023-02-22-035325_/2023-02-22-035325_.zip
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full/phoenix/2023-02-22-014339/2023-02-22-050243_/2023-02-22-050243_.zip
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full/phoenix/2023-02-22-014339/2023-02-22-051940_/2023-02-22-051940_.zip
+/hpc/projects/group.bioengineering/LFM_scope/Uganda_full/curiosity/2023-02-11-024532/2023-02-11-024952_/2023-02-11-024952_.zip
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full/curiosity/2023-02-13-080725/2023-02-13-082206_/2023-02-13-082206_.zip
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2/curiosity/2023-04-19-025707/2023-04-19-044128_/2023-04-19-044128_.zip
 /hpc/projects/group.bioengineering/LFM_scope/Uganda_full_2/curiosity/2023-04-19-044546/2023-04-19-053451_/2023-04-19-053451_.zip
