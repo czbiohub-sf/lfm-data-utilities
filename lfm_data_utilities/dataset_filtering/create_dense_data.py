@@ -229,7 +229,6 @@ if __name__ == "__main__":
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
-                num_workers=0,
             )
 
             dataset_path_dir = args.output_dir / dataset_path.root_dir.name
