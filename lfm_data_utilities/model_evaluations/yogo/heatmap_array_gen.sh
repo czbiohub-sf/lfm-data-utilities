@@ -6,7 +6,7 @@
 #SBATCH --time=00:20:00
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
-#SBATCH --array=1-1022
+#SBATCH --array=1-1367
 #SBATCH --cpus-per-task=16
 #SBATCH --partition=preempted
 #SBATCH --gpus-per-node=1
