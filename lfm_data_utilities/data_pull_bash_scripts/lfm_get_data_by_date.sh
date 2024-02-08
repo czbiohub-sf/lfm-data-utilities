@@ -46,4 +46,4 @@ read -p "> " date
 desired_dirs=$(ssh -p $port $ngrok_addr find $storage_loc -mindepth 1 -maxdepth 1 -type d -newermt "$date" | cut -c 2- | xargs printf -- '/%s,')
 desired_dirs="{${desired_dirs::-1}}"
 echo "Copy and run the command below: "
-echo "rsync -rza --info=progress2 --exclude \".*\" --exclude \"*.zip\" --exclude \"*zstack*\" --exclude \"*.zarr\" --stats -e \"ssh -p $port\" $ngrok_addr:$desired_dirs $local_save_loc"
+echo "rsync -rza --info=progress2 --exclude \".*\" --exclude \"*.zip\" --exclude \"*zstack*\" --exclude \"*.zarr\" --exclude \"*.npy\" --stats -e \"ssh -p $port\" $ngrok_addr:$desired_dirs $local_save_loc"
