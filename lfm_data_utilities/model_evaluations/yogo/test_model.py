@@ -15,10 +15,10 @@ from yogo.model import YOGO
 from yogo.train import Trainer
 from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import ObjectDetectionDataset
+from yogo.data.utils import collate_batch_robust
 from yogo.data.yogo_dataloader import (
     get_dataloader,
     choose_dataloader_num_workers,
-    collate_batch,
 )
 from yogo.utils import get_free_port
 
@@ -39,10 +39,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
         backend="nccl", rank=rank, world_size=world_size
     )
 
-    # take test and val since neither have been trained on and more data == gooder
-    test_dataset: Dataset[ObjectDetectionDataset] = ConcatDataset(
-        [dataloaders["val"].dataset, dataloaders["test"].dataset]
-    )
+    test_dataset: Dataset[ObjectDetectionDataset] = dataloaders["test"].dataset
     DistributedSampler(
         test_dataset,
         rank=rank,
@@ -60,7 +57,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
         num_workers=num_workers,
         persistent_workers=num_workers > 0,
         generator=torch.Generator().manual_seed(111111),
-        collate_fn=collate_batch,
+        collate_fn=collate_batch_robust,
         multiprocessing_context="spawn" if num_workers > 0 else None,
     )
 
@@ -77,6 +74,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
     }
 
     if args.wandb or args.wandb_resume_id and rank == 0:
+        print("Logging to wandb")
         wandb.init(
             project="yogo",
             entity="bioengineering",
