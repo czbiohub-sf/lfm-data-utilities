@@ -63,7 +63,7 @@ def create_confidence_filtered_tasks_file_from_YOGO(
         images = images.to(device)
 
         with torch.no_grad():
-            predictions = model(images)
+            predictions = model(images.float())
 
         for image_path, prediction in zip(image_paths, predictions):
             formatted_preds = format_preds(
