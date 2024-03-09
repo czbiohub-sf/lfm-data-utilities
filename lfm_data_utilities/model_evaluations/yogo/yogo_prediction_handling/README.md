@@ -5,7 +5,9 @@ Due to YOGO's large grid size, each RBC prediction has many individual grid cell
 ## Prediction Selection Methods
 
 A. NMS w/ score being `(class_confidence | objectness_score > 0.5)`
+
 B. NMS w/ score being `(class_confidence * objectness_score)`
+
 C. Some sort of voting? e.g. in a nxn (maybe n=5) grid centered on the "winning" grid cell, winning class is the $argmax(\sum_{i} max(p(c_i)))$
 
 ## E2E testing method
