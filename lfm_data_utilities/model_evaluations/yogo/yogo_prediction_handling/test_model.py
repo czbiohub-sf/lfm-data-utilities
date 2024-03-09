@@ -9,7 +9,7 @@ from pathlib import Path
 
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import Dataset, ConcatDataset, DataLoader
+from torch.utils.data import Dataset, DataLoader
 
 from yogo.model import YOGO
 from yogo.train import Trainer
