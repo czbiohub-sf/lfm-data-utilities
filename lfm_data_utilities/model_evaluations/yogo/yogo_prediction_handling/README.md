@@ -2,6 +2,8 @@
 
 Due to YOGO's large grid size, each RBC prediction has many individual grid cells making positive predictions. Via bbox NMS (using objectness only as the score), we make a prediction on the cell's class. By integrating class confidence, we can probably improve on this metric.
 
+Follow the fun here https://github.com/czbiohub-sf/yogo/pull/118
+
 ## Prediction Selection Methods
 
 A. NMS w/ score being `(class_confidence | objectness_score > 0.5)`
