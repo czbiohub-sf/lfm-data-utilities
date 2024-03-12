@@ -92,7 +92,7 @@ def test_model(rank: int, world_size: int, args: argparse.Namespace) -> None:
         "cuda",
         config,
         y,
-        include_mAP=False,
+        include_mAP=True,
     )
 
     if args.wandb or args.wandb_resume_id and rank == 0:
