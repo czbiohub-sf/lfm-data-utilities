@@ -23,9 +23,9 @@ fi
 model_path=~/celldiagnosis/yogo/trained_models/absurd-moon-607/best.pth
 data_path=~/celldiagnosis/dataset_defs/human-labels/all-dataset-subsets-no-aug.yml
 
-srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test default --PREDICTION-FORMATTER default &
-srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test opt_A --PREDICTION-FORMATTER opt_A &
-srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test opt_B --PREDICTION-FORMATTER opt_B &
+srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test default --prediction-formatter default &
+srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test opt_A --prediction-formatter opt_A &
+srun --partition=gpu --gres=gpu:1 -c 16 yogo test $model_path $data_path --wandb --include-mAP --tags handling-test opt_B --prediction-formatter opt_B &
 
 wait
 
