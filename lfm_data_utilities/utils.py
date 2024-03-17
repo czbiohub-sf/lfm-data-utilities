@@ -151,7 +151,7 @@ def get_rms(data: List[float]):
     return np.sqrt(ms / N)
 
 
-def make_video(dataset: Dataset, save_dir: PathLike):
+def make_video(dataset: Dataset, save_dir: PathLike, ds_factor: int = 1):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
@@ -164,20 +164,28 @@ def make_video(dataset: Dataset, save_dir: PathLike):
     height, width = zf[:, :, 0].shape
 
     save_dir.mkdir(exist_ok=True)
-    output_path = Path(save_dir) / Path(dataset.dp.zarr_path.stem + ".mp4")
+    output_path = Path(save_dir) / Path(
+        dataset.dp.zarr_path.stem + f"ds_{ds_factor}.mp4"
+    )
 
     writer = cv2.VideoWriter(
         f"{output_path}",
         fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
         fps=framerate,
-        frameSize=(width, height),
+        frameSize=(width // ds_factor, height // ds_factor),
         isColor=False,
     )
 
     for i, _ in enumerate(tqdm(range(num_frames))):
-        img = zf[:, :, i]
+        img = cv2.resize(zf[:, :, i], (width // ds_factor, height // ds_factor))
         img = cv2.putText(
-            img, f"img {i}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1
+            img,
+            f"img {i}",
+            (50 // ds_factor, 50 // ds_factor),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1 // ds_factor,
+            (0, 0, 0),
+            1,
         )
         writer.write(img)
     writer.release()

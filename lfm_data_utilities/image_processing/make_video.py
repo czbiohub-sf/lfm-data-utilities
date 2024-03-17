@@ -21,5 +21,5 @@ if __name__ == "__main__":
     print("Generating videos...")
     with mp.Pool() as pool:
         pool.starmap(
-            utils.make_video, [(x, path_to_save) for x in tqdm(valid_datasets)]
+            utils.make_video, [(x, path_to_save, 1) for x in tqdm(valid_datasets)]
         )
