@@ -5,7 +5,6 @@ This is modified from https://github.com/heartexlabs/label-studio-converter
 Read Apache-2.0 license here https://www.apache.org/licenses/LICENSE-2.0
 """
 
-
 import os
 import sys
 import json  # better to use "imports ujson as json" for the best performance

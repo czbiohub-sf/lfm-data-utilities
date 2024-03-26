@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Generator, Iterable, Tuple
 
 from yogo.utils.utils import bbox_colour
-from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import load_labels
 
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

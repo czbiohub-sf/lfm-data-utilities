@@ -25,7 +25,7 @@ import argparse
 
 from pathlib import Path
 
-from yogo.data import YOGO_CLASS_ORDERING
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 from lfm_data_utilities.thumbnail_labelling.sort_thumbnails import (
     sort_thumbnails,

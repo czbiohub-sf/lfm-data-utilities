@@ -8,8 +8,7 @@ from datetime import datetime
 from collections import defaultdict
 from typing import List, Dict, Tuple, DefaultDict, cast
 
-from yogo.data import YOGO_CLASS_ORDERING
-
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 from lfm_data_utilities.utils import timing_context_manager
 from lfm_data_utilities.malaria_labelling.labelling_constants import CLASSES
 from lfm_data_utilities.malaria_labelling.label_studio_converter.convert_ls_to_yolo import (

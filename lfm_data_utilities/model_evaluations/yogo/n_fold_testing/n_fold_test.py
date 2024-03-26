@@ -16,12 +16,13 @@ from torch.utils.data import ConcatDataset, DataLoader, Subset
 from yogo.model import YOGO
 from yogo.train import Trainer
 from yogo.utils import choose_device
-from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import ObjectDetectionDataset
 from yogo.data.yogo_dataloader import choose_dataloader_num_workers, collate_batch
 from yogo.data.data_transforms import DualInputId
 from yogo.data.dataset_definition_file import DatasetDefinition
 from yogo.utils.default_hyperparams import DefaultHyperparams as df
+
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 # set seeds so we can reproduce + if we do this w/ slurm arrays,
 # each job could pick a separate fold for calculation

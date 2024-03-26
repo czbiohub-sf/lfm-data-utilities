@@ -12,8 +12,7 @@ from typing import List, Dict, Union
 
 from tqdm import tqdm
 
-from yogo.data import YOGO_CLASS_ORDERING
-
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 from lfm_data_utilities.malaria_labelling.thumbnail_labelling.sort_thumbnails import (
     sort_thumbnails,
 )

@@ -1,6 +1,5 @@
 import argparse
 from pathlib import Path
-import pickle
 
 import cv2
 import matplotlib.pyplot as plt

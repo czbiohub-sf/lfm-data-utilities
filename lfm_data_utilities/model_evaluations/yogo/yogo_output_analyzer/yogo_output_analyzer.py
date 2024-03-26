@@ -15,7 +15,10 @@ import yogo
 from dash import Dash, ctx, dcc, html, callback, Input, Output, State
 
 
-CLASS_LIST = yogo.data.YOGO_CLASS_ORDERING
+from lfm_data_utilities import YOGO_CLASS_ORDERING
+
+
+CLASS_LIST = YOGO_CLASS_ORDERING
 
 
 def set_universal_fig_settings_(fig, img_shape, prediction_shape, scale=0.8):

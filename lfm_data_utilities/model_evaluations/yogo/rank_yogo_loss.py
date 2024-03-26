@@ -27,12 +27,14 @@ from yogo.yogo_loss import YOGOLoss
 from yogo.utils.utils import bbox_colour
 from yogo.utils import draw_yogo_prediction
 from yogo.data.dataset_definition_file import DatasetDefinition
-from yogo.data import YOGO_CLASS_ORDERING
 from yogo.data.yogo_dataset import (
     ObjectDetectionDataset,
     label_file_to_tensor,
     load_labels,
 )
+
+
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 
 class YOGOPerLabelLoss(YOGOLoss):

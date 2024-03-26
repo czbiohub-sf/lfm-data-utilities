@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from pathlib import Path
 
-from yogo.data import YOGO_CLASS_ORDERING
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 
 def sigmoid(x, a, b):
