@@ -1,5 +1,11 @@
 # Thumbnail Labelling
 
+## Before you begin
+Make sure you have already created a folder of images for the runs you are interested in. You can create a folder of images from a `.zarr` file by using `lfm_data_utilities/malaria_labelling/process_zarr_to_images.py`. An example usage would be:
+`python3 process_zarr_to_images.py /hpc/projects/group.bioengineering/LFM_scope/ec50/drug_no_drug_comparison/2024-04-12-141644_`.
+
+Note that you need to pass in the _folder containing_ the zarr file and not the path to the zarr file itself.
+
 ## Labelling Guide
 
 Given datasets (i.e. folder of images + folder of labels), grab a thumbnail of each cell and put it in folders, sorted by class. A user can then sort those thumbnails into the correct folder. You can then use those corrected thumbnanils to update the original labels.
