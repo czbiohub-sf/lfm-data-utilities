@@ -2,10 +2,27 @@
 
 import json
 
+from functools import cache
 from pathlib import Path
 from dataclasses import dataclass
 
 from yogo.data.dataset_definition_file import DatasetDefinition
+
+"""
+messy, but correct, file used to track the thumbnails that we used for training.
+These track thumbnails that were EXPLICITLY LOOKED-AT BY A PERSON
+"""
+
+
+@cache
+def get_all_root_dirs_used_in_training():
+    ddf = DatasetDefinition.from_yaml(
+        Path(
+            "/home/axel.jacobsen/celldiagnosis/dataset_defs/fine-tuning/all-dataset-subsets.yml"
+        )
+    )
+
+    return set(d.label_path.parent for d in ddf.all_dataset_paths)
 
 
 def all_dirs_in(p: str) -> list[Path]:
@@ -139,46 +156,32 @@ class ThumbnailsDir:
         return s
 
 
-ddf = DatasetDefinition.from_yaml(
-    Path(
-        "/home/axel.jacobsen/celldiagnosis/dataset_defs/fine-tuning/all-dataset-subsets.yml"
-    )
-)
+def thumbnaildir_used_in_training(thumbnail_dir: ThumbnailsDir):
+    should_go_in = True
+    for task_dict in thumbnail_dir.id_to_tasks.values():
+        label_path = Path(task_dict["label_path"])
+        if label_path.parent not in get_all_root_dirs_used_in_training():
+            should_go_in = False
+            print(f"not in training {label_path=} {thumbnail_dir.root_path=}")
 
-all_root_dirs_used_in_training = set(d.label_path.parent for d in ddf.all_dataset_paths)
+    return should_go_in
+
 
 life_stage_timecourse = ThumbnailsDir.from_root_path(
     "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/life-stage-timecourse/thumbnails"
 )
-
-all_thumbnail_dirs = [
-    life_stage_timecourse,
-    *[
-        ThumbnailsDir.from_root_path(d)
-        for d in all_dirs_in(
-            "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets"
-        )
-    ],
+uganda_subsets = [
+    ThumbnailsDir.from_root_path(d)
+    for d in all_dirs_in(
+        "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets"
+    )
 ]
 
-# filter out empty dirs
-all_thumbnail_dirs = [atd for atd in all_thumbnail_dirs if atd.num_images() > 0]
-
-# use only dirs that were used in training
-aaaa = []
-for atd in all_thumbnail_dirs:
-    should_go_in = True
-    for task_dict in atd.id_to_tasks.values():
-        label_path = Path(task_dict["label_path"])
-        if label_path.parent not in all_root_dirs_used_in_training:
-            should_go_in = False
-            print(f'not in training {label_path=} {atd.root_path=}')
-
-    if should_go_in:
-        aaaa.append(atd)
-
-all_thumbnail_dirs = aaaa
-
-
-# for td in all_thumbnail_dirs:
-#     print(td)
+all_thumbnail_dirs = [
+    atd
+    for atd in [
+        life_stage_timecourse,
+        *uganda_subsets,
+    ]
+    if (atd.num_images() > 0 and thumbnaildir_used_in_training(atd))
+]
