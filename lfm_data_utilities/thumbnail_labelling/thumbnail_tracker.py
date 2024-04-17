@@ -191,6 +191,18 @@ if __name__ == "__main__":
         if (atd.num_images() > 0 and thumbnaildir_used_in_training(atd))
     ]
 
+    print("""
+      What are we counting?
+      Here, we are counting the number of thumbnails (cropped RBC + misc + wbc)
+      that were corrected via thumbnail labelling, and that were *not* originally
+      labelled in Label Studio. The latter is counted elsewhere.
+
+      The sets that fit this bill are
+        - late-lifestage timecourse data
+        - uganda subsets
+"""
+  )
+
     print("total counts")
     print("------------")
 
