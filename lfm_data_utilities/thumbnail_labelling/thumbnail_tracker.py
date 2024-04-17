@@ -125,9 +125,13 @@ class ThumbnailsDir:
         )
 
     def num_images(self) -> int:
-        return sum(
-            [len(list(xx.glob("*.png"))) for x in self.class_dir_paths for xx in x]
-        )
+        return sum(self.num_images_by_class())
+
+    def num_images_by_class(self) -> list[int]:
+        return [
+            sum(1 for folder in cls for f in folder.iterdir() if f.suffix == ".png")
+            for cls in self.class_dir_paths
+        ]
 
     def __repr__(self) -> str:
         def format_name(dir_path: Path) -> list[str]:
@@ -167,21 +171,30 @@ def thumbnaildir_used_in_training(thumbnail_dir: ThumbnailsDir):
     return should_go_in
 
 
-life_stage_timecourse = ThumbnailsDir.from_root_path(
-    "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/life-stage-timecourse/thumbnails"
-)
-uganda_subsets = [
-    ThumbnailsDir.from_root_path(d)
-    for d in all_dirs_in(
-        "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets"
+if __name__ == "__main__":
+    life_stage_timecourse = ThumbnailsDir.from_root_path(
+        "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/life-stage-timecourse/thumbnails"
     )
-]
-
-all_thumbnail_dirs = [
-    atd
-    for atd in [
-        life_stage_timecourse,
-        *uganda_subsets,
+    uganda_subsets = [
+        ThumbnailsDir.from_root_path(d)
+        for d in all_dirs_in(
+            "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/Uganda-subsets"
+        )
     ]
-    if (atd.num_images() > 0 and thumbnaildir_used_in_training(atd))
-]
+
+    all_thumbnail_dirs = [
+        atd
+        for atd in [
+            life_stage_timecourse,
+            *uganda_subsets,
+        ]
+        if (atd.num_images() > 0 and thumbnaildir_used_in_training(atd))
+    ]
+
+    print("total counts")
+    print("------------")
+
+    class_counts = [td.num_images_by_class() for td in all_thumbnail_dirs]
+    class_sums = [sum(x) for x in zip(*class_counts)]
+    for class_name, class_sum in zip(class_names, class_sums):
+        print(f"{class_name}:{' ' * (15 - len(class_name))} {class_sum}")
