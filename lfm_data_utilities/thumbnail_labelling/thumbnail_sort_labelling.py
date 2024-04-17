@@ -272,6 +272,9 @@ def main():
         )
 
         shutil.copy("see_in_context.py", args.path_to_output_dir)
+
+        with open(args.path_to_output_dir / "config_print.txt", "w") as f:
+            f.write(repr(args))
     else:
         parser.print_help()
 
