@@ -68,8 +68,19 @@ def convert_yolo_to_ls(
         categories = {int(v["id"]): v["name"] for v in notes_data["categories"]}
     else:
         classes_file = os.path.join(input_dir, "classes.txt")
-        with open(classes_file) as f:
-            lines = [line.strip() for line in f.readlines()]
+        try:
+            with open(classes_file) as f:
+                lines = [line.strip() for line in f.readlines()]
+        except FileNotFoundError:
+            lines = [
+                'healthy',
+                'ring',
+                'trophozoite',
+                'schizont',
+                'gametocyte',
+                'wbc',
+                'misc'
+            ]
 
         categories = {i: line for i, line in enumerate(lines)}
 
