@@ -175,6 +175,9 @@ if __name__ == "__main__":
     life_stage_timecourse = ThumbnailsDir.from_root_path(
         "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/life-stage-timecourse/thumbnails"
     )
+    label_studio = ThumbnailsDir.from_root_path(
+        "/hpc/projects/group.bioengineering/LFM_scope/thumbnail-corrections/all-human-labelled-no-healthy-or-misc-2023-07-19"
+    )
     uganda_subsets = [
         ThumbnailsDir.from_root_path(d)
         for d in all_dirs_in(
@@ -187,11 +190,13 @@ if __name__ == "__main__":
         for atd in [
             life_stage_timecourse,
             *uganda_subsets,
+            label_studio,
         ]
         if (atd.num_images() > 0 and thumbnaildir_used_in_training(atd))
     ]
 
-    print("""
+    print(
+        """
       What are we counting?
       Here, we are counting the number of thumbnails (cropped RBC + misc + wbc)
       that were corrected via thumbnail labelling, and that were *not* originally
@@ -201,7 +206,7 @@ if __name__ == "__main__":
         - late-lifestage timecourse data
         - uganda subsets
 """
-  )
+    )
 
     print("total counts")
     print("------------")
@@ -210,3 +215,49 @@ if __name__ == "__main__":
     class_sums = [sum(x) for x in zip(*class_counts)]
     for class_name, class_sum in zip(class_names, class_sums):
         print(f"{class_name}:{' ' * (15 - len(class_name))} {class_sum}")
+
+    print()
+    print("uganda counts")
+    print("------------")
+
+    class_counts = [td.num_images_by_class() for td in uganda_subsets]
+    class_sums = [sum(x) for x in zip(*class_counts)]
+    for class_name, class_sum in zip(class_names, class_sums):
+        print(f"{class_name}:{' ' * (15 - len(class_name))} {class_sum}")
+
+    print()
+    print("life-stage timecourse counts")
+    print("------------")
+    for class_name, class_sum in zip(
+        class_names, life_stage_timecourse.num_images_by_class()
+    ):
+        print(f"{class_name}:{' ' * (15 - len(class_name))} {class_sum}")
+
+    print()
+    print("label studio counts")
+    print("------------")
+    for class_name, class_sum in zip(class_names, label_studio.num_images_by_class()):
+        print(f"{class_name}:{' ' * (15 - len(class_name))} {class_sum}")
+
+    class_dirs = [p.class_dir_paths for p in all_thumbnail_dirs]
+
+    def flatten(xss):
+        return [x for xs in xss for x in xs]
+
+    (
+        healthy_dirs,
+        ring_dirs,
+        trophozoite_dirs,
+        schizont_dirs,
+        gametocyte_dirs,
+        wbc_dirs,
+        misc_dirs,
+    ) = map(flatten, zip(*class_dirs))
+
+    print("healthy", list(map(str, filter(bool, healthy_dirs))))
+    print("ring", list(map(str, filter(bool, ring_dirs))))
+    print("trophozoite", list(map(str, filter(bool, trophozoite_dirs))))
+    print("schizont", list(map(str, filter(bool, schizont_dirs))))
+    print("gametocyte", list(map(str, filter(bool, gametocyte_dirs))))
+    print("wbc", list(map(str, filter(bool, wbc_dirs))))
+    print("misc", list(map(str, filter(bool, misc_dirs))))
