@@ -161,7 +161,7 @@ def sort_thumbnails(
     # dict has an id. Why not make it a dict of dicts, mapping the cell id to the
     # prediction? It would turn the cell search from O(n) to O(1). Oh well, do a
     # first pass over the dict, making a map of cell id to image index and bbox index
-    not_corrected = was_corrected = 0
+    not_corrected = would_be_corrected = 0
     for task_json_id, corrections in id_to_list_of_corrections.items():
         if len(corrections) == 0:
             continue
@@ -211,13 +211,13 @@ def sort_thumbnails(
                 if verbose:
                     print(
                         f"original_class {original_class} does not match bbox_pred class "
-                        f"{bbox_pred['value']['rectanglelabels'][0]}"
+                        f"{bbox_pred['value']['rectanglelabels'][0]} - likely already corrected"
                     )
                 continue
 
             bbox_pred["value"]["rectanglelabels"] = [correction["corrected_class"]]
 
-            was_corrected += 1
+            would_be_corrected += 1
 
         # write the (corrected) json file
         if commit:
@@ -227,7 +227,7 @@ def sort_thumbnails(
             print(f"would have written corrected tasks.json file to {task_path}")
 
     if verbose:
-        print(f"not corrected: {not_corrected}, was corrected: {was_corrected}")
+        print(f"not corrected: {not_corrected}, would be corrected: {would_be_corrected}")
 
     # convert the corrected json files to yolo format
     for task_and_label_path in id_to_task_path.values():
