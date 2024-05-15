@@ -736,6 +736,7 @@ def multithread_map_unordered(
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
+    description: Optional[str] = None,
 ) -> List[Any]:
     protected_fcn_partial = partial(protected_fcn, fn)
     try:
@@ -753,7 +754,7 @@ def multithread_map_unordered(
         return [
             r.result()
             for r in tqdm(
-                as_completed(futs), total=argument_list_len, disable=not verbose
+                as_completed(futs), total=argument_list_len, disable=not verbose, desc=description
             )
         ]
 
@@ -768,6 +769,7 @@ def multiprocess_fn(
     ],
     ordered: bool = True,
     verbose: bool = True,
+    description: Optional[str] = None,
 ) -> List[Any]:
     """Wraps any function invocation in multiprocessing, with optional TQDM for progress.
 
@@ -800,6 +802,7 @@ def multiprocess_fn(
                 mp_func(protected_fcn_partial, argument_list),
                 total=len(argument_list),
                 disable=not verbose,
+                desc=description,
             )
         )
 
