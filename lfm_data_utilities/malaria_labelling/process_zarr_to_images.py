@@ -3,6 +3,7 @@
 import sys
 import zarr
 import math
+import zipfile
 
 from PIL import Image
 from pathlib import Path
@@ -39,7 +40,11 @@ def convert_zarr_to_image_folder(
             "image_runset_dir and path_to_runset must both have a value or must both be None"
         )
 
-    data = zarr.open(str(path_to_zarr_zip), mode="r")
+    try:
+        data = zarr.open(str(path_to_zarr_zip), mode="r")
+    except zipfile.BadZipFile:
+        print(f"{path_to_zarr_zip} is not a valid zarr file")
+        return
 
     if image_runset_dir is None:
         image_dir = path_to_zarr_zip.parent / "images"
@@ -197,5 +202,6 @@ if __name__ == "__main__":
                 ),
                 skip=skip,
             ),
+            description="converting zarr files to images",
             ordered=False,
         )
