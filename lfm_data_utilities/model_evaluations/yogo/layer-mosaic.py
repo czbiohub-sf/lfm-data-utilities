@@ -6,20 +6,16 @@ import torch.nn as nn
 from pathlib import Path
 
 from yogo.model import YOGO
+from yogo.utils import choose_device
 from yogo.data.utils import read_image
 
 
-def get_feature_maps(model, image_path, layer_num):
+def get_feature_maps(model, image, layer_num):
     layers = []
     for i in range(layer_num):
         layers.append(list(model.model.children())[i])
 
     selected_layers = nn.Sequential(*layers)
-
-    image = read_image(image_path)
-    if model.normalize_images:
-        image = image / 255
-    image = image.unsqueeze(0)
 
     with torch.no_grad():
         feature_maps = selected_layers(image)
@@ -59,7 +55,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("image", type=str)
+    parser.add_argument("image_path", type=str)
     parser.add_argument("pth_path", type=str)
     parser.add_argument("--output-dir", default=".", type=Path)
     output_group = parser.add_mutually_exclusive_group(required=True)
@@ -79,10 +75,17 @@ if __name__ == "__main__":
         args.pth_path,
         inference=True,
     )
+    y.to(choose_device())
+    y.eval()
+
+    image = read_image(args.image_path).to(choose_device())
+    if y.normalize_images:
+        image = image / 255
+    image = image.unsqueeze(0)
 
     num_layers = len(y.model)
     for layer_num in range(1, num_layers + 1):
-        feature_maps = get_feature_maps(y, args.image, layer_num)
+        feature_maps = get_feature_maps(y, image, layer_num)
 
         output_path = args.output_dir / f"feature_maps_layer_{layer_num}.pdf"
 
