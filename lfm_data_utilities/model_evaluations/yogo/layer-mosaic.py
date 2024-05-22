@@ -55,8 +55,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("image_path", type=str)
-    parser.add_argument("pth_path", type=str)
+    parser.add_argument("image_path", type=Path)
+    parser.add_argument("pth_path", type=Path)
     parser.add_argument("--output-dir", default=".", type=Path)
     output_group = parser.add_mutually_exclusive_group(required=True)
     output_group.add_argument(
