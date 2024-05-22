@@ -17,12 +17,16 @@ import torch
 import argparse
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from tqdm import tqdm
 from scipy import ndimage
 from yogo.model import YOGO
+
+
+matplotlib.use('Agg')
 
 
 def load_model(path_to_pth_file: str, device: Union[str, torch.device] = "cpu") -> YOGO:

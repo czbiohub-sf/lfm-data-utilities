@@ -3,7 +3,7 @@
 #SBATCH --job-name=heatmapGeneration
 #SBATCH --output=slurm-outputs/array/%A_%a.out
 #SBATCH --error=slurm-outputs/array/%A_%a.err
-#SBATCH --time=00:20:00
+#SBATCH --time=10:00:00
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --array=1-1367
