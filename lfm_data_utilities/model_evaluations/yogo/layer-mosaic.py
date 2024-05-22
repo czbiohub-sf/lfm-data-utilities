@@ -1,10 +1,7 @@
-import matplotlib.pyplot as plt
-
-from matplotlib.backends.backend_pdf import PdfPages
+#! /usr/bin/env python3
 
 import torch
 import torch.nn as nn
-import tifffile as tiff
 
 from pathlib import Path
 
@@ -31,6 +28,9 @@ def get_feature_maps(model, image_path, layer_num):
 
 
 def save_feature_maps_to_pdf(feature_maps, output_path, layer_num):
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+
     n, c, h, w = feature_maps.shape
 
     with PdfPages(output_path) as pdf:
@@ -45,7 +45,11 @@ def save_feature_maps_to_pdf(feature_maps, output_path, layer_num):
 
 
 def save_feature_maps_to_tiff(feature_maps, output_path, layer_num):
-    _, c, h, w = feature_maps.shape
+    import tifffile as tiff
+
+    n, c, h, w = feature_maps.shape
+    assert n == 1, "only one image at a time, please!"
+
     feature_maps_np = feature_maps[0].detach().cpu().numpy()
     tiff_path = output_path.parent / f"feature_maps_layer_{layer_num}.tiff"
     tiff.imwrite(tiff_path, feature_maps_np)
