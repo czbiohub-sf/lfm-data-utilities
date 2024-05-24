@@ -4,6 +4,7 @@ import sys
 import random
 import termios
 import argparse
+import matplotlib
 import numpy as np
 import multiprocessing as mp
 import matplotlib.pyplot as plt
@@ -13,6 +14,8 @@ from pathlib import Path
 from lfm_data_utilities.utils import get_list_of_img_paths_in_folder, load_imgs_threaded
 from lfm_data_utilities.ssaf_training_data import utils
 
+
+# matplotlib.use("QtAgg")
 
 # (Axel) I am not proud of this function - it's messy and hacky and fragile,
 # but i don't want to spend a lot of time working on this, so hacky and fast
