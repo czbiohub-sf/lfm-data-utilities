@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 from lfm_data_utilities.utils import get_list_of_img_paths_in_folder, load_imgs_threaded
-from lfm_data_utilities.ssaf_training_data import utils
+from lfm_data_utilities.ssaf_data_sorting import utils
 
 
 # matplotlib.use("QtAgg")
