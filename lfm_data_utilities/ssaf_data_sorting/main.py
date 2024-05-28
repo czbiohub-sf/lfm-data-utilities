@@ -17,6 +17,7 @@ from lfm_data_utilities.ssaf_data_sorting import utils
 
 # matplotlib.use("QtAgg")
 
+
 # (Axel) I am not proud of this function - it's messy and hacky and fragile,
 # but i don't want to spend a lot of time working on this, so hacky and fast
 # is the way to go
