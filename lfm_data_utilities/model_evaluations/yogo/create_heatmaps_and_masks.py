@@ -26,7 +26,7 @@ from scipy import ndimage
 from yogo.model import YOGO
 
 
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 
 
 def load_model(path_to_pth_file: str, device: Union[str, torch.device] = "cpu") -> YOGO:

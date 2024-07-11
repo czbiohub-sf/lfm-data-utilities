@@ -151,7 +151,15 @@ def get_rms(data: List[float]):
     return np.sqrt(ms / N)
 
 
-def make_video(dataset: Dataset, save_dir: PathLike, ds_factor: int = 1):
+def make_video(
+    dataset: Dataset,
+    save_dir: PathLike,
+    ds_factor: int = 1,
+    ssaf1_model_name: Optional[str] = "",
+    ssaf_vals_1: Optional[list] = None,
+    ssaf2_model_name: Optional[str] = "",
+    ssaf_vals_2: Optional[list] = None,
+):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
@@ -187,6 +195,28 @@ def make_video(dataset: Dataset, save_dir: PathLike, ds_factor: int = 1):
             (0, 0, 0),
             1,
         )
+
+        if ssaf_vals_1 != None and i > 0:
+            img = cv2.putText(
+                img,
+                f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
+                (50 // ds_factor, 80 // ds_factor),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1 // ds_factor,
+                (225, 0, 0),
+                1,
+            )
+        if ssaf_vals_2 != None and i > 0:
+            img = cv2.putText(
+                img,
+                f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
+                (50 // ds_factor, 110 // ds_factor),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1 // ds_factor,
+                (225, 0, 0),
+                1,
+            )
+
         writer.write(img)
     writer.release()
 
@@ -754,7 +784,10 @@ def multithread_map_unordered(
         return [
             r.result()
             for r in tqdm(
-                as_completed(futs), total=argument_list_len, disable=not verbose, desc=description
+                as_completed(futs),
+                total=argument_list_len,
+                disable=not verbose,
+                desc=description,
             )
         ]
 

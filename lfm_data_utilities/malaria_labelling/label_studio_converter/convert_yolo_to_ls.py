@@ -73,13 +73,13 @@ def convert_yolo_to_ls(
                 lines = [line.strip() for line in f.readlines()]
         except FileNotFoundError:
             lines = [
-                'healthy',
-                'ring',
-                'trophozoite',
-                'schizont',
-                'gametocyte',
-                'wbc',
-                'misc'
+                "healthy",
+                "ring",
+                "trophozoite",
+                "schizont",
+                "gametocyte",
+                "wbc",
+                "misc",
             ]
 
         categories = {i: line for i, line in enumerate(lines)}

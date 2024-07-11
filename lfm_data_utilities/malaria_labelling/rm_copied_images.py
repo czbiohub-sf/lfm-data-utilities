@@ -43,9 +43,9 @@ if __name__ == "__main__":
             for p in parent_dir.rglob(dset.label_path.parent.name)
             if (
                 (re.match(r".*Uganda_full_?\d?_images", str(p)) is not None)
-                and all(s not in str(p) for s in (
-                    "dense-data", "subsets-for-labelling"
-                ))
+                and all(
+                    s not in str(p) for s in ("dense-data", "subsets-for-labelling")
+                )
             )
         )
 

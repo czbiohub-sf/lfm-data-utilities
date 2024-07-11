@@ -227,7 +227,9 @@ def sort_thumbnails(
             print(f"would have written corrected tasks.json file to {task_path}")
 
     if verbose:
-        print(f"not corrected: {not_corrected}, would be corrected: {would_be_corrected}")
+        print(
+            f"not corrected: {not_corrected}, would be corrected: {would_be_corrected}"
+        )
 
     # convert the corrected json files to yolo format
     for task_and_label_path in id_to_task_path.values():
