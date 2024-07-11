@@ -4,7 +4,6 @@ import sys
 import random
 import termios
 import argparse
-import matplotlib
 import numpy as np
 import multiprocessing as mp
 import matplotlib.pyplot as plt

@@ -196,7 +196,7 @@ def make_video(
             1,
         )
 
-        if ssaf_vals_1 != None and i > 0:
+        if ssaf_vals_1 is not None and i > 0:
             img = cv2.putText(
                 img,
                 f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
@@ -206,7 +206,7 @@ def make_video(
                 (225, 0, 0),
                 1,
             )
-        if ssaf_vals_2 != None and i > 0:
+        if ssaf_vals_2 is not None and i > 0:
             img = cv2.putText(
                 img,
                 f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
