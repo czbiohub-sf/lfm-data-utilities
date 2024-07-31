@@ -17,7 +17,7 @@ setup(
         "opencv-python>=4.7.0.72",
         "nbdev",
         # "autofocus @ git+https://github.com/czbiohub/ulc-malaria-autofocus@main",
-        "zarr",
+        "zarr==2.10.1",
     ],
     extras_require={
         "torch": "torch>=1.13.1",
