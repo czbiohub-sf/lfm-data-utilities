@@ -501,7 +501,7 @@ if __name__ == "__main__":
     all_merged_label_paths = []
     all_merged_label_plus_paths = []
 
-    print(f"Copying label fiels to merged_labels...")
+    print(f"Copying label files to merged_labels...")
     for i, (lp, ds) in enumerate(zip(label_paths, dataset_names)):
         # Create a metadata folder to house information on the merged labels (IoU and etc.)
         metadata_path = Path(
