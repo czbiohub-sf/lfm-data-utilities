@@ -661,6 +661,14 @@ if __name__ == "__main__":
                 if match_found:
                     class_to_matches[class_name] += 1
             csv_file.close()
+
+            print(f"{'='*10}")
+            print("Class: matches / total (%)")
+            print(f"{'='*10}")
+            for k in class_to_matches.keys():
+                matches = class_to_matches[k]
+                total = class_to_total[k]
+                print(f"{k}: {matches} / {total} = {matches/total:.2f}")
             print(f"\n{class_to_matches=}")
             print(f"{class_to_total=}")
 
