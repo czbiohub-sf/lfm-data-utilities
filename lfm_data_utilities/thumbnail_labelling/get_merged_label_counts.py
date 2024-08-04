@@ -1,3 +1,4 @@
+import argparse
 import os
 import glob
 from collections import defaultdict
@@ -23,12 +24,17 @@ def count_labels(base_path):
     return label_counts
 
 
-# Usage
-base_directory = (
-    "/hpc/projects/group.bioengineering/LFM_scope/merged_labels/still-voice-4405"
-)
-result = count_labels(base_directory)
-for class_id, counts in sorted(result.items()):
-    print(f"Class {class_id}:")
-    for type_label, count in sorted(counts.items()):
-        print(f"  {type_label} : {count:,}")
+if __name__ == "__main__":
+    # Use argparse to get the path
+    parser = argparse.ArgumentParser(
+        description="This script processes a directory structure to count labeled data, distinguishing between 'Human' verified and 'Machine' generated labels. It requires the path to the base directory containing 'labels_plus' subdirectories."
+    )
+    parser.add_argument("base_path", help="Path to the base directory")
+    args = parser.parse_args()
+
+    base_directory = args.base_path
+    result = count_labels(base_directory)
+    for class_id, counts in sorted(result.items()):
+        print(f"Class {class_id}:")
+        for type_label, count in sorted(counts.items()):
+            print(f"  {type_label} : {count:,}")
