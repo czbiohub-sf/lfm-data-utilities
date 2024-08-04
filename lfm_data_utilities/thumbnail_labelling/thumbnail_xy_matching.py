@@ -244,7 +244,6 @@ def find_labels_using_regex(model_name, dataset_name):
         )
         if dataset_date in x
     ]
-    folder = folders[0]
 
     if len(folders) > 1:
         print(f"Multiple folders found for {dataset_date}: {folders}")
@@ -252,7 +251,9 @@ def find_labels_using_regex(model_name, dataset_name):
     elif len(folders) == 0:
         print(f"No folders found for {dataset_date}")
         folder = None
-    print(f"Found: {folder}")
+    else:
+        folder = folders[0]
+        print(f"Found: {folder}")
     return folder
 
 
