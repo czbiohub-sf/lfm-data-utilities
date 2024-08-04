@@ -432,6 +432,8 @@ def add_zero_to_label_files(directory: Path):
 def update_labels_files(
     new_class: str, label_path: Path, label_plus_path: Path, line_idx: int
 ):
+    """Given a specific label (a row index within a labels.txt file), update the class ID to the new class ID."""
+
     # Get the class ID
     class_name = new_class if "corrected" not in new_class else new_class.split("_")[1]
 
@@ -498,10 +500,8 @@ if __name__ == "__main__":
     all_merged_label_paths = []
     all_merged_label_plus_paths = []
 
-    for i, (lp, ds) in tqdm(
-        enumerate(zip(label_paths, dataset_names)),
-        desc="Copying labels to merged_labels...",
-    ):
+    print(f"Copying label fiels to merged_labels...")
+    for i, (lp, ds) in enumerate(zip(label_paths, dataset_names)):
         # Create a metadata folder to house information on the merged labels (IoU and etc.)
         metadata_path = Path(
             f"/hpc/projects/group.bioengineering/LFM_scope/merged_labels/{args.model_name}/metadata_on_merged_labels"
@@ -536,10 +536,9 @@ if __name__ == "__main__":
         copy_files_concurrently(Path(yogo_label_path), merged_label_plus_path, lp)
 
         # Update the label files with an additional column, defaulted to 0s, indicating that these are machine labels
-        print(f"Adding zeros to label files in {merged_label_path}")
         add_zero_to_label_files(merged_label_plus_path)
 
-        print(f"\nDone {i+1} / {len(label_paths)}")
+        print(f"\nDone copying {i+1} / {len(label_paths)}")
 
     try:
         for task_id in tqdm(
@@ -663,6 +662,31 @@ if __name__ == "__main__":
             csv_file.close()
             print(f"\n{class_to_matches=}")
             print(f"{class_to_total=}")
+
+        print("X-Y matching complete.")
+
+        # Now, let's go through and check for any labels files which have no human verified labels
+        # and remove those (since they consist entirely of machine labels)
+        print(
+            "Checking for and removing any label files which do not have any human verified labels now..."
+        )
+
+        for lbl_path, lbl_plus_path in zip(
+            all_merged_label_paths, all_merged_label_plus_paths
+        ):
+            # Go through each file in the lbl_plus_path folder and check if all of its last columns are 0
+            # if so, then there are no human verified labels and that file (and its corresponding file in lbl_path)
+            # should be removed
+            counter = 0
+            for file in lbl_plus_path.glob("*.txt"):
+                lines = file.read_text().splitlines()
+                if all([line.split(" ")[-1] == "0" for line in lines]):
+                    counter += 1
+                    os.remove(lbl_path / file.name)
+                    os.remove(file)
+            print(
+                f"{counter} files were removed from {lbl_path} for not having any human verified labels."
+            )
 
     except Exception as e:
         print(traceback.format_exc())
