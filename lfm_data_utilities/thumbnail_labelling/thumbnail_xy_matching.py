@@ -684,9 +684,14 @@ if __name__ == "__main__":
                     counter += 1
                     os.remove(lbl_path / file.name)
                     os.remove(file)
-            print(
-                f"{counter} files were removed from {lbl_path} for not having any human verified labels."
-            )
+            if counter > 1:
+                print(
+                    f"{counter} files were removed from {lbl_path} for not having any human verified labels."
+                )
+            elif counter == 1:
+                print(
+                    f"{counter} file was removed from {lbl_path} for not having any human verified labels."
+                )
 
     except Exception as e:
         print(traceback.format_exc())
