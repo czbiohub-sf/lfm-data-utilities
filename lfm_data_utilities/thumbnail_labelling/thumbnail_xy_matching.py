@@ -668,7 +668,8 @@ if __name__ == "__main__":
             for k in class_to_matches.keys():
                 matches = class_to_matches[k]
                 total = class_to_total[k]
-                print(f"{k}: {matches} / {total} = {matches/total:.2f}")
+                perc = matches / total if total != 0 else 0
+                print(f"{k}: {matches} / {total} ({perc:.2f})")
             print(f"\n{class_to_matches=}")
             print(f"{class_to_total=}")
 
