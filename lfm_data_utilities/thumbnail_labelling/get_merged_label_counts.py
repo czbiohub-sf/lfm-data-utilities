@@ -1,7 +1,9 @@
 import argparse
+from collections import defaultdict
 import os
 import glob
-from collections import defaultdict
+
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 
 def count_labels(base_path):
@@ -35,6 +37,6 @@ if __name__ == "__main__":
     base_directory = args.base_path
     result = count_labels(base_directory)
     for class_id, counts in sorted(result.items()):
-        print(f"Class {class_id}:")
+        print(f"Class {YOGO_CLASS_ORDERING[class_id]}:")
         for type_label, count in sorted(counts.items()):
             print(f"  {type_label} : {count:,}")
