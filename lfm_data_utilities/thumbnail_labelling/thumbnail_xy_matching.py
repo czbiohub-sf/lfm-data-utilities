@@ -415,7 +415,7 @@ def copy_files_concurrently(src_dir, dest_dir, orig_label_path, num_workers=10):
 
 def add_zero_to_label_files(directory: Path):
     for file_path in tqdm(
-        directory.glob("*.txt"), desc=f"Adding zeros label files in {directory.stem}"
+        directory.glob("*.txt"), desc=f"Adding zeros to label files in {directory.stem}"
     ):
         lines = file_path.read_text().splitlines()
 
