@@ -37,6 +37,6 @@ if __name__ == "__main__":
     base_directory = args.base_path
     result = count_labels(base_directory)
     for class_id, counts in sorted(result.items()):
-        print(f"Class {YOGO_CLASS_ORDERING[class_id]}:")
+        print(f"Class {YOGO_CLASS_ORDERING[int(class_id)]}:")
         for type_label, count in sorted(counts.items()):
             print(f"  {type_label} : {count:,}")
