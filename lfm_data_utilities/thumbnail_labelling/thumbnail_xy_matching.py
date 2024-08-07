@@ -98,9 +98,9 @@ def get_all_completed_thumbnails(tld: Path):
         print(f"Found {len(unique_folders)} potentially incomplete folders: ")
         for folder in unique_folders:
             print(folder)
-        # raise ValueError(
-        #     "There appear to be some folders which have not been marked as complete. Please verify."
-        # )
+        raise ValueError(
+            "There appear to be some folders which have not been marked as complete. Please verify."
+        )
 
     # Otherwise, return all the thumbnail paths
     return all_thumbnail_paths
