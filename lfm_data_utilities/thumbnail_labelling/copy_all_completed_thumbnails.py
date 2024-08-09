@@ -51,7 +51,7 @@ if __name__ == "__main__":
     completed_dirs = [
         d
         for d in thumbnail_dir.rglob("*completed*")
-        if d.stem
+        if d.parent.stem
         in [
             "ring",
             "trophozoite",
@@ -76,9 +76,6 @@ if __name__ == "__main__":
             "corrected_misc",
         ]
     ]
-
-    # Remove the healthy dirs (how we'll keep the corrected_healthy dirs)
-    completed_dirs = [dir for dir in completed_dirs if "healthy" not in dir.stem]
 
     combined = completed_dirs + corrected_dirs
 
