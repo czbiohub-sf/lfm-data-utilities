@@ -26,6 +26,7 @@ from typing import cast, Tuple, List, Dict
 from tqdm import tqdm
 
 from lfm_data_utilities import YOGO_CLASS_ORDERING
+from utils import get_verified_class_from_thumbnail_path
 
 IMG_W = 1032
 IMG_H = 772
