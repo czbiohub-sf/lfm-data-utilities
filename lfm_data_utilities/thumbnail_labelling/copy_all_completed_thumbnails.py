@@ -55,11 +55,10 @@ if __name__ == "__main__":
     completed_dirs = [dir for dir in completed_dirs if "healthy" not in dir.stem]
     corrected_dirs = [dir for dir in corrected_dirs if "healthy" not in dir.stem]
 
+    combined = completed_dirs + corrected_dirs
+
     # Get all the thumbnails from the corrected folders
-    for dir in tqdm(
-        [completed_dirs, corrected_dirs],
-        desc="Looping through completed/corrected folders",
-    ):
+    for dir in tqdm(combined, desc="Looping through completed/corrected folders"):
         for thumbnail_dir in dir:
             for thumbnail in thumbnail_dir.rglob("*.png"):
                 verified_class = get_verified_class_from_thumbnail_path(thumbnail)
