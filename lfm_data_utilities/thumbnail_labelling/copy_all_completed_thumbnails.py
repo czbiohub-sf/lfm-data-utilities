@@ -15,6 +15,8 @@ import argparse
 from pathlib import Path
 import shutil
 
+from tqdm import tqdm
+
 from utils import get_verified_class_from_thumbnail_path
 
 if __name__ == "__main__":
@@ -44,9 +46,15 @@ if __name__ == "__main__":
     corrected_dirs = list(thumbnail_dir.rglob("corrected_*"))
 
     # Get all the thumbnails from the corrected folders
-    for dir in [completed_dirs, corrected_dirs]:
+    for dir in tqdm(
+        [completed_dirs, corrected_dirs],
+        desc="Looping through completed/corrected folders",
+    ):
         for thumbnail_dir in dir:
-            for thumbnail in thumbnail_dir.iterdir():
+            for thumbnail in tqdm(
+                thumbnail_dir.iterdir(),
+                desc=f"Looping through thumbnails in: {thumbnail_dir}",
+            ):
                 verified_class = get_verified_class_from_thumbnail_path(thumbnail)
                 output_dir = args.path_to_output_dir / verified_class
                 output_dir.mkdir(exist_ok=True)
