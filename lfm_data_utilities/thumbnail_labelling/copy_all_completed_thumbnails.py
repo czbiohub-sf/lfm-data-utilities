@@ -58,12 +58,11 @@ if __name__ == "__main__":
     combined = completed_dirs + corrected_dirs
 
     # Get all the thumbnails from the corrected folders
-    for dir in tqdm(combined, desc="Looping through completed/corrected folders"):
-        for thumbnail_dir in dir:
-            for thumbnail in thumbnail_dir.rglob("*.png"):
-                verified_class = get_verified_class_from_thumbnail_path(thumbnail)
-                if "corrected" in verified_class:
-                    verified_class = verified_class.split("_")[1]
-                output_dir = args.path_to_output_dir / verified_class
-                output_dir.mkdir(exist_ok=True)
-                shutil.copy(thumbnail, output_dir)
+    for thumbnail_dir in tqdm(combined, desc="Looping through completed/corrected folders"):
+        for thumbnail in thumbnail_dir.rglob("*.png"):
+            verified_class = get_verified_class_from_thumbnail_path(thumbnail)
+            if "corrected" in verified_class:
+                verified_class = verified_class.split("_")[1]
+            output_dir = args.path_to_output_dir / verified_class
+            output_dir.mkdir(exist_ok=True)
+            shutil.copy(thumbnail, output_dir)
