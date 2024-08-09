@@ -33,6 +33,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    thumbnail_dir: Path = args.path_to_thumbnail_dir
+    output_dir: Path = args.path_to_output_dir
+
     # Get all the corrected and complete folders
     if not args.path_to_thumbnail_dir.exists():
         raise ValueError(
@@ -40,10 +43,16 @@ if __name__ == "__main__":
         )
 
     # Create the folder where the thumbnails will be copied
+    output_dir.mkdir(exist_ok=True)
+    for class_name in ["ring", "trophozoite", "schizont", "gametocyte", "wbc", "misc"]:
+        (output_dir / class_name).mkdir(exist_ok=True)
 
-    thumbnail_dir: Path = args.path_to_thumbnail_dir
     completed_dirs = list(thumbnail_dir.rglob("*completed*"))
     corrected_dirs = list(thumbnail_dir.rglob("corrected_*"))
+
+    # Remove the healthy dirs
+    completed_dirs = [dir for dir in completed_dirs if "healthy" not in dir.stem]
+    corrected_dirs = [dir for dir in corrected_dirs if "healthy" not in dir.stem]
 
     # Get all the thumbnails from the corrected folders
     for dir in tqdm(
