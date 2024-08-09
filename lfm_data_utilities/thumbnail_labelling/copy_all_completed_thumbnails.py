@@ -47,6 +47,7 @@ if __name__ == "__main__":
     for class_name in ["ring", "trophozoite", "schizont", "gametocyte", "wbc", "misc"]:
         (output_dir / class_name).mkdir(exist_ok=True)
 
+    print("Finding all the completed and corrected_* folders (except the healthy ones)")
     completed_dirs = list(thumbnail_dir.rglob("*completed*"))
     corrected_dirs = list(thumbnail_dir.rglob("corrected_*"))
 
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     ):
         for thumbnail_dir in dir:
             for thumbnail in tqdm(
-                thumbnail_dir.iterdir(),
+                thumbnail_dir.rglob("*.png"),
                 desc=f"Looping through thumbnails in: {thumbnail_dir}",
             ):
                 verified_class = get_verified_class_from_thumbnail_path(thumbnail)
