@@ -44,21 +44,48 @@ if __name__ == "__main__":
 
     # Create the folder where the thumbnails will be copied
     output_dir.mkdir(exist_ok=True)
-    for class_name in ["ring", "trophozoite", "schizont", "gametocyte", "wbc", "misc"]:
-        (output_dir / class_name).mkdir(exist_ok=True)
 
-    print("Finding all the completed and corrected_* folders (except the healthy ones)")
-    completed_dirs = list(thumbnail_dir.rglob("*completed*"))
-    corrected_dirs = list(thumbnail_dir.rglob("corrected_*"))
+    print(
+        "\nFinding all the completed and corrected_* folders (we'll skip the normal healthy dirs, but we'll keep the corrected_healthy folders)"
+    )
+    completed_dirs = [
+        d
+        for d in thumbnail_dir.rglob("*completed*")
+        if d.stem
+        in [
+            "ring",
+            "trophozoite",
+            "schizont",
+            "gametocyte",
+            "wbc",
+            "misc",
+        ]
+    ]
 
-    # Remove the healthy dirs
+    corrected_dirs = [
+        x
+        for x in thumbnail_dir.rglob("corrected_*")
+        if x.stem
+        in [
+            "corrected_healthy",
+            "corrected_ring",
+            "corrected_trophozoite",
+            "corrected_schizont",
+            "corrected_gametocyte",
+            "corrected_wbc",
+            "corrected_misc",
+        ]
+    ]
+
+    # Remove the healthy dirs (how we'll keep the corrected_healthy dirs)
     completed_dirs = [dir for dir in completed_dirs if "healthy" not in dir.stem]
-    corrected_dirs = [dir for dir in corrected_dirs if "healthy" not in dir.stem]
 
     combined = completed_dirs + corrected_dirs
 
     # Get all the thumbnails from the corrected folders
-    for thumbnail_dir in tqdm(combined, desc="Looping through completed/corrected folders"):
+    for thumbnail_dir in tqdm(
+        combined, desc="Looping through completed/corrected folders"
+    ):
         for thumbnail in thumbnail_dir.rglob("*.png"):
             verified_class = get_verified_class_from_thumbnail_path(thumbnail)
             if "corrected" in verified_class:
