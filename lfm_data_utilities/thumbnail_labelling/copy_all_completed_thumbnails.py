@@ -61,10 +61,7 @@ if __name__ == "__main__":
         desc="Looping through completed/corrected folders",
     ):
         for thumbnail_dir in dir:
-            for thumbnail in tqdm(
-                thumbnail_dir.rglob("*.png"),
-                desc=f"Looping through thumbnails in: {thumbnail_dir}",
-            ):
+            for thumbnail in thumbnail_dir.rglob("*.png"):
                 verified_class = get_verified_class_from_thumbnail_path(thumbnail)
                 output_dir = args.path_to_output_dir / verified_class
                 output_dir.mkdir(exist_ok=True)
