@@ -23,6 +23,10 @@ def count_labels(base_path):
                         class_id = parts[0]
                         verified = "Human" if parts[-1] == "1" else "Machine"
                         label_counts[class_id][verified] += 1
+                    elif len(parts) == 5:  # Of unknown provenance
+                        class_id = parts[0]
+                        verified = "Unknown"
+                        label_counts[class_id][verified] += 1
     return label_counts
 
 
