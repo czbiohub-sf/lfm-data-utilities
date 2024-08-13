@@ -37,7 +37,8 @@ def count_labels(base_path):
 if __name__ == "__main__":
     # Use argparse to get the path
     parser = argparse.ArgumentParser(
-        description="This script processes a directory structure to count labeled data, distinguishing between 'Human' verified and 'Machine' generated labels. It requires the path to the base directory containing 'labels_plus' subdirectories."
+        description="This script processes a directory structure to count labeled data, distinguishing between 'Human' verified, 'Machine' generated, and 'Unknown' labels \
+            (unknown labels are those which do not have a column distinguishing whether it was human verified or machine generated). It requires the path to the base directory containing 'labels_plus' subdirectories."
     )
     parser.add_argument("base_path", help="Path to the base directory")
     args = parser.parse_args()
