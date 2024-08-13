@@ -1,7 +1,8 @@
 import argparse
 from collections import defaultdict
-import os
 import glob
+import os
+from pathlib import Path
 
 from lfm_data_utilities import YOGO_CLASS_ORDERING
 
@@ -11,9 +12,12 @@ def count_labels(base_path):
         lambda: defaultdict(int)
     )  # Nested dictionaries for counts
     # Search for all 'labels_plus' directories within the base_path
-    for labels_dir in glob.glob(
-        os.path.join(base_path, "**/labels_plus"), recursive=True
-    ):
+    path = os.path.join(base_path, "**/labels_plus")
+    if not Path(path).exists():
+        # Let's use the regular labels
+        path = os.path.join(base_path, "**/labels")
+
+    for labels_dir in glob.glob(path, recursive=True):
         # Iterate over each file in the found directory
         for filename in glob.glob(os.path.join(labels_dir, "*.txt")):
             with open(filename, "r") as file:
