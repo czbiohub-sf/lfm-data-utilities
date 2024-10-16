@@ -159,6 +159,7 @@ def make_video(
     ssaf_vals_1: Optional[list] = None,
     ssaf2_model_name: Optional[str] = "",
     ssaf_vals_2: Optional[list] = None,
+    add_im_counter_text: bool = True,
 ):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
@@ -173,12 +174,12 @@ def make_video(
 
     save_dir.mkdir(exist_ok=True)
     output_path = Path(save_dir) / Path(
-        dataset.dp.zarr_path.stem + f"ds_{ds_factor}.mp4"
+        dataset.dp.zarr_path.stem + f"ds_{ds_factor}.avi"
     )
 
     writer = cv2.VideoWriter(
         f"{output_path}",
-        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
+        fourcc=cv2.VideoWriter_fourcc(*"FFV1"),
         fps=framerate,
         frameSize=(width // ds_factor, height // ds_factor),
         isColor=False,
@@ -186,36 +187,38 @@ def make_video(
 
     for i, _ in enumerate(tqdm(range(num_frames))):
         img = cv2.resize(zf[:, :, i], (width // ds_factor, height // ds_factor))
-        img = cv2.putText(
-            img,
-            f"img {i}",
-            (50 // ds_factor, 50 // ds_factor),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1 // ds_factor,
-            (0, 0, 0),
-            1,
-        )
 
-        if ssaf_vals_1 is not None and i > 0:
+        if add_im_counter_text:
             img = cv2.putText(
                 img,
-                f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
-                (50 // ds_factor, 80 // ds_factor),
+                f"{i}",
+                (50 // ds_factor, 50 // ds_factor),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1 // ds_factor,
-                (225, 0, 0),
+                (0, 0, 0),
                 1,
             )
-        if ssaf_vals_2 is not None and i > 0:
-            img = cv2.putText(
-                img,
-                f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
-                (50 // ds_factor, 110 // ds_factor),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1 // ds_factor,
-                (225, 0, 0),
-                1,
-            )
+
+            if ssaf_vals_1 is not None and i > 0:
+                img = cv2.putText(
+                    img,
+                    f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
+                    (50 // ds_factor, 80 // ds_factor),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1 // ds_factor,
+                    (225, 0, 0),
+                    1,
+                )
+            if ssaf_vals_2 is not None and i > 0:
+                img = cv2.putText(
+                    img,
+                    f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
+                    (50 // ds_factor, 110 // ds_factor),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1 // ds_factor,
+                    (225, 0, 0),
+                    1,
+                )
 
         writer.write(img)
     writer.release()
