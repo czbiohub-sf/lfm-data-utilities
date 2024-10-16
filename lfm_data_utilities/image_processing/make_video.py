@@ -28,8 +28,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--img_counter",
         type=bool,
+        action=argparse.BooleanOptionalAction,
         help="Add img counter text (default True)",
-        default=True,
     )
     parser.add_argument(
         "--ssaf1_vals",
