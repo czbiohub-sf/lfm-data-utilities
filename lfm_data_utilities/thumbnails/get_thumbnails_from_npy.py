@@ -13,6 +13,11 @@ def filter_for_conf(arr, conf_thresh):
     return arr[:, arr[7, :] > conf_thresh]
 
 
+def filter_for_cells(arr: np.ndarray):
+    cells = [0, 1, 2, 3]
+    return arr[:, np.isin(arr[6, :], cells)]
+
+
 def parse_filepaths(filepath):
     if filepath.endswith(".txt"):
         with open(filepath, "r") as file:
@@ -31,7 +36,7 @@ def get_imgs_dir(npy_file: Path) -> Path:
 
 
 def get_thumbnail_coords(
-    npy_filepath: Path,
+    npy_filepath: Path, conf: float = 0.99
 ) -> List[Tuple[int, Path, Tuple[int, int, int, int]]]:
     """
     Get the corresponding image file path and
@@ -41,14 +46,8 @@ def get_thumbnail_coords(
 
     # Load and filter npy file
     arr = np.load(npy_filepath)
-    arr = filter_for_conf(arr, 0.9)
-    # widths = arr[3, :] - arr[1, :]
-    # heights = arr[4, :] - arr[2, :]
-    # ar = widths / heights
-
-    # ar_mask = np.logical_and(0.8 <= ar, ar <= 1.2)
-
-    # arr = arr[:, ar_mask]
+    arr = filter_for_cells(arr)
+    arr = filter_for_conf(arr, conf)
 
     classes = np.unique(arr[6, :])
 
@@ -100,7 +99,7 @@ def main():
         get_thumbnail_coords(x) for x in tqdm(filepaths, desc="Loading files")
     ]
     paths_and_coords = [item for sublist in paths_and_coords for item in sublist]
-
+    Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     partial_crop_and_save_thumbnail = partial(
         crop_and_save_thumbnail, output_dir=Path(args.output_dir)
     )
