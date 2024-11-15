@@ -4,6 +4,7 @@ Create a csv file for use with creating QR codes on the label printer.
 The function takes in a desired string and appends, with an underscore,
 numbers from 1 to N at the end.
 """
+
 import argparse
 import csv
 

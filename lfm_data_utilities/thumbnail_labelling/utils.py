@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def get_verified_class_from_thumbnail_path(thumbail_path: Path):
     """
     Based on the folder path of the thumbail,
