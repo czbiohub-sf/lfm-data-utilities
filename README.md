@@ -1,6 +1,6 @@
 # lfm-data-utilities
 
-Tools for processing data related to the lfm-scope (ulc-malaria-scope)
+This is a collection of auxilliary data processing tools used by the Remoscope project: https://www.medrxiv.org/content/10.1101/2024.11.12.24317184v1
 
 # Installation
 
