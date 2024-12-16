@@ -21,7 +21,7 @@ fi
 ZARR_PATH=$(sed -n "$SLURM_ARRAY_TASK_ID"p "$1")
 YOGO_MODEL_NAME="$2"
 OUTPUT_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_heatmaps/$YOGO_MODEL_NAME"
-PTH_FILE="/home/axel.jacobsen/celldiagnosis/yogo/trained_models/$YOGO_MODEL_NAME/best.pth"
+PTH_FILE="/hpc/projects/group.bioengineering/LFM_scope/celldiagnosis/yogo/trained_models/$YOGO_MODEL_NAME/best.pth"
 
 out=$(
   ./create_heatmaps_and_masks.py \

@@ -17,9 +17,7 @@ from lfm_data_utilities.ssaf_data_sorting import utils
 # matplotlib.use("QtAgg")
 
 
-# (Axel) I am not proud of this function - it's messy and hacky and fragile,
-# but i don't want to spend a lot of time working on this, so hacky and fast
-# is the way to go
+# Function needs to be refactored. It is messy and fragile.
 def process_folder(folder_path: Path, save_loc: Path, focus_graph_loc: Path):
     """Run the analysis + sorting on a given folder
 

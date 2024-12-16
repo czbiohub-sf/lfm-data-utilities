@@ -7,12 +7,12 @@
 #   07529/          README.md       high-titration/ low-titration/
 
 
-BASE_DIR="/Users/axel.jacobsen/Desktop/yogo-layer-analysis-dataset"
+BASE_DIR="/hpc/projects/group.bioengineering/LFM_scope/yogo-layer-analysis-dataset"
 HIGH_TITRATION_DIR="$BASE_DIR/high-titration"
 LOW_TITRATION_DIR="$BASE_DIR/low-titration"
 
 process_png() {
-  MODEL_PATH="/Users/axel.jacobsen/Documents/yogo/trained_models/still-voice-4405/best.pth"
+  MODEL_PATH="/hpc/projects/group.bioengineering/LFM_scope/yogo/trained_models/still-voice-4405/best.pth"
 
   local png_file=$1
   local tiff_dir=$2

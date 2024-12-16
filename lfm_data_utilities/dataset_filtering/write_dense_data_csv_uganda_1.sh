@@ -15,8 +15,8 @@ echo "writing dense data w/ args"
 
 SOURCE_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full"
 TARGET_DIR="/hpc/projects/group.bioengineering/LFM_scope/Uganda_full_images/dense-data"
-YOGO_MODEL="/home/axel.jacobsen/celldiagnosis/yogo/trained_models/frightful-wendigo-1931/best.pth"
-AUTOFOCUS_MODEL="/home/axel.jacobsen/autofocus/ulc-malaria-autofocus/trained_models/polished-dragon-468/best.pth"
+YOGO_MODEL="/hpc/projects/group.bioengineering/LFM_scope/celldiagnosis/yogo/trained_models/frightful-wendigo-1931/best.pth"
+AUTOFOCUS_MODEL="/hpc/projects/group.bioengineering/LFM_scope/autofocus/ulc-malaria-autofocus/trained_models/polished-dragon-468/best.pth"
 
 echo "SOURCE_DIR is $SOURCE_DIR"
 echo "TARGET_DIR is $TARGET_DIR"

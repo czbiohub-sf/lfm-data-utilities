@@ -103,8 +103,6 @@ When exporting for training (i.e. you've completed labelling the entire batch of
 curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=YOLO&download_resources=false" -H "Authorization: Token <paste the Auth. token here>" --output annotations.zip
 ```
 
-Send that folder to Axel. Thank you!
-
 ### Exporting `tasks.json` for further labelling or review
 
 ```console

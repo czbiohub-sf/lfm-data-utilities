@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --output=./slurm-outputs/%j.out
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=axel.jacobsen@czbiohub.org
+#SBATCH --mail-user=first.last@czbiohub.org
 
 env | grep "^SLURM" | sort
 

@@ -23,9 +23,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output_dataset_path",
-        help="Path to copied dataset (defaults to /hpc/mydata/axel.jacobsen/labelled_yolo_data",
+        help="Path to copied dataset (defaults to /hpc/projects/group.bioengineering/LFM_scope/labelled_yolo_data",
         type=Path,
-        default=Path("/hpc/mydata/axel.jacobsen/labelled_yolo_data"),
+        default=Path("/hpc/projects/group.bioengineering/LFM_scope/labelled_yolo_data"),
     )
     args = parser.parse_args()
 
