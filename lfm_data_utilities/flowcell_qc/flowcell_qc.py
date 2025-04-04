@@ -32,9 +32,7 @@ PREVIEW_SIZE = "100,100,640,480"
 # Directory to save images
 BASE_DIR = "/home/pi/Desktop/qc_images"
 
-
-def capture_image(save_dir):
-    # Get batch and chip_ids
+def get_batch_id()->str:
     while True:
         try:
             batch_id = input("Please enter a batch ID: ").strip()
@@ -44,7 +42,7 @@ def capture_image(save_dir):
 
             if not all(c.isalnum() or c in ["_", "-"] for c in batch_id):
                 print(
-                    "Flowcell ID can only contain alphanumeric characters, underscores, or dashes. Please try again."
+                    "Batch ID can only contain alphanumeric characters, underscores, or dashes. Please try again."
                 )
                 continue
 
@@ -53,26 +51,12 @@ def capture_image(save_dir):
             print("\nNo input received for batch_id. Aborting capture.")
             return
 
-    while True:
-        try:
-            chip_id = input("Please enter a flowcell ID: ").strip()
-            if not chip_id:
-                print("Flowcell ID cannot be empty. Please try again.")
-                continue
+    return batch_id
 
-            if not all(c.isalnum() or c in ["_", "-"] for c in chip_id):
-                print(
-                    "Flowcell ID can only contain alphanumeric characters, underscores, or dashes. Please try again."
-                )
-                continue
-
-            break
-        except EOFError:
-            print("\nNo input received for chip_id. Aborting capture.")
-            return
+def capture_image(save_dir:str, img_index:int)->None:
 
     timestamp_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
-    image_path = os.path.join(save_dir, f"{timestamp_str}_{batch_id}_{chip_id}.jpg")
+    image_path = os.path.join(save_dir, f"{timestamp_str}_{img_index}.jpg")
 
     if os.path.exists(image_path):
         print(f"Image {image_path} already exists. Please press the button and try again.")
@@ -102,7 +86,7 @@ def capture_image(save_dir):
         print(f"image capture failed with error: {e.returncode}")
 
 
-def main():
+def main()->None:
     # Initialize GPIO
     try:
         GPIO.setmode(GPIO.BCM)
@@ -124,8 +108,10 @@ def main():
     neopixels.show()
 
     # Create a directory for the current session
-    session_dir_name = datetime.now().strftime("%Y_%m_%d_%H_%M")
-    save_dir = os.path.join(BASE_DIR, session_dir_name)
+    batch_id = get_batch_id()
+    date_string = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    batch_dir_name = f"{batch_id}_{date_string}"
+    save_dir = os.path.join(BASE_DIR, batch_dir_name)
 
     try:
         os.makedirs(save_dir, exist_ok=True)
@@ -136,13 +122,16 @@ def main():
     print("Press the button to capture an image...")
     print("Or press CTRL-C to exit the program...")
 
+    img_index = 0
+
     # Main loop
     try:
         while True:
             # The button is active low
             if GPIO.input(BUTTON_PIN) == GPIO.LOW:
                 print("Button pressed! Capturing image...")
-                capture_image(save_dir)
+                img_index+=1
+                capture_image(save_dir, img_index)
 
                 # Simple debounce: wait until button is released
                 while GPIO.input(BUTTON_PIN) == GPIO.LOW:
