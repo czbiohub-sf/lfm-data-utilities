@@ -78,7 +78,7 @@ def capture_image(save_dir):
     ]
 
     try:
-        ans = subprocess.run(cam_command, check=True)
+        subprocess.run(cam_command, check=True)
         print(f"Image saved to {image_path}")
 
     except subprocess.CalledProcessError as e:
