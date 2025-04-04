@@ -34,7 +34,6 @@ BASE_DIR = "/home/pi/Desktop/qc_images"
 
 
 def capture_image(save_dir):
-
     # Get batch and chip_ids
     while True:
         try:
@@ -42,6 +41,13 @@ def capture_image(save_dir):
             if not batch_id:
                 print("Batch ID cannot be empty. Please try again.")
                 continue
+
+            if not all(c.isalnum() or c in ["_", "-"] for c in batch_id):
+                print(
+                    "Flowcell ID can only contain alphanumeric characters, underscores, or dashes. Please try again."
+                )
+                continue
+
             break
         except EOFError:  # Apparently hitting CTRL-D inputs an EOF character
             print("\nNo input received for batch_id. Aborting capture.")
@@ -53,6 +59,13 @@ def capture_image(save_dir):
             if not chip_id:
                 print("Flowcell ID cannot be empty. Please try again.")
                 continue
+
+            if not all(c.isalnum() or c in ["_", "-"] for c in chip_id):
+                print(
+                    "Flowcell ID can only contain alphanumeric characters, underscores, or dashes. Please try again."
+                )
+                continue
+
             break
         except EOFError:
             print("\nNo input received for chip_id. Aborting capture.")
@@ -60,6 +73,10 @@ def capture_image(save_dir):
 
     timestamp_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
     image_path = os.path.join(save_dir, f"{timestamp_str}_{batch_id}_{chip_id}.jpg")
+
+    if os.path.exists(image_path):
+        print(f"Image {image_path} already exists. Please press the button and try again.")
+        return
 
     cam_command = [
         "rpicam-still",
@@ -86,7 +103,6 @@ def capture_image(save_dir):
 
 
 def main():
-
     # Initialize GPIO
     try:
         GPIO.setmode(GPIO.BCM)
