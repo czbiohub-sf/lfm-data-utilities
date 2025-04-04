@@ -32,7 +32,8 @@ PREVIEW_SIZE = "100,100,640,480"
 # Directory to save images
 BASE_DIR = "/home/pi/Desktop/qc_images"
 
-def get_batch_id()->str:
+
+def get_batch_id() -> str:
     while True:
         try:
             batch_id = input("Please enter a batch ID: ").strip()
@@ -53,13 +54,16 @@ def get_batch_id()->str:
 
     return batch_id
 
-def capture_image(save_dir:str, img_index:int)->None:
+
+def capture_image(save_dir: str, img_index: int) -> None:
 
     timestamp_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
     image_path = os.path.join(save_dir, f"{timestamp_str}_{img_index}.jpg")
 
     if os.path.exists(image_path):
-        print(f"Image {image_path} already exists. Please press the button and try again.")
+        print(
+            f"Image {image_path} already exists. Please press the button and try again."
+        )
         return
 
     cam_command = [
@@ -86,7 +90,7 @@ def capture_image(save_dir:str, img_index:int)->None:
         print(f"image capture failed with error: {e.returncode}")
 
 
-def main()->None:
+def main() -> None:
     # Initialize GPIO
     try:
         GPIO.setmode(GPIO.BCM)
@@ -130,7 +134,7 @@ def main()->None:
             # The button is active low
             if GPIO.input(BUTTON_PIN) == GPIO.LOW:
                 print("Button pressed! Capturing image...")
-                img_index+=1
+                img_index += 1
                 capture_image(save_dir, img_index)
 
                 # Simple debounce: wait until button is released
