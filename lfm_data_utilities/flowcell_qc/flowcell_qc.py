@@ -114,7 +114,7 @@ def main() -> None:
     # Create a directory for the current session
     batch_id = get_batch_id()
     date_string = datetime.now().strftime("%Y_%m_%d_%H_%M")
-    batch_dir_name = f"{batch_id}_{date_string}"
+    batch_dir_name = f"{date_string}_{batch_id}"
     save_dir = os.path.join(BASE_DIR, batch_dir_name)
 
     try:
@@ -136,7 +136,8 @@ def main() -> None:
                 print("Button pressed! Capturing image...")
                 img_index += 1
                 capture_image(save_dir, img_index)
-
+                print("Press the button to capture the next image...")
+    
                 # Simple debounce: wait until button is released
                 while GPIO.input(BUTTON_PIN) == GPIO.LOW:
                     time.sleep(1)
