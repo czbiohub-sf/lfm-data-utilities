@@ -28,7 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from tqdm import trange, tqdm
 from natsort import natsorted
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
@@ -44,10 +44,20 @@ AREA_PER_PX = LEN_PER_PX ** 2 # cm^2
 
 # print(f'\nLEN_PER_PX = {LEN_PER_PX} cm\nAREA_PER_PX = {AREA_PER_PX:.3e} cm^2 \nEPSILON = {EPSILON:.3e}')
 
-def calc_pg_per_px(absorbance: np.ndarray) -> np.ndarray:
+def calc_pg_per_px(absorbance: np.ndarray[float]) -> np.ndarray[float]:
     hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
     return hb_mass
 
+def calc_mch_pg(pg_img: np.ndarray[float], masks: np.ndarray[int]) -> List[float]:
+    return [np.sum(pg_img[masks == cell_id]) for cell_id in range(np.max(masks))]
+
+def calc_hct(masks: np.ndarray[int]) -> float:
+    cell_pxs = np.sum(masks == 0)
+    bkg_pxs = np.sum(masks != 0)
+    return cell_pxs / (cell_pxs + bkg_pxs)
+
+def calc_vol_fl(masks: np.ndarray[int]) -> List[float]:
+    return [np.sum(masks == i) * AREA_PER_PX * 5 / 1e-8 for i in range(np.max(masks))] # um^3 = fL
 
 ##### SEGMENTATION PARAMETERS #####
 flow_threshold = 0.0
@@ -79,7 +89,7 @@ def get_img_hb(f: str) -> Tuple[float, float, float]:
     absorbance_img = np.log10(BKG / img)
     pg_img = calc_pg_per_px(absorbance_img)
 
-    mchs = [np.sum(pg_img[masks == cell_id]) for cell_id in range(NUM_CELLS)]
+    mchs = calc_mch_pg(pg_img, masks)
     avg_mch = np.mean(mchs)
     # print(f'Per image MCH  = {avg_mch:.3f} pg')
 
