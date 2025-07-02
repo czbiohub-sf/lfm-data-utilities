@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+""" Fit estimated MCH against clinical MCH
+Author: Michelle Khoo (@mwlkhoo)
+Date: 2025.06
+
+Performs a linear fit of estimated MCH to clinical MCH. Plots results and computes
+residuals for both the raw and corrected data
+"""
+
 import time
 import os
 import argparse

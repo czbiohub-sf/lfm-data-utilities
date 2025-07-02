@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+""" Plot estimated MCH against clinical MCH
+Author: Michelle Khoo (@mwlkhoo)
+Date: 2025.06
+
+Plots data in .csv output by get_mch.py
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd

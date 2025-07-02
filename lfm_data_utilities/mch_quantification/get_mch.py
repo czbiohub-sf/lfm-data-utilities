@@ -1,3 +1,20 @@
+# -*- coding: utf-8 -*-
+""" Estimate MCH from subsample images in datasets with clinical MCH
+Author: Michelle Khoo (@mwlkhoo)
+Date: 2025.06
+
+Takes in a .csv containing:
+- Paths to all datasets
+- Corresponding clinical MCH values
+Runs cellpose-SAM and MCH quantification pipeline (similar to cellpose_sandbox.ipynb
+workflow) and outputs a new .csv with:
+- Paths to all datasets
+- Corresponding clinical MCH values
+- Estimated MCH values from image processing pipeline
+
+To plot results, use plot_estimated_v_clinical_mch.py
+"""
+
 import time
 import os
 import argparse
@@ -30,16 +47,17 @@ def calc_pg_per_px(absorbance):
     hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
     return hb_mass
 
+
 ##### SEGMENTATION PARAMETERS #####
 flow_threshold = 0.0
 cellprob_threshold = -1
 tile_norm_blocksize = 0
 
-##### RUN SCRIPT ####
 def init_model():
     # io.logger_setup() # run this to get printing of progress
     model = models.CellposeModel(gpu=True)
     return model
+
 
 ##### PIPELINE #####
 def get_img_hb(f):
@@ -65,7 +83,6 @@ def get_img_hb(f):
     # print(f'Per image MCH  = {avg_mch:.3f} pg')
 
     return avg_mch, NUM_CELLS, BKG 
-
 
 def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')):
     try:
