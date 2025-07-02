@@ -134,11 +134,15 @@ def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Option
             # f'cellpose-hb-data/{Path(dataset).stem}{rn.strftime("%Y%m%d-%H%M%S")}.csv
         )
 
-        print(f'MCH = {np.mean(df['mch_pg']):.3f} pg')
+        mch = np.mean(df['mch_pg'])
+        vol = np.mean(df['vol_fl']) 
+        hct = np.mean(df['hct'])
+
+        print(f'MCH = {mch:.3f} pg\tMCV = {vol:.3f} fL\t Hct = {hct*100:.1f}%')
         print(f'STD of background = {np.std(df['hct']):.3e}')
 
-        return np.mean(df['mch_pg']), np.mean(df['vol_fl']), np.mean(df['hct'])
-    
+        return mch, vol, hct
+
     except Exception as e:
         print(f'ERROR:\n{e}\n')
         return None
