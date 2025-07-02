@@ -34,6 +34,8 @@ from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
+PTH = Path(__file__)
+
 # From https://omlc.org/spectra/hemoglobin/summary.html (evaluated at 406nm)
 # molar extinction coefficient: 270548 L / (cm * mol) = 270548e3 cm^2 / mol
 # Hb has molar mass 64500e12 pg/mol

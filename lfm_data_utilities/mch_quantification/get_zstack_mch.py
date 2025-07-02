@@ -34,6 +34,8 @@ from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
+PTH = Path(__file__)
+
 # From https://omlc.org/spectra/hemoglobin/summary.html (evaluated at 406nm)
 # molar extinction coefficient: 270548 L / (cm * mol) = 270548e3 cm^2 / mol
 # Hb has molar mass 64500e12 pg/mol
@@ -103,50 +105,6 @@ def get_img_metadata(f: str) -> Tuple[float, float, float]:
         print(f'Could not process {f}:\n{e}')
         pass
 
-def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
-    try:
-        dir = dataset / "sub_sample_imgs"
-
-        if not dir.exists():
-            raise FileNotFoundError(f'Directory does not exist: {dir}')
-
-        # list all files
-        files = natsorted([f for f in dir.glob("*.png") if "_masks" not in f.name and "_flows" not in f.name])
-
-        if(len(files)==0):
-            raise FileNotFoundError("No image files found, did you specify the correct folder and extension?")
-        else:
-            print(f"{len(files)} images in directory: {dir}")
-
-        mch_out = np.array([get_img_metadata(f) for f in tqdm(files, desc='Image  ')])
-
-        df = pd.DataFrame()
-        df['mch_pg'] = mch_out[:, 0]
-        df['vol_fl'] = mch_out[:, 1]
-        df['hct'] = mch_out[:, 2]
-        df['cell_count'] = mch_out[:, 3]
-        df['bkg'] = mch_out[:, 4]
-        df['dir'] = files
-
-        rn = datetime.now()
-        df.to_csv(
-            savedir / f'{Path(dataset).stem}hbquant.csv',
-            # f'cellpose-hb-data/{Path(dataset).stem}{rn.strftime("%Y%m%d-%H%M%S")}.csv
-        )
-
-        mch = np.mean(df['mch_pg'])
-        vol = np.mean(df['vol_fl']) 
-        hct = np.mean(df['hct'])
-        bkg_std = np.std(df['bkg'])
-
-        print(f'MCH = {mch:.3f} pg\tMCV = {vol:.3f} fL\t Hct = {hct*100:.1f}%')
-        print(f'STD of background = {bkg_std:.3e}')
-
-        return mch, vol, hct
-
-    except Exception as e:
-        print(f'ERROR:\n{e}\n')
-        return None
 
 ##### RUN SCRIPT #####
 
@@ -174,8 +132,12 @@ except FileExistsError:
 
 model = init_model()
 
+
 print(f'\n***** Processing zstack from: {dir} *****\n')
-metadata = [get_dataset_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
+metadata = [get_img_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(files, desc='File')]
+
+df = pd.DataFrame()
+df['path'] = files
 df['mch_estimate'] = metadata[:, 0]
 df['vol_estimate'] = metadata[:, 1]
 df['hct_estimate'] = metadata[:, 2]
