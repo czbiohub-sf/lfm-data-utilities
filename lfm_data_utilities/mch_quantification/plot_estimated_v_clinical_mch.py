@@ -3,7 +3,7 @@
 Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 
-Plots data in .csv output by get_mch.py
+Plots data in the .csv output of get_mch.py
 """
 
 import numpy as np
