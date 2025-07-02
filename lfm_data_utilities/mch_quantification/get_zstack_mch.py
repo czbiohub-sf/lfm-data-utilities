@@ -123,8 +123,8 @@ files = natsorted([f for step in steps for f in dir.glob(f'{step}*.png') if f.is
 print(files)
 
 try:
-    savedir = Path(Path(dir).stem)
-    os.mkdir("outputs" / savedir)
+    savedir = PTH / "outputs" / Path(dir).stem
+    os.makedirs(savedir)
     print(f'\nDirectory {savedir} created successfully')
 except FileExistsError:
     print(f'\nDirectory {savedir} already exists')
