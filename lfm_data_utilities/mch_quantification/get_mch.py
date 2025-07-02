@@ -12,7 +12,7 @@ workflow) and outputs a new .csv with:
 - Corresponding clinical MCH values
 - Estimated MCH values from image processing pipeline
 
-To plot results, use plot_estimated_v_clinical_mch.py
+To plot results, use plot_estimated_v_clinical_mch.py or fit_estimated_v_clinical_mch.py
 """
 
 import time
@@ -28,6 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from tqdm import trange, tqdm
 from natsort import natsorted
+from typing import Tuple, Optional
 
 
 ##### CONSTANTS / CONVERSIONS #####
@@ -43,7 +44,7 @@ AREA_PER_PX = LEN_PER_PX ** 2 # cm^2
 
 # print(f'\nLEN_PER_PX = {LEN_PER_PX} cm\nAREA_PER_PX = {AREA_PER_PX:.3e} cm^2 \nEPSILON = {EPSILON:.3e}')
 
-def calc_pg_per_px(absorbance):
+def calc_pg_per_px(absorbance: np.ndarray) -> np.ndarray:
     hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
     return hb_mass
 
@@ -53,14 +54,14 @@ flow_threshold = 0.0
 cellprob_threshold = -1
 tile_norm_blocksize = 0
 
-def init_model():
+def init_model() -> models.CellposeModel:
     # io.logger_setup() # run this to get printing of progress
     model = models.CellposeModel(gpu=True)
     return model
 
 
 ##### PIPELINE #####
-def get_img_hb(f):
+def get_img_hb(f: str) -> Tuple[float, float, float]:
     img = io.imread(f)
     # print(f'Loaded img {f.name}')
 
@@ -84,7 +85,7 @@ def get_img_hb(f):
 
     return avg_mch, NUM_CELLS, BKG 
 
-def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')):
+def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
     try:
         dir = dataset / "sub_sample_imgs"
 
