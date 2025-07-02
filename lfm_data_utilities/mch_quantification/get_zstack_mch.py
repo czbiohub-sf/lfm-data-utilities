@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Estimate MCH from subsample images in datasets with clinical MCH
+""" Estimate MCH from subsample images in zstack
 Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 
@@ -11,6 +11,8 @@ workflow) and outputs a new .csv with:
 - Paths to all datasets
 - Corresponding clinical MCH values
 - Estimated MCH values from image processing pipeline
+- Estimated MCV
+- Estimated Hb 
 
 To plot results, use plot_estimated_v_clinical_mch.py or fit_estimated_v_clinical_mch.py
 """
@@ -28,7 +30,7 @@ from datetime import datetime
 from pathlib import Path
 from tqdm import trange, tqdm
 from natsort import natsorted
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
@@ -44,10 +46,20 @@ AREA_PER_PX = LEN_PER_PX ** 2 # cm^2
 
 # print(f'\nLEN_PER_PX = {LEN_PER_PX} cm\nAREA_PER_PX = {AREA_PER_PX:.3e} cm^2 \nEPSILON = {EPSILON:.3e}')
 
-def calc_pg_per_px(absorbance: np.ndarray) -> np.ndarray:
+def calc_pg_per_px(absorbance: np.ndarray[float]) -> np.ndarray[float]:
     hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
     return hb_mass
 
+def calc_mch_pg(pg_img: np.ndarray[float], masks: np.ndarray[int]) -> List[float]:
+    return [np.sum(pg_img[masks == cell_id]) for cell_id in range(np.max(masks))]
+
+def calc_hct(masks: np.ndarray[int]) -> float:
+    cell_pxs = np.sum(masks == 0)
+    bkg_pxs = np.sum(masks != 0)
+    return cell_pxs / (cell_pxs + bkg_pxs)
+
+def calc_vol_fl(masks: np.ndarray[int]) -> List[float]:
+    return [np.sum(masks == i) * AREA_PER_PX * 5 / 1e-8 for i in range(np.max(masks))] # um^3 = fL
 
 ##### SEGMENTATION PARAMETERS #####
 flow_threshold = 0.0
@@ -61,31 +73,37 @@ def init_model() -> models.CellposeModel:
 
 
 ##### PIPELINE #####
-def get_img_hb(f: str) -> Tuple[float, float, float]:
-    img = io.imread(f)
-    # print(f'Loaded img {f.name}')
+def get_img_metadata(f: str) -> Tuple[float, float, float]:
+    try:
+        img = io.imread(f)
+        # print(f'Loaded img {f.name}')
 
-    t0 = time.perf_counter()
-    masks, flows, styles = model.eval(img, batch_size=32, flow_threshold=flow_threshold, cellprob_threshold=cellprob_threshold,
-                                    normalize={"tile_norm_blocksize": tile_norm_blocksize})
-    t1 = time.perf_counter()
-    # print(f'Generated masks for img {f.name} in {t1-t0:.3f}s')
+        t0 = time.perf_counter()
+        masks, flows, styles = model.eval(img, batch_size=32, flow_threshold=flow_threshold, cellprob_threshold=cellprob_threshold,
+                                        normalize={"tile_norm_blocksize": tile_norm_blocksize})
+        t1 = time.perf_counter()
+        # print(f'Generated masks for img {f.name} in {t1-t0:.3f}s')
 
-    filt = masks > 0
-    NUM_CELLS = np.max(masks)
-    BKG = np.mean(img[~filt])
-    # print(f'NUM_CELLS = {NUM_CELLS}\nBKG = {BKG}\n')
+        filt = masks > 0
+        NUM_CELLS = np.max(masks)
+        BKG = np.mean(img[~filt])
+        # print(f'NUM_CELLS = {NUM_CELLS}\nBKG = {BKG}\n')
 
-    absorbance_img = np.log10(BKG / img)
-    pg_img = calc_pg_per_px(absorbance_img)
+        absorbance_img = np.log10(BKG / img)
+        pg_img = calc_pg_per_px(absorbance_img)
 
-    mchs = [np.sum(pg_img[masks == cell_id]) for cell_id in range(NUM_CELLS)]
-    avg_mch = np.mean(mchs)
-    # print(f'Per image MCH  = {avg_mch:.3f} pg')
+        avg_mch = np.mean(calc_mch_pg(pg_img, masks))
+        avg_vol = np.mean(calc_vol_fl(masks))
+        hct = calc_hct(masks)
+        # print(f'Per image MCH  = {avg_mch:.3f} pg')
 
-    return avg_mch, NUM_CELLS, BKG 
+        return avg_mch, avg_vol, hct, NUM_CELLS, BKG
+    
+    except Exception as e:
+        print(f'Could not process {f}:\n{e}')
+        pass
 
-def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
+def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
     try:
         dir = dataset / "sub_sample_imgs"
 
@@ -100,12 +118,14 @@ def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[flo
         else:
             print(f"{len(files)} images in directory: {dir}")
 
-        mch_out = np.array([get_img_hb(f) for f in tqdm(files, desc='Image  ')])
+        mch_out = np.array([get_img_metadata(f) for f in tqdm(files, desc='Image  ')])
 
         df = pd.DataFrame()
         df['mch_pg'] = mch_out[:, 0]
-        df['cell_count'] = mch_out[:, 1]
-        df['bkg'] = mch_out[:, 2]
+        df['vol_fl'] = mch_out[:, 1]
+        df['hct'] = mch_out[:, 2]
+        df['cell_count'] = mch_out[:, 3]
+        df['bkg'] = mch_out[:, 4]
         df['dir'] = files
 
         rn = datetime.now()
@@ -114,16 +134,14 @@ def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[flo
             # f'cellpose-hb-data/{Path(dataset).stem}{rn.strftime("%Y%m%d-%H%M%S")}.csv
         )
 
-        mch = np.mean(mch_out[:, 0])
+        print(f'MCH = {np.mean(df['mch_pg']):.3f} pg')
+        print(f'STD of background = {np.std(df['hct']):.3e}')
 
-        print(f'MCH = {mch:.3f} pg')
-        print(f'STD of background = {np.std(mch_out[:, 2]):.3e}')
-
-        return mch
+        return np.mean(df['mch_pg']), np.mean(df['vol_fl']), np.mean(df['hct'])
+    
     except Exception as e:
         print(f'ERROR:\n{e}\n')
         return None
-
 
 ##### RUN SCRIPT #####
 
@@ -133,38 +151,30 @@ print("(__  )/ ___)(_  _)/ _\\  / __)(  / )  ( \\/ ) / __)/ )( \\")
 print(" / _/ \\___ \\  )( /    \\( (__  )  (   / \\/ \\( (__ ) __ (")
 print("(____)(____/ (__)\\_/\\_/ \\___)(__\\_)  \\_)(_/ \\___)\\_)(_/")
 
-dir = input("Path to zstack image folder:\n")
+dir = Path(input("Path to zstack image folder:\n"))
 center = input("Set center step:\n")
 bound = input("Set bound (ie. evaluate images up to N steps away from center):\n")
 
-if not csv == '':
-    df = pd.read_csv(csv)
-    if not ('path' in df.columns and 'mch_pg' in df.columns):
-        raise ValueError(".csv is missing 'path' and/or 'mch_pg' header(s)")
+steps = range(center-bound, center+bound+1)
+files = [f for f in dir.glob(f'{step}*.png') if file.is_file() for step in steps]
+print(files)
 
-    try:
-        savedir = Path(Path(csv).stem)
-        os.mkdir("outputs" / savedir)
-        # print(f'\nDirectory {savedir} created successfully')
-    except FileExistsError:
-        # print(f'\nDirectory {savedir} already exists')
-        pass
+try:
+    savedir = Path(Path(dir).stem)
+    os.mkdir("outputs" / savedir)
+    print(f'\nDirectory {savedir} created successfully')
+except FileExistsError:
+    print(f'\nDirectory {savedir} already exists')
+    pass
 
-    model = init_model()
+model = init_model()
 
-    print(f'\n***** Processing batch from: {csv} *****\n')
-    batch_mch = [get_dataset_hb(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
-    df['mch_estimate'] = batch_mch
+print(f'\n***** Processing zstack from: {dir} *****\n')
+metadata = [get_dataset_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
+df['mch_estimate'] = metadata[:, 0]
+df['vol_estimate'] = metadata[:, 1]
+df['hct_estimate'] = metadata[:, 2]
 
-    batch_csv = savedir / f'{savedir}_processed.csv'
-    df.to_csv(batch_csv)
-    print(f'\nSaved batch mch to {batch_csv}')
-
-else:
-    expt = input("Enter single dataset path as per .../LFM_scope/<dataset>/sub_sample_imgs/:\n")
-    dataset = Path(f'/hpc/projects/group.bioengineering/LFM_scope/{expt}')
-
-    model = init_model()
-
-    get_dataset_hb(dataset)
-
+output_csv = savedir / f'{savedir}_processed.csv'
+df.to_csv(output_csv)
+print(f'\nSaved output metadata to {output_csv}')

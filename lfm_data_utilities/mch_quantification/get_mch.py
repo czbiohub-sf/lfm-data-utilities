@@ -11,6 +11,8 @@ workflow) and outputs a new .csv with:
 - Paths to all datasets
 - Corresponding clinical MCH values
 - Estimated MCH values from image processing pipeline
+- Estimated MCV
+- Estimated Hb 
 
 To plot results, use plot_estimated_v_clinical_mch.py or fit_estimated_v_clinical_mch.py
 """
@@ -101,7 +103,7 @@ def get_img_metadata(f: str) -> Tuple[float, float, float]:
         print(f'Could not process {f}:\n{e}')
         pass
 
-def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
+def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
     try:
         dir = dataset / "sub_sample_imgs"
 
@@ -132,12 +134,11 @@ def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[flo
             # f'cellpose-hb-data/{Path(dataset).stem}{rn.strftime("%Y%m%d-%H%M%S")}.csv
         )
 
-        mch = np.mean(mch_out[:, 0])
+        print(f'MCH = {np.mean(df['mch_pg']):.3f} pg')
+        print(f'STD of background = {np.std(df['hct']):.3e}')
 
-        print(f'MCH = {mch:.3f} pg')
-        print(f'STD of background = {np.std(mch_out[:, 2]):.3e}')
+        return np.mean(df['mch_pg']), np.mean(df['vol_fl']), np.mean(df['hct'])
 
-        return mch
     except Exception as e:
         print(f'ERROR:\n{e}\n')
         return None
@@ -169,12 +170,14 @@ if not csv == '':
     model = init_model()
 
     print(f'\n***** Processing batch from: {csv} *****\n')
-    batch_mch = [get_dataset_hb(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
-    df['mch_estimate'] = batch_mch
+    metadata = [get_dataset_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
+    df['mch_estimate'] = metadata[:, 0]
+    df['vol_estimate'] = metadata[:, 1]
+    df['hct_estimate'] = metadata[:, 2]
 
     batch_csv = savedir / f'{savedir}_processed.csv'
     df.to_csv(batch_csv)
-    print(f'\nSaved batch mch to {batch_csv}')
+    print(f'\nSaved output metadata to {batch_csv}')
 
 else:
     expt = input("Enter single dataset path as per .../LFM_scope/<dataset>/sub_sample_imgs/:\n")
