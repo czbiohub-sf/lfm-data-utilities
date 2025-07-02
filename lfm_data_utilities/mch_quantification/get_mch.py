@@ -71,29 +71,35 @@ def init_model() -> models.CellposeModel:
 
 
 ##### PIPELINE #####
-def get_img_hb(f: str) -> Tuple[float, float, float]:
-    img = io.imread(f)
-    # print(f'Loaded img {f.name}')
+def get_img_metadata(f: str) -> Tuple[float, float, float]:
+    try:
+        img = io.imread(f)
+        # print(f'Loaded img {f.name}')
 
-    t0 = time.perf_counter()
-    masks, flows, styles = model.eval(img, batch_size=32, flow_threshold=flow_threshold, cellprob_threshold=cellprob_threshold,
-                                    normalize={"tile_norm_blocksize": tile_norm_blocksize})
-    t1 = time.perf_counter()
-    # print(f'Generated masks for img {f.name} in {t1-t0:.3f}s')
+        t0 = time.perf_counter()
+        masks, flows, styles = model.eval(img, batch_size=32, flow_threshold=flow_threshold, cellprob_threshold=cellprob_threshold,
+                                        normalize={"tile_norm_blocksize": tile_norm_blocksize})
+        t1 = time.perf_counter()
+        # print(f'Generated masks for img {f.name} in {t1-t0:.3f}s')
 
-    filt = masks > 0
-    NUM_CELLS = np.max(masks)
-    BKG = np.mean(img[~filt])
-    # print(f'NUM_CELLS = {NUM_CELLS}\nBKG = {BKG}\n')
+        filt = masks > 0
+        NUM_CELLS = np.max(masks)
+        BKG = np.mean(img[~filt])
+        # print(f'NUM_CELLS = {NUM_CELLS}\nBKG = {BKG}\n')
 
-    absorbance_img = np.log10(BKG / img)
-    pg_img = calc_pg_per_px(absorbance_img)
+        absorbance_img = np.log10(BKG / img)
+        pg_img = calc_pg_per_px(absorbance_img)
 
-    mchs = calc_mch_pg(pg_img, masks)
-    avg_mch = np.mean(mchs)
-    # print(f'Per image MCH  = {avg_mch:.3f} pg')
+        avg_mch = np.mean(calc_mch_pg(pg_img, masks))
+        avg_vol = np.mean(calc_vol_fl(masks))
+        hct = calc_hct(masks)
+        # print(f'Per image MCH  = {avg_mch:.3f} pg')
 
-    return avg_mch, NUM_CELLS, BKG 
+        return avg_mch, avg_vol, hct, NUM_CELLS, BKG
+    
+    except Exception as e:
+        print(f'Could not process {f}:\n{e}')
+        pass
 
 def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
     try:
@@ -110,12 +116,14 @@ def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[flo
         else:
             print(f"{len(files)} images in directory: {dir}")
 
-        mch_out = np.array([get_img_hb(f) for f in tqdm(files, desc='Image  ')])
+        mch_out = np.array([get_img_metadata(f) for f in tqdm(files, desc='Image  ')])
 
         df = pd.DataFrame()
         df['mch_pg'] = mch_out[:, 0]
-        df['cell_count'] = mch_out[:, 1]
-        df['bkg'] = mch_out[:, 2]
+        df['vol_fl'] = mch_out[:, 1]
+        df['hct'] = mch_out[:, 2]
+        df['cell_count'] = mch_out[:, 3]
+        df['bkg'] = mch_out[:, 4]
         df['dir'] = files
 
         rn = datetime.now()
