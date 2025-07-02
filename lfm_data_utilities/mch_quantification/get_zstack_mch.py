@@ -157,11 +157,11 @@ print(" / _/ \\___ \\  )( /    \\( (__  )  (   / \\/ \\( (__ ) __ (")
 print("(____)(____/ (__)\\_/\\_/ \\___)(__\\_)  \\_)(_/ \\___)\\_)(_/")
 
 dir = Path(input("Path to zstack image folder:\n"))
-center = input("Set center step:\n")
-bound = input("Set bound (ie. evaluate images up to N steps away from center):\n")
+center = int(input("Set center step:\n"))
+bound = int(input("Set bound (ie. evaluate images up to N steps away from center):\n"))
 
 steps = range(center-bound, center+bound+1)
-files = [f for f in dir.glob(f'{step}*.png') if file.is_file() for step in steps]
+files = natsorted([f for step in steps for f in dir.glob(f'{step}*.png') if f.is_file()])
 print(files)
 
 try:
