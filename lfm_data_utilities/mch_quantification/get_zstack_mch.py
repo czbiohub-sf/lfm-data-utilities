@@ -128,12 +128,14 @@ def get_dataset_hb(dataset: Path, savedir: Path = Path('data/')) -> Optional[flo
 ##### RUN SCRIPT #####
 
 # ASCII art descriptor
-print("  ___  __    __  __ _  __  ___   __   __      _  _   ___  _  _ ")
-print(" / __)(  )  (  )(  ( \\(  )/ __) / _\\ (  )    ( \\/ ) / __)/ )( \\")
-print("( (__ / (_/\\ )( /    / )(( (__ /    \\/ (_/\\  / \\/ \\( (__ ) __ (")
-print(" \\___)\\____/(__)\\_)__)(__)\\___)\\_/\\_/\\____/  \\_)(_/ \\___)\\_)(_/")
+print(" ____  ____  ____  __    ___  __ _    _  _   ___  _  _ ")
+print("(__  )/ ___)(_  _)/ _\\  / __)(  / )  ( \\/ ) / __)/ )( \\")
+print(" / _/ \\___ \\  )( /    \\( (__  )  (   / \\/ \\( (__ ) __ (")
+print("(____)(____/ (__)\\_/\\_/ \\___)(__\\_)  \\_)(_/ \\___)\\_)(_/")
 
-csv = input("Path to .csv with headers ['path', 'mch_pg'] or click Enter to manually run single dataset:\n")
+dir = input("Path to zstack image folder:\n")
+center = input("Set center step:\n")
+bound = input("Set bound (ie. evaluate images up to N steps away from center):\n")
 
 if not csv == '':
     df = pd.read_csv(csv)
