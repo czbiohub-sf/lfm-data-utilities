@@ -121,16 +121,10 @@ bound = int(input("Set bound (ie. evaluate images up to N steps away from center
 steps = range(center-bound, center+bound+1)
 files = natsorted([f for step in steps for f in dir.glob(f'{step}*.png') if f.is_file()])
 files = files[0:3]
-try:
-    savedir = PTH / "outputs" / Path(dir).stem
-    os.makedirs(savedir)
-    print(f'\nDirectory {savedir} created successfully')
-except FileExistsError:
-    print(f'\nDirectory {savedir} already exists')
-    pass
+
+savedir = PTH / "outputs" / Path(dir).stem
 
 model = init_model()
-
 
 print(f'\n***** Processing zstack from: {dir} *****\n')
 metadata = np.array([get_img_metadata(Path(f)) for f in tqdm(files, desc='File')])
@@ -141,6 +135,6 @@ df['mch_estimate'] = metadata[:, 0]
 df['vol_estimate'] = metadata[:, 1]
 df['hct_estimate'] = metadata[:, 2]
 
-output_csv = savedir / f'{savedir}_processed.csv'
+output_csv = f'{savedir}_processed.csv'
 df.to_csv(output_csv)
 print(f'\nSaved output metadata to {output_csv}')

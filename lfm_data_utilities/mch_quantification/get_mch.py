@@ -167,7 +167,8 @@ if not csv == '':
         raise ValueError(".csv is missing 'path' and/or 'mch_pg' header(s)")
 
     try:
-        savedir = PTH / "outputs" / Path(csv).stem
+        dataset_name = Path(csv).stem
+        savedir = PTH / "outputs" / dataset_name
         os.mkdir(savedir)
         # print(f'\nDirectory {savedir} created successfully')
     except FileExistsError:
@@ -182,9 +183,9 @@ if not csv == '':
     df['vol_estimate'] = metadata[:, 1]
     df['hct_estimate'] = metadata[:, 2]
 
-    batch_csv = savedir / f'{savedir}_processed.csv'
-    df.to_csv(batch_csv)
-    print(f'\nSaved output metadata to {batch_csv}')
+    output_csv = savedir / f'{dataset_name}_processed.csv'
+    df.to_csv(output_csv)
+    print(f'\nSaved output metadata to {output_csv}')
 
 else:
     expt = input("Enter single dataset path as per .../LFM_scope/<dataset>/sub_sample_imgs/:\n")
