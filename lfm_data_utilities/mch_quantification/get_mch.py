@@ -178,7 +178,7 @@ if not csv == '':
     model = init_model()
 
     print(f'\n***** Processing batch from: {csv} *****\n')
-    metadata = [get_dataset_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].tolist(), desc='Dataset')]
+    metadata = np.array([get_dataset_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(df['path'].to_list(), desc='Dataset')])
     df['mch_estimate'] = metadata[:, 0]
     df['vol_estimate'] = metadata[:, 1]
     df['hct_estimate'] = metadata[:, 2]

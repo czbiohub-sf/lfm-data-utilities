@@ -9,4 +9,4 @@
 #SBATCH --gpus-per-node=a100:1
 #SBATCH --cpus-per-task=64
 
-python3 ../cellpose_hb.py <<< "../inputs/rwanda_mch_data.csv"
+python3 ../get_mch.py <<< "../inputs/rwanda_mch_data.csv"
