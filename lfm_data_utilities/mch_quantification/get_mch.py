@@ -34,7 +34,7 @@ from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
-PTH = Path(__file__)
+PTH = Path(__file__).parent
 
 # From https://omlc.org/spectra/hemoglobin/summary.html (evaluated at 406nm)
 # molar extinction coefficient: 270548 L / (cm * mol) = 270548e3 cm^2 / mol
@@ -167,8 +167,8 @@ if not csv == '':
         raise ValueError(".csv is missing 'path' and/or 'mch_pg' header(s)")
 
     try:
-        savedir = Path(Path(csv).stem)
-        os.mkdir("outputs" / savedir)
+        savedir = PTH / "outputs" / Path(csv).stem
+        os.mkdir(savedir)
         # print(f'\nDirectory {savedir} created successfully')
     except FileExistsError:
         # print(f'\nDirectory {savedir} already exists')

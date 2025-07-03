@@ -120,7 +120,6 @@ bound = int(input("Set bound (ie. evaluate images up to N steps away from center
 
 steps = range(center-bound, center+bound+1)
 files = natsorted([f for step in steps for f in dir.glob(f'{step}*.png') if f.is_file()])
-print(files)
 
 try:
     savedir = PTH / "outputs" / Path(dir).stem
