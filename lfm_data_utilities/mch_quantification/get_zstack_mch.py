@@ -120,7 +120,7 @@ bound = int(input("Set bound (ie. evaluate images up to N steps away from center
 
 steps = range(center-bound, center+bound+1)
 files = natsorted([f for step in steps for f in dir.glob(f'{step}*.png') if f.is_file()])
-
+files = files[0:3]
 try:
     savedir = PTH / "outputs" / Path(dir).stem
     os.makedirs(savedir)
@@ -133,7 +133,7 @@ model = init_model()
 
 
 print(f'\n***** Processing zstack from: {dir} *****\n')
-metadata = [get_img_metadata(Path(f)) for f in tqdm(files, desc='File')]
+metadata = np.array([get_img_metadata(Path(f)) for f in tqdm(files, desc='File')])
 
 df = pd.DataFrame()
 df['path'] = files
