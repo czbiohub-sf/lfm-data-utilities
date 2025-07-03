@@ -34,7 +34,7 @@ from typing import Tuple, Optional, List
 
 
 ##### CONSTANTS / CONVERSIONS #####
-PTH = Path(__file__)
+PTH = Path(__file__).parent
 
 # From https://omlc.org/spectra/hemoglobin/summary.html (evaluated at 406nm)
 # molar extinction coefficient: 270548 L / (cm * mol) = 270548e3 cm^2 / mol
@@ -134,7 +134,7 @@ model = init_model()
 
 
 print(f'\n***** Processing zstack from: {dir} *****\n')
-metadata = [get_img_metadata(Path(dataset), savedir=savedir) for dataset in tqdm(files, desc='File')]
+metadata = [get_img_metadata(Path(f)) for f in tqdm(files, desc='File')]
 
 df = pd.DataFrame()
 df['path'] = files
