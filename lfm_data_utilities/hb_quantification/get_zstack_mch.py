@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Estimate MCH from subsample images in zstack
 Author: Michelle Khoo (@mwlkhoo)
-Date: 2025.06
+Date: 2025.07
 
 Takes in a .csv containing:
 - Paths to all datasets

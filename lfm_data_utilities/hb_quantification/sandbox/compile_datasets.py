@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+""" Compile MCH and other metadata from individual dataset .csvs
+Author: Michelle Khoo (@mwlkhoo)
+Date: 2025.07
+
+Use where multi-dataset compilation at end of get_mch.py fails to save.
+Requires:
+- Individual .csvs for image processing outputs (include MCH, etc.)
+- Compiled .csv for all clinical metadata
+"""
+
 import numpy as np
 import pandas as pd
 

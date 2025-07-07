@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Plot estimated Hb metric against clinical Hb metric
 Author: Michelle Khoo (@mwlkhoo)
-Date: 2025.06
+Date: 2025.07
 
 Plots data in the .csv output of get_mch.py
 """

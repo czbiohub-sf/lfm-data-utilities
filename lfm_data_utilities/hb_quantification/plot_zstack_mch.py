@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Plot zstack MCH as a function of position
 Author: Michelle Khoo (@mwlkhoo)
-Date: 2025.06
+Date: 2025.07
 
 Plots data in the .csv output of get_zstack_mch.py
 """
