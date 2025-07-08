@@ -20,4 +20,4 @@ lfm_data_utilities/model_evaluations/yogo/plotting_results
 lfm_data_utilities/malaria_labelling/thumbnail_labelling/dataset_description_files
 lfm_data_utilities/model_evaluations/yogo/yogo_prediction_handling/venv
 
-lfm_data_utilities/mch_quantification/slurm/*.out
+lfm_data_utilities/hb_quantification/slurm/*.out
