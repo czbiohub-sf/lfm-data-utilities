@@ -108,7 +108,7 @@ def get_img_metadata(f: str) -> Tuple[float, float, float]:
         print(f'Could not process {f}:\n{e}')
         pass
 
-def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Optional[float]:
+def get_dataset_metadata(dataset: Path, savedir: Path = Path('outputs/')) -> Optional[float]:
     try:
         dir = dataset / "sub_sample_imgs"
 
@@ -129,7 +129,7 @@ def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Option
         df['mch_pg'] = mch_out[:, 0]
         df['pos_x'] = mch_out[:, 1]
         df['pos_y'] = mch_out[:, 2]
-        df['dir'] = mch_out[:, 4]
+        df['dir'] = mch_out[:, 3]
 
         rn = datetime.now()
         df.to_csv(
