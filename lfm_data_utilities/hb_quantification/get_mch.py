@@ -139,12 +139,13 @@ def get_dataset_metadata(dataset: Path, savedir: Path = Path('data/')) -> Option
         mch = np.mean(df['mch_pg'])
         vol = np.mean(df['vol_fl']) 
         hct = np.mean(df['hct'])
+        cell_count = np.mean(df['cell_count'])
         bkg_std = np.std(df['bkg'])
 
         print(f'MCH = {mch:.3f} pg\tMCV = {vol:.3f} fL\t Hct = {hct*100:.1f}%')
         print(f'STD of background = {bkg_std:.3e}')
 
-        return mch, vol, hct
+        return mch, vol, hct, cell_count
 
     except Exception as e:
         print(f'ERROR:\n{e}\n')
@@ -182,6 +183,7 @@ if not csv == '':
     df['mch_estimate'] = metadata[:, 0]
     df['vol_estimate'] = metadata[:, 1]
     df['hct_estimate'] = metadata[:, 2]
+    df['cell_count_estimate'] = metadata[:, 3]
 
     output_csv = savedir / f'{dataset_name}_processed.csv'
     df.to_csv(output_csv)
