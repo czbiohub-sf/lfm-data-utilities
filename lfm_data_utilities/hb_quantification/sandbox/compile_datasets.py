@@ -25,11 +25,13 @@ def extract_metadata(file: str) -> tuple[float, float, float, str]:
         np.mean(dff['mch_pg']),
         np.mean(dff['vol_fl']),
         np.mean(dff['hct']),
+        np.mean(dff['cell_count']),
         Path(dff['dir'].loc[0]).parent.parent,
     )
 
 def match_metadata(file: str) -> tuple[str, str, str]:
-    i = clinical_df.loc[clinical_df['path']==str(file)].index.values[0]
+    file = str(file).replace("\\", "/")
+    i = clinical_df.loc[clinical_df['path']==file].index.values[0]
     row = clinical_df.loc[i]
     return (
         row['mch_pg'],
@@ -41,7 +43,8 @@ metadata = np.array([extract_metadata(f) for f in files])
 df['mch_estimate'] = metadata[:, 0]
 df['vol_estimate'] = metadata[:, 1]
 df['hct_estimate'] = metadata[:, 2]
-df['path'] = metadata[:, 3]
+df['cell_count_estimate'] = metadata[:, 3]
+df['path'] = metadata[:, 4]
 
 clinical_metadata = np.array([match_metadata(f) for f in df['path']])
 df['mch_clinical'] = clinical_metadata[:, 0]
