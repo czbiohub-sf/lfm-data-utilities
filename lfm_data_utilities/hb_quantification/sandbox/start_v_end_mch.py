@@ -53,6 +53,11 @@ count_filt = img_count == 100
 plt.scatter(mch_clinical[count_filt], mch_start[count_filt], s=3, label='First 10 frames')
 plt.scatter(mch_clinical[count_filt], mch_end[count_filt], s=3, label="Last 10 frames")
 
+plt.title("Estimated MCH for first and last 10 frames")
+plt.xlabel("Clinical MCH (pg)")
+plt.ylabel("Estimated MCH (pg)")
+
+
 # Plot cases with incomplete data collection
 # plt.scatter(mch_clinical[~count_filt], mch_start[~count_filt], color='r', s=1, marker='+')
 # plt.scatter(mch_clinical[~count_filt], mch_end[~count_filt], color='b', s=1, marker='+')
