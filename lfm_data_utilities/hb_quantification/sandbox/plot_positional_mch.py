@@ -12,9 +12,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-plt.hist2d(x, y, bins=30, cmap='viridis') # bins controls the number of bins, cmap sets the color map
-plt.colorbar(label='Count') # Add a color bar to indicate the count/density
-plt.xlabel('X-axis Label')
-plt.ylabel('Y-axis Label')
-plt.title('2D Histogram of X and Y')
+DATASET='disk8'
+
+f = '../outputs/rwanda_mch_data_positions_processed.csv'
+df = pd.read_csv(f)
+
+dff = df[df['path'].str.contains(DATASET)]
+
+plt.hist2d(dff['pos_x_estimate'], dff['pos_y_estimate'], bins=30, weights=dff['mch_estimate'], cmap='viridis')
+# plt.colorbar(label='')
+plt.title(f'Estimated MCH heatmap ({DATASET})')
 plt.show()
