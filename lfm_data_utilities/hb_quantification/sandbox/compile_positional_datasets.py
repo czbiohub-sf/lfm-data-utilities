@@ -19,7 +19,11 @@ df = pd.DataFrame()
 files = [f for f in Path('../outputs/rwanda_mch_data_positions').iterdir()]
 
 def extract_metadata(file: str) -> tuple[float, float, float, str]:
-    dff = pd.read_csv(file)
+    try:
+        dff = pd.read_csv(file)
+    except:
+        print(f'Failed on dataset {file}')
+        raise
     out = np.array(
         [
             dff['mch_pg'],
@@ -30,7 +34,7 @@ def extract_metadata(file: str) -> tuple[float, float, float, str]:
     ).T
     return out
 
-metadata = np.vstack([extract_metadata(f) for f in tqdm(files[0:5])])
+metadata = np.vstack([extract_metadata(f) for f in tqdm(files)])
 
 df['mch_estimate'] = metadata[:, 0]
 df['pos_x_estimate'] = metadata[:, 1]

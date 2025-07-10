@@ -14,13 +14,16 @@ import pandas as pd
 from scipy.stats import binned_statistic_2d
 
 
-DATASET='disk6'
+# DATASET='disk6'
+DATASET='disk7'
+# DATASET='disk8'
 
 f = '../outputs/rwanda_mch_data_positions_processed.csv'
 df = pd.read_csv(f)
 
 # Filter by dataset
 dff = df[df['path'].str.contains(DATASET)]
+print(dff)
 
 # Bin results
 stat, x_edges, y_edges, binnumber = binned_statistic_2d(
