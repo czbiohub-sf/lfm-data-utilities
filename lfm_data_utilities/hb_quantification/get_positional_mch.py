@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Estimate MCH from subsample images in datasets with clinical MCH
+""" Estimate MCH across subsample images in datasets with clinical MCH
 Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 
@@ -14,7 +14,8 @@ workflow) and outputs a new .csv with:
 - Estimated MCV
 - Estimated Hb 
 
-To plot results, use plot_estimated_v_clinical_mch.py or fit_estimated_v_clinical_mch.py
+To plot results, compile all MCH data using compile_positional_datasets.py then run
+plot positional_mch.py
 """
 
 import time
