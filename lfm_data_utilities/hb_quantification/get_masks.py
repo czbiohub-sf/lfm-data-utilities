@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
-""" Estimate MCH from subsample images in datasets with clinical MCH
+""" Save cellpose masks from subsample images
 Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 
 Takes in a .csv containing:
 - Paths to all datasets
 - Corresponding clinical MCH values
-Runs cellpose-SAM and MCH quantification pipeline (similar to cellpose_sandbox.ipynb
-workflow) and outputs a new .csv with:
-- Paths to all datasets
-- Corresponding clinical MCH values
-- Estimated MCH values from image processing pipeline
-- Estimated MCV
-- Estimated Hb 
-
-To plot results, use plot_estimated_v_clinical_mch.py or fit_estimated_v_clinical_mch.py
+Runs cellpose-SAM and saves the masks in a .npy file, each labelled as
+<disk id>_<experiment_id>_<img_id>.npy
 """
 
 import time
@@ -116,15 +109,6 @@ if not csv == '':
     df = pd.read_csv(csv)
     if not ('path' in df.columns and 'mch_pg' in df.columns):
         raise ValueError(".csv is missing 'path' and/or 'mch_pg' header(s)")
-
-    try:
-        dataset_name = Path(csv).stem
-        savedir = PTH / "outputs" / dataset_name
-        os.mkdir(savedir)
-        # print(f'\nDirectory {savedir} created successfully')
-    except FileExistsError:
-        # print(f'\nDirectory {savedir} already exists')
-        pass
 
     model = init_model()
 
