@@ -68,11 +68,12 @@ def get_masks(f: Path) -> Tuple[float, float, float]:
 
 def save_masks(f: Path):
     file_id = f.stem
-    expt_id = f.parent.stem
+    expt_id = f.parent.parent.stem
+    disk_id = f.parent.parent.parent.parent.stem
 
     masks = get_masks(f)
 
-    with open('{DATA_DIR}/{expt_id}{file_id}.npy', 'wb') as npf:
+    with open(f'{DATA_DIR}/{disk_id}_{expt_id}{file_id}.npy', 'wb') as npf:
         np.save(npf, masks)
 
 
