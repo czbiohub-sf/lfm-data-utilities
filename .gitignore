@@ -21,5 +21,6 @@ lfm_data_utilities/malaria_labelling/thumbnail_labelling/dataset_description_fil
 lfm_data_utilities/model_evaluations/yogo/yogo_prediction_handling/venv
 
 lfm_data_utilities/hb_quantification/slurm/*.out
+lfm_data_utilities/hb_quantification/temp
 # Ignore very large files
 lfm_data_utilities/hb_quantification/outputs/rwanda_mch_data_positions_processed.csv
