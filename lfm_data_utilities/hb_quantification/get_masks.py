@@ -44,8 +44,8 @@ tile_norm_blocksize = 0
 
 def init_model() -> models.CellposeModel:
     # io.logger_setup() # run this to get printing of progress
-    # model = models.CellposeModel(gpu=True)
-    model = models.CellposeModel(gpu=False)
+    model = models.CellposeModel(gpu=True)
+    # model = models.CellposeModel(gpu=False)
 
     return model
 
