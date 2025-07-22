@@ -4,16 +4,12 @@ Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 """
 
-import time
-import os
-import argparse
+import csv
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from cellpose import models, core, io, plot
-from datetime import datetime
 from pathlib import Path
 from tqdm import trange, tqdm
 from natsort import natsorted
