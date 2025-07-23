@@ -21,23 +21,24 @@ PTH = Path(__file__).parent
 
 
 def load_masks(f: Path):
-    with open(f, 'rb') as fnp:
+    file_id = f.stem
+    expt_id = f.parent.parent.stem
+    disk_id = f.parent.parent.parent.parent.stem
+    
+    with open(f'{DATA_DIR}/{disk_id}_{expt_id}{file_id}.npy', 'rb') as fnp:
         mask = np.load(fnp)
 
     fstr = str(f)
-    disk_id = fstr[5]
-    expt_id = fstr[6:23]
-    file_id = fstr[24:29]
 
     return disk_id, expt_id, file_id, mask
 
 ##### RUN SCRIPT #####
 
 DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/cellpose-masks')
-metadata = pd.read_csv("inputs/rwanda_mch_data.csv")
+clindata = pd.read_csv("inputs/rwanda_mch_data.csv")
 
 print(f'\n***** Processing batch from: {csv} *****\n')
-res = [load_masks(Path(dataset)) for dataset in tqdm(df['path'].to_list(), desc='Dataset')]
+res = [load_masks(Path(f)) for dataset in tqdm(clindata['path'].to_list(), desc='Dataset') for f in Path(f'{dataset}/sub_sample_imgs').glob("*.png")]
 
 metadata = pd.DataFrame()
 metadata['disk'] = res[:, 0]
