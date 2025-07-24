@@ -36,12 +36,12 @@ def compile_masks(d: Path):
     expt_id = d.stem
     disk_id = d.parent.parent.stem
 
-    masks = np.zeros((772, 1032, 100))
+    masks = np.zeros((100, 772, 1032))
 
     for i, f in enumerate(Path(f'{d}/sub_sample_imgs').glob("*.png")):
         with open(f'{DATA_DIR}/{disk_id}_{expt_id}{f.stem}.npy', 'rb') as fnp:
             img_mask = np.load(fnp)
-            masks[:, :, i] = img_mask
+            masks[i, :, :] = img_mask
                 
     with open(f'{DATA_DIR}/../compiled-cellpose-masks/{disk_id}_{expt_id}.npy', 'wb') as fsave:
         np.save(fsave, masks)
