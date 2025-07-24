@@ -44,7 +44,7 @@ def load_masks(f: Path):
 ##### RUN SCRIPT #####
 
 DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/cellpose-masks')
-clindata = pd.read_csv("inputs/rwanda_mch_data.csv")
+clindata = pd.read_csv(f"{PTH}/inputs/rwanda_mch_data.csv")
 
 print(f'\n***** Processing batch from: {csv} *****\n')
 res = [load_masks(Path(f)) for dataset in tqdm(clindata['path'].to_list(), desc='Dataset') for f in Path(f'{dataset}/sub_sample_imgs').glob("*.png")]
