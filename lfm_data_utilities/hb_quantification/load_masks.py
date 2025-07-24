@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Load all cellpose masks
+""" Load all cellpose masks and plot area heatmap
 Author: Michelle Khoo (@mwlkhoo)
 Date: 2025.06
 """
