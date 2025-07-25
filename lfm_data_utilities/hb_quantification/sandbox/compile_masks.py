@@ -26,7 +26,7 @@ DATASETS= [
     'disk8',
 ]
 
-DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/cellpose-masks')
+DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/compiled-cellpose-masks')
 
 clindata = pd.read_csv(f"{PTH}/../inputs/rwanda_mch_data.csv")
 
@@ -43,7 +43,7 @@ def compile_masks(d: Path):
             img_mask = np.load(fnp)
             masks[i, :, :] = img_mask
                 
-    with open(f'{DATA_DIR}/../compiled-cellpose-masks/{disk_id}_{expt_id}.npy', 'wb') as fsave:
+    with open(f'{DATA_DIR}/{disk_id}_{expt_id}.npy', 'wb') as fsave:
         np.save(fsave, masks)
 
 
