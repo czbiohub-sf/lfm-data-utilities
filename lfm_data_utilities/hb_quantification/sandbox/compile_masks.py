@@ -26,24 +26,28 @@ DATASETS= [
     'disk8',
 ]
 
-clindata = pd.read_csv("inputs/rwanda_mch_data.csv")
+DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/cellpose-masks')
+
+clindata = pd.read_csv(f"{PTH}/../inputs/rwanda_mch_data.csv")
 
 
 def compile_masks(d: Path):
+    
     expt_id = d.stem
     disk_id = d.parent.parent.stem
 
-    concat = np.vstack()
+    masks = np.zeros((100, 772, 1032))
 
-    masks = np.zeros((772, 1032, 100))
+    for i, f in enumerate(Path(f'{d}/sub_sample_imgs').glob("*.png")):
+        with open(f'{DATA_DIR}/{disk_id}_{expt_id}{f.stem}.npy', 'rb') as fnp:
+            img_mask = np.load(fnp)
+            masks[i, :, :] = img_mask
+                
+    with open(f'{DATA_DIR}/../compiled-cellpose-masks/{disk_id}_{expt_id}.npy', 'wb') as fsave:
+        np.save(fsave, masks)
 
-    for i in enumerate(Path(f'{d}/sub_sample_imgs').glob("*.png")):
-        with open(f'{DATA_DIR}/{disk_id}_{expt_id}{file_id}.npy', 'rb') as fnp:
-            masks[:, :, i] = np.load(fnp)
-
-    print(masks)
-
-    # return disk_id, expt_id, file_id, mask
 
 print(f'\n***** Processing batch from: {csv} *****\n')
-res = [compile_masks(Path(dataset)) for dataset in tqdm(clindata['path'].to_list()[0], desc='Dataset')]
+for dataset in tqdm(clindata['path'].to_list(), desc='Dataset'):
+    compile_masks(Path(dataset))
+
