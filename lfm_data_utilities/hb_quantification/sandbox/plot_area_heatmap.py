@@ -22,12 +22,16 @@ def calc_pos_and_area(masks: np.ndarray[int], cell_id: int) -> list[int, float, 
     px_row, px_col = np.where(masks == cell_id)
     return px_area, np.mean(px_row), np.mean(px_col)
 
+def load_mask(f: Path):
+    with open(f, 'rb') as fnp:
+        return np.load(fnp)
 
 for DATASET in DATASETS:
 
-    dff = metadata[metadata['disk'].str.contains(DATASET)]
+    files = [file in tqdm(DATA_DIR.glob("*.npy"), desc='Dataset') if str(file).contains(DATASET)]
+    masks = [load_mask(file) in tqdm(files[0:2])]
 
-    pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for mask in tqdm(dff['masks'][0:2]) for cell_id in range(np.max(mask))])
+    pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for mask in tqdm(masks) for cell_id in range(np.max(mask))])
 
     # Bin results
     stat, x_edges, y_edges, binnumber = binned_statistic_2d(
