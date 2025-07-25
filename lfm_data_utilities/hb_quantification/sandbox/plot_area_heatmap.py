@@ -13,8 +13,8 @@ from scipy.stats import binned_statistic_2d
 
 DATASETS = [
     'disk6',
-    'disk7',
-    'disk8',
+    # 'disk7',
+    # 'disk8',
 ]
 
 def calc_pos_and_area(masks: np.ndarray[int], cell_id: int) -> list[int, float, float]:
