@@ -32,7 +32,7 @@ def load_mask(f: Path):
 for DATASET in DATASETS:
 
     files = [file in tqdm(DATA_DIR.glob("*.npy"), desc='Dataset') if DATASET in str(file)]
-    masks = np.vstack(np.array([load_mask(file) for file in tqdm(files[0:2])]))
+    masks = np.vstack(np.array([load_mask(file) for file in tqdm(files)]))
 
     pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for mask in tqdm(masks) for cell_id in range(int(np.max(mask)))])
 
