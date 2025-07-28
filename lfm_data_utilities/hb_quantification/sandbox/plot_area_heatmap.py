@@ -11,15 +11,18 @@ from typing import Tuple, Optional, List
 from scipy.stats import binned_statistic_2d
 
 
+DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/hb/compiled-cellpose-masks')
+
 DATASETS = [
     'disk6',
-    # 'disk7',
-    # 'disk8',
+    'disk7',
+    'disk8',
 ]
 
 def calc_pos_and_area(masks: np.ndarray[int], cell_id: int) -> list[int, float, float]:
-    px_area = np.sum(masks == cell_id)
-    px_row, px_col = np.where(masks == cell_id)
+    hotspots = masks == cell_id
+    px_area = np.sum(hotspots)
+    px_row, px_col = np.where(hotspots)
     return px_area, np.mean(px_row), np.mean(px_col)
 
 def load_mask(f: Path):
@@ -28,16 +31,16 @@ def load_mask(f: Path):
 
 for DATASET in DATASETS:
 
-    files = [file in tqdm(DATA_DIR.glob("*.npy"), desc='Dataset') if str(file).contains(DATASET)]
-    masks = [load_mask(file) in tqdm(files[0:2])]
+    files = [file in tqdm(DATA_DIR.glob("*.npy"), desc='Dataset') if DATASET in str(file)]
+    masks = np.vstack(np.array([load_mask(file) for file in tqdm(files[0:2])]))
 
-    pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for mask in tqdm(masks) for cell_id in range(np.max(mask))])
+    pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for mask in tqdm(masks) for cell_id in range(int(np.max(mask)))])
 
     # Bin results
     stat, x_edges, y_edges, binnumber = binned_statistic_2d(
-        pos_and_area[:,0],
         pos_and_area[:, 1],
         pos_and_area[:, 2],
+        pos_and_area[:, 0],
         statistic='mean',
         bins=(30, 24)  # adjust bins as needed
     )
