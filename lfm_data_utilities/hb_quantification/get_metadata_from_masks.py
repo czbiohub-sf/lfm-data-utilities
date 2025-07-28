@@ -36,7 +36,9 @@ PTH = Path(__file__).parent
 
 clindata = pd.read_csv(f"{PTH}/inputs/rwanda_mch_data.csv")
 
-def get_npy_filename(f: Path):
+def get_npy_filename(f: str):
+    f = Path(f)
+
     expt_id = f.stem
     disk_id = f.parent.parent.stem
 
