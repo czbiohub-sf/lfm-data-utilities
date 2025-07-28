@@ -43,7 +43,7 @@ PTH = Path(__file__).parent
 EPSILON = 270548e3 / 64500e12 # cm^2 / pg
 
 # 2x binning, 30x mag
-LEN_PER_PX = 3.45e-4 * 2/ 40 # cm
+LEN_PER_PX = 3.45e-4 * 2 / 40 # cm
 AREA_PER_PX = LEN_PER_PX ** 2 # cm^2
 
 # print(f'\nLEN_PER_PX = {LEN_PER_PX} cm\nAREA_PER_PX = {AREA_PER_PX:.3e} cm^2 \nEPSILON = {EPSILON:.3e}')
