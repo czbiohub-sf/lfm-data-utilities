@@ -65,7 +65,9 @@ def calc_pos_and_area(mask: np.ndarray[int], cell_id: int) -> list[int, float, f
     return px_area, np.mean(px_row), np.mean(px_col)
 
 def calc_mch_pg(pg_img: np.ndarray[float], mask: np.ndarray[int]) -> List[float]:
-    return [np.sum(pg_img[mask == cell_id]) for cell_id in range(1, np.max(mask))]
+    for cell_id in range(1, int(np.max(mask))):
+        print(np.sum(pg_img[mask == cell_id]), flush=True)
+    # return [np.sum(pg_img[mask == cell_id]) for cell_id in range(1, int(np.max(mask)))]
 
 def calc_pg_per_px(absorbance: np.ndarray[float]) -> np.ndarray[float]:
     hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
@@ -77,18 +79,16 @@ def get_img_metadata(f: str, mask: np.ndarray) -> Tuple[float, float, float]:
         ##
         filt = mask > 0
         BKG = np.mean(img[~filt])
-        print(BKG, flush=True)
         # print(f'NUM_CELLS = {NUM_CELLS}\nBKG = {BKG}\n')
         ##
         absorbance_img = np.log10(BKG / img)
         pg_img = calc_pg_per_px(absorbance_img)
+        # print(pg_img, flush=True)
         ##
         mch = np.array(calc_mch_pg(pg_img, mask))
-        print(mch, flush=True)
         pos_and_area = np.array([calc_pos_and_area(mask, cell_id) for cell_id in range(1, int(np.max(mask)))])
         ##
-        print(mch)
-        print(pos_and_area)
+        print(mch, flush=True)
         ##
         return np.hstack((mch, pos_and_area))
         ##
