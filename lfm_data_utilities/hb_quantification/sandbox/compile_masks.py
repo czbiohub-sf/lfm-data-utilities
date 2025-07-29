@@ -39,7 +39,7 @@ def compile_masks(d: Path):
     masks = np.zeros((100, 772, 1032))
 
     for i, f in enumerate(Path(f'{d}/sub_sample_imgs').glob("*.png")):
-        with open(f'{DATA_DIR}/{disk_id}_{expt_id}{f.stem}.npy', 'rb') as fnp:
+        with open(f'{DATA_DIR}/../per-img-masks/{disk_id}_{expt_id}{f.stem}.npy', 'rb') as fnp:
             img_mask = np.load(fnp)
             masks[i, :, :] = img_mask
                 

@@ -55,8 +55,7 @@ def get_npy_filename(f: str):
     return f'{DATA_DIR}/{disk_id}_{expt_id}.npy'
 
 def get_mask(f: str):
-    with open(f, 'rb') as fnp:
-        return np.load(fnp).astype(int)
+    return np.load(fnp).astype(int)
 
 def calc_pos_and_area(mask: np.ndarray[int], cell_id: int) -> list[int, float, float]:
     hotspots = mask == cell_id
@@ -66,6 +65,7 @@ def calc_pos_and_area(mask: np.ndarray[int], cell_id: int) -> list[int, float, f
 
 def calc_mch_pg(pg_img: np.ndarray[float], mask: np.ndarray[int]) -> List[float]:
     for cell_id in range(1, int(np.max(mask))):
+        print(mask==cell_id, flush=True)
         print(np.sum(pg_img[mask == cell_id]), flush=True)
     # return [np.sum(pg_img[mask == cell_id]) for cell_id in range(1, int(np.max(mask)))]
 
