@@ -54,6 +54,15 @@ def gen_dataset_def(
         }
 
     dataset_defs = {
+        "class_names": [
+            "healthy",
+            "ring",
+            "trophozoite",
+            "schizont",
+            "gametocyte",
+            "wbc",
+            "misc",
+        ],
         "dataset_split_fractions": {"train": 0.75, "test": 0.20, "val": 0.05},
         "dataset_paths": dataset_paths,
     }
@@ -112,8 +121,8 @@ if __name__ == "__main__":
         )
     elif args.subparser == "verify":
         try:
-            from yogo.data.dataloader import (
-                load_dataset_description,
+            from yogo.data.dataset_definition_file import (
+                DatasetDefinition,
                 InvalidDatasetDescriptionFile,
             )
         except ImportError:
@@ -125,15 +134,15 @@ if __name__ == "__main__":
         # if InvalidDatasetDescriptionFile is raised, then the file is invalid
         # if path_to_dataset_defn_file is a directory, iterate over yml files and check all of them
         if args.path_to_dataset_defn_file.is_dir():
-            for path in args.path_to_dataset_defn_file.glob("*.yml"):
+            for path in args.path_to_dataset_defn_file.rglob("*.yml"):
                 try:
-                    load_dataset_description(path)
+                    DatasetDefinition.from_yaml(path)
+                    print(f"{path} passed")
                 except InvalidDatasetDescriptionFile as e:
                     print(f"{path} is invalid: {e}")
-                    sys.exit(1)
         else:
             try:
-                load_dataset_description(args.path_to_dataset_defn_file)
+                DatasetDefinition.from_yaml(args.path_to_dataset_defn_file)
             except InvalidDatasetDescriptionFile as e:
                 print(f"{args.path_to_dataset_defn_file} is invalid: {e}")
                 sys.exit(1)

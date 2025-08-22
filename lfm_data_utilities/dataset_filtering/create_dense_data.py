@@ -121,6 +121,7 @@ def write_results(
     """
     # flowrate of 1st frame can't be calculated, so set to 0
     flowrate_iterable = chain(((0, 0, 0),), zip(*flowrate_results))
+    print(f"writing to {output_dir / 'data.csv'}")
     with open(output_dir / "data.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(
@@ -182,15 +183,6 @@ if __name__ == "__main__":
         help="path to autofocus pth file",
     )
     parser.add_argument(
-        "--expected-class-probabilities",
-        action="store_true",
-        default=False,
-        help=(
-            "if set, calculate expected number of cells per class instead of the sum "
-            "of argmax of class probabilities (default)"
-        ),
-    )
-    parser.add_argument(
         "--objectness-threshold",
         type=float,
         default=0.5,
@@ -237,6 +229,7 @@ if __name__ == "__main__":
                 path_to_pth=args.path_to_yogo_pth,
                 path_to_zarr=dataset_path.zarr_path,
                 device=next(devices),
+                half=False,
             )
 
             dataset_path_dir = args.output_dir / dataset_path.root_dir.name
@@ -275,5 +268,5 @@ if __name__ == "__main__":
                     flowrate_results=flowrate_results,
                     autofocus_results=autofocus_results,
                     yogo_results=yogo_results,
-                    threshold_class_probabilities=False,
+                    threshold_class_probabilities=True,
                 )

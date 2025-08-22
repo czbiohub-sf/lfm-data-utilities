@@ -3,4 +3,4 @@ dataset_split_fractions:
   test:  0.20
   val:   0.05
 dataset_paths:
-  AVT_Spirit: /hpc/mydata/axel.jacobsen/retest-spirit/training-data
+  AVT_Spirit: /hpc/projects/group.bioengineering/LFM_scope/retest-spirit/training-data

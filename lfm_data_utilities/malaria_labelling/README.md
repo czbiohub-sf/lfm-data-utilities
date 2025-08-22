@@ -10,7 +10,7 @@ Where you should start depends entirely on what you need to do. If you are just 
 
 # Human Annotation
 
-We will use [Label Studio](https://labelstud.io/) for human annotation.
+We have two options: [thumbnail labelling](thumbnail_labelling/README.md) or [Label Studio](https://labelstud.io/).
 
 ## Preparation
 
@@ -60,17 +60,17 @@ python3 -m pip install label-studio
     <Image name="image" value="$image" zoom="true" zoomControl="true"/>
     <Header value="RectangleLabels"/>
     <RectangleLabels name="label" toName="image" canRotate="false" strokeWidth="3" opacity=".0">
-        <Label value="healthy" background="#27b94c" category="1"/>
-        <Label value="ring" background="rgba(250, 100, 150, 1)" category="2"/>
-        <Label value="trophozoite" background="#eebd68" category="3"/>
-        <Label value="schizont" background="rgba(100, 180, 255, 1)" category="4"/>
-        <Label value="gametocyte" background="rgba(255, 200, 255, 1)" category="5"/>
-        <Label value="wbc" background="#9cf2ec" category="6"/>
-        <Label value="misc" background="rgba(100, 100, 100, 1)" category="7"/>
+        <Label value="healthy" background="#27b94c" category="0"/>
+        <Label value="ring" background="rgba(250, 100, 150, 1)" category="1"/>
+        <Label value="trophozoite" background="#eebd68" category="2"/>
+        <Label value="schizont" background="rgba(100, 180, 255, 1)" category="3"/>
+        <Label value="gametocyte" background="rgba(255, 200, 255, 1)" category="4"/>
+        <Label value="wbc" background="#9cf2ec" category="5"/>
+        <Label value="misc" background="rgba(100, 100, 100, 1)" category="6"/>
     </RectangleLabels>
 </View>
 ```
-  - Go to the "Data Import" tab, click "Upload Files", and import the `tasks.json` in the run folder that you are annotating. It will be somewhere in `.../scope-parasite-data/run-sets`. **Note**: If this fails (e.g "too many SQL variables") - try creating the project _without_ doing this "Data Import" step. Then, once the project has been created, upload the data after.
+  - Go to the "Data Import" tab, click "Upload Files", and import the `yogo_labelled_tasks.json` in the run folder that you are annotating. It will be somewhere in `.../scope-parasite-data/run-sets`. **Note**: If this fails (e.g "too many SQL variables") - try creating the project _without_ doing this "Data Import" step. Then, once the project has been created, upload the data after.
   - Click "Save"
 
 and you are ready to annotate!
@@ -102,8 +102,6 @@ When exporting for training (i.e. you've completed labelling the entire batch of
 ```console
 curl -X GET "http://localhost:8080/api/projects/<project id>/export?exportType=YOLO&download_resources=false" -H "Authorization: Token <paste the Auth. token here>" --output annotations.zip
 ```
-
-Send that folder to Axel. Thank you!
 
 ### Exporting `tasks.json` for further labelling or review
 

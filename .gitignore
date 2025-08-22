@@ -15,3 +15,7 @@ lfm_data_utilities/model_evaluations/yogo/*.png
 lfm_data_utilities/model_evaluations/yogo/loss.csv
 
 .ipynb_checkpoints
+slurm-outputs/
+lfm_data_utilities/model_evaluations/yogo/plotting_results
+lfm_data_utilities/malaria_labelling/thumbnail_labelling/dataset_description_files
+lfm_data_utilities/model_evaluations/yogo/yogo_prediction_handling/venv

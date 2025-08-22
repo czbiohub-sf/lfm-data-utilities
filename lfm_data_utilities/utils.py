@@ -3,14 +3,26 @@ import multiprocessing as mp
 import time
 import git
 import types
+
 from csv import DictReader
 from datetime import datetime
 from functools import partial
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Tuple, Optional, Any, Callable, Union, Sequence
 from pathlib import Path
+from typing import (
+    List,
+    Dict,
+    Tuple,
+    Optional,
+    Any,
+    Callable,
+    Union,
+    Iterator,
+    Sequence,
+    Generator,
+)
 
 from tqdm import tqdm
 import cv2
@@ -39,6 +51,15 @@ class DatasetPaths:
                 f"invalid results for dataset paths - data are from different dirs for {self.zarr_path}"
             )
         return self.zarr_path.parent
+
+    def __iter__(self) -> Iterator[Path]:
+        return iter(map(lambda field: getattr(self, field.name), fields(self)))
+
+    def is_valid(self, blame: bool = False) -> bool:
+        for path in self:
+            if not path.exists():
+                return False
+        return True
 
 
 class Dataset:
@@ -130,7 +151,16 @@ def get_rms(data: List[float]):
     return np.sqrt(ms / N)
 
 
-def make_video(dataset: Dataset, save_dir: PathLike):
+def make_video(
+    dataset: Dataset,
+    save_dir: PathLike,
+    ds_factor: int = 1,
+    ssaf1_model_name: Optional[str] = "",
+    ssaf_vals_1: Optional[list] = None,
+    ssaf2_model_name: Optional[str] = "",
+    ssaf_vals_2: Optional[list] = None,
+    add_im_counter_text: bool = True,
+):
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
@@ -143,18 +173,53 @@ def make_video(dataset: Dataset, save_dir: PathLike):
     height, width = zf[:, :, 0].shape
 
     save_dir.mkdir(exist_ok=True)
-    output_path = Path(save_dir) / Path(dataset.dp.zarr_path.stem + ".mp4")
+    output_path = Path(save_dir) / Path(
+        dataset.dp.zarr_path.stem + f"ds_{ds_factor}.avi"
+    )
 
     writer = cv2.VideoWriter(
         f"{output_path}",
-        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
+        fourcc=cv2.VideoWriter_fourcc(*"FFV1"),
         fps=framerate,
-        frameSize=(width, height),
+        frameSize=(width // ds_factor, height // ds_factor),
         isColor=False,
     )
 
     for i, _ in enumerate(tqdm(range(num_frames))):
-        img = zf[:, :, i]
+        img = cv2.resize(zf[:, :, i], (width // ds_factor, height // ds_factor))
+
+        if add_im_counter_text:
+            img = cv2.putText(
+                img,
+                f"{i}",
+                (50 // ds_factor, 50 // ds_factor),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1 // ds_factor,
+                (0, 0, 0),
+                1,
+            )
+
+            if ssaf_vals_1 is not None and i > 0:
+                img = cv2.putText(
+                    img,
+                    f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
+                    (50 // ds_factor, 80 // ds_factor),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1 // ds_factor,
+                    (225, 0, 0),
+                    1,
+                )
+            if ssaf_vals_2 is not None and i > 0:
+                img = cv2.putText(
+                    img,
+                    f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
+                    (50 // ds_factor, 110 // ds_factor),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1 // ds_factor,
+                    (225, 0, 0),
+                    1,
+                )
+
         writer.write(img)
     writer.release()
 
@@ -221,11 +286,11 @@ def get_all_dataset_paths(
         Top level directory path to search
     """
 
-    def get_path_or_none(paths: List[PathLike]) -> Optional[PathLike]:
+    def get_path_or_none(paths: Sequence[PathLike]) -> Optional[Path]:
         if len(paths) == 0:
             return None
         elif len(paths) == 1:
-            return paths[0]
+            return Path(paths[0])
         raise ValueError(f"more than one possible path: {paths}")
 
     dataset_paths: List[DatasetPaths] = []
@@ -345,6 +410,38 @@ def get_list_of_zarr_files(top_level_dir: PathLike) -> List[Path]:
     )
 
 
+def find_files_with_excludes(
+    p: PathLike, match_str: str, excludes: List[str] = []
+) -> Generator[Path, None, None]:
+    """find files in directory tree, excluding `excludes` and matching via `match_str`.
+
+    We offload matching to pathlib.PurePath.match() [1], which gives glob-like matching.
+    This can be *much* faster for traversing our data, since we have many folders with
+    20,000 images or text files, and do not have what we often want (such as path to a
+    metadata file!).
+
+    Parameters
+    ----------
+    p: PathLike
+        root of search
+    match_str: str
+        a glob-like match string
+    excludes: List[str]
+        a list of glob-like match strings that you want to exclude from the search in
+        order to speed the search up. e.g. `excludes=['images', 'labels', 'yogo_labels']`
+        makes searching for metadata files very quick.
+
+    [1] https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.match
+    """
+    for subpath in Path(p).iterdir():
+        if subpath.match(match_str):
+            yield subpath
+        elif any(subpath.match(e) for e in excludes):
+            continue
+        elif subpath.is_dir():
+            yield from find_files_with_excludes(subpath, match_str, excludes)
+
+
 def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     """Get a list of all the per image metadata in this folder and all its subfolders
 
@@ -361,7 +458,11 @@ def get_list_of_per_image_metadata_files(top_level_dir: PathLike) -> List[Path]:
     return sorted(
         [
             x
-            for x in Path(top_level_dir).rglob("*perimage*.csv")
+            for x in find_files_with_excludes(
+                top_level_dir,
+                "*perimage*.csv",
+                excludes=["images", "labels", "yogo_labels"],
+            )
             if is_not_hidden_path(x)
         ]
     )
@@ -383,7 +484,9 @@ def get_list_of_experiment_level_metadata_files(top_level_dir: PathLike) -> List
     return sorted(
         [
             file
-            for file in Path(top_level_dir).rglob("*exp*.csv")
+            for file in find_files_with_excludes(
+                top_level_dir, "*exp*.csv", excludes=["images", "labels", "yogo_labels"]
+            )
             if is_not_hidden_path(file)
         ]
     )
@@ -666,6 +769,7 @@ def multithread_map_unordered(
     verbose: bool = True,
     max_num_threads: Optional[int] = None,
     realize: bool = False,
+    description: Optional[str] = None,
 ) -> List[Any]:
     protected_fcn_partial = partial(protected_fcn, fn)
     try:
@@ -683,7 +787,10 @@ def multithread_map_unordered(
         return [
             r.result()
             for r in tqdm(
-                as_completed(futs), total=argument_list_len, disable=not verbose
+                as_completed(futs),
+                total=argument_list_len,
+                disable=not verbose,
+                desc=description,
             )
         ]
 
@@ -698,6 +805,7 @@ def multiprocess_fn(
     ],
     ordered: bool = True,
     verbose: bool = True,
+    description: Optional[str] = None,
 ) -> List[Any]:
     """Wraps any function invocation in multiprocessing, with optional TQDM for progress.
 
@@ -730,6 +838,7 @@ def multiprocess_fn(
                 mp_func(protected_fcn_partial, argument_list),
                 total=len(argument_list),
                 disable=not verbose,
+                desc=description,
             )
         )
 
@@ -835,6 +944,8 @@ def get_list_of_img_paths_in_folder(folder_path: PathLike) -> List[Path]:
     elif len(pngs) > 0 and len(tiffs) == 0:
         return pngs
 
+    elif len(pngs) == 0 and len(tiffs) == 0:
+        raise ValueError(f"no tiffs and no pngs in {folder_path}")
     else:
         raise ValueError(
             f"For some reason there are both pngs and tiffs in this folder: \npngs: {pngs}\ntiffs: {tiffs}"

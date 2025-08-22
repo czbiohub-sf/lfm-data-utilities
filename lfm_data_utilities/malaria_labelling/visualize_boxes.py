@@ -1,22 +1,18 @@
 #! /usr/bin/env python3
 
 import json
-import torch
 import signal
-import numpy as np
 from PIL import Image, ImageDraw
 
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-from typing import Generator, Iterable, Tuple, Optional, Dict, Any
-
-from yogo.data.dataset import YOGO_CLASS_ORDERING
+from typing import Generator, Iterable, Tuple
 
 from yogo.utils.utils import bbox_colour
-from yogo.data.dataset import read_grayscale, load_labels
+from yogo.data.yogo_dataset import load_labels
 
-from labelling_constants import CLASSES
+from lfm_data_utilities import YOGO_CLASS_ORDERING
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -41,7 +37,10 @@ def draw_rects(image_path, label_path):
     else:
         json_data = None
 
-    label_tensor = load_labels(label_path, notes_data=json_data)
+    print(YOGO_CLASS_ORDERING)
+    label_tensor = load_labels(
+        label_path, notes_data=json_data, classes=YOGO_CLASS_ORDERING
+    )
 
     rgb = Image.new("RGBA", pil_img.size)
     rgb.paste(pil_img)
@@ -56,9 +55,10 @@ def draw_rects(image_path, label_path):
         x2 = (r[1] + r[3] / 2) * img_w
         y2 = (r[2] + r[4] / 2) * img_h
         label = YOGO_CLASS_ORDERING[int(r[0])]
+        label = YOGO_CLASS_ORDERING.index(label)
         draw.rectangle(
             (x1, y1, x2, y2),
-            outline=bbox_colour(label),
+            outline=bbox_colour(label, num_classes=7),
         )
         draw.text((x1, y2), f"label: {label}", (0, 0, 0, 255))
 
@@ -67,7 +67,9 @@ def draw_rects(image_path, label_path):
 
 def plot_img_labels_pair(image_path: Path, label_path: Path):
     annotated_img = draw_rects(image_path, label_path)
+    plt.figure(figsize=(12 * 1.33, 12))
     plt.imshow(annotated_img)
+    plt.tight_layout()
     plt.show()
 
 
@@ -91,7 +93,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser("visualize some labels in a run")
-    parser.add_argument("path_to_run", type=Path, help="path to run")
+    parser.add_argument("path_to_images", type=Path, help="path to run")
+    parser.add_argument("path_to_labels", type=Path, help="path to labels")
     parser.add_argument(
         "--label-dir-name",
         type=str,
@@ -101,8 +104,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    image_dir = args.path_to_run / "images"
-    label_dir = args.path_to_run / args.label_dir_name
+    image_dir = args.path_to_images
+    label_dir = args.path_to_labels
 
     print("ctrl-c to stop")
     for image_path, label_path in make_img_label_pairs(image_dir, label_dir):
