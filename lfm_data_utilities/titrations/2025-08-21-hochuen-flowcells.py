@@ -35,7 +35,18 @@ run2 = [
 ]
 
 yticks = [
-    40000, 20000, 10000, 5000, 2500, 1250, 750, 325, 162,
+    40000, 20000, 10000, 5000, 2500, 1250, 625, 312, 156,
+]
+xticks = [
+    200000,
+    100000,
+    50000,
+    25000,
+    12500,
+    6250,
+    3125,
+    1562,
+    781,
 ]
 
 other = np.array([
@@ -45,15 +56,22 @@ other = np.array([
 
 plt.yscale('log', base=2)
 plt.xscale('log', base=2)
-plt.xticks(parasitemias[:-1], parasitemias[:-1])
+plt.xticks(xticks, xticks)
 plt.yticks(yticks, yticks)
 
 plt.title("2025-08-21 Titration")
 plt.xlim([1000, 250000])
 plt.ylim([100, 50000])
 
-plt.plot(parasitemias, run1, label="Run 1")
-plt.plot(parasitemias, run2, label="Run 2")
+plt.plot(parasitemias, run1, label="Run 1", marker='x')
+plt.plot(parasitemias, run2, label="Run 2", marker='x')
+plt.plot(parasitemias, parasitemias, linestyle='--', c='gray')
 plt.scatter(other[:, 0], other[:, 1], label="Repeatability", marker='x', c='r')
+
 plt.legend()
+plt.xlabel('Expected parasitemia (parasites/uL)')
+plt.ylabel('Remoscope parasitemia (parasites/uL)')
+
+plt.savefig('figs/2025-08-21-hochuen-flowcells.png')
+
 plt.show()
