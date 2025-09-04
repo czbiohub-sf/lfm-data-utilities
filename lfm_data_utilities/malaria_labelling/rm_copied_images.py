@@ -65,7 +65,6 @@ if __name__ == "__main__":
 
         n_images, n_labels = 0, 0
         for img in dset.image_path.glob("*.png"):
-
             if args.execute:
                 try:
                     (run_dir / "images" / img.name).unlink()
@@ -76,7 +75,6 @@ if __name__ == "__main__":
 
         # delete the labels
         for label in dset.label_path.glob("*.txt"):
-
             if args.execute:
                 # annoyingly, our labels are either in yogo_labels or labels
                 try:

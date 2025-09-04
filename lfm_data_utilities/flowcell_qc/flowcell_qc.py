@@ -56,7 +56,6 @@ def get_batch_id() -> str:
 
 
 def capture_image(save_dir: str, img_index: int) -> None:
-
     timestamp_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
     image_path = os.path.join(save_dir, f"{timestamp_str}_{img_index}.jpg")
 
@@ -137,7 +136,7 @@ def main() -> None:
                 img_index += 1
                 capture_image(save_dir, img_index)
                 print("Press the button to capture the next image...")
-    
+
                 # Simple debounce: wait until button is released
                 while GPIO.input(BUTTON_PIN) == GPIO.LOW:
                     time.sleep(1)
