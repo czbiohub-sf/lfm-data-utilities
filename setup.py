@@ -19,7 +19,7 @@ setup(
         "pandas>=1.5.3",
         "tqdm>=4.64.1",
         "zarr==2.10.1",
-        "cellpose=4.0.5"
+        "cellpose=4.0.5",
     ],
     extras_require={
         "torch": "torch>=1.13.1",

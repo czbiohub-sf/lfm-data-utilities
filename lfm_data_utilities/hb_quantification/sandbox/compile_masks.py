@@ -20,34 +20,36 @@ from scipy.stats import binned_statistic_2d
 ##### CONSTANTS / CONVERSIONS #####
 PTH = Path(__file__).parent
 
-DATASETS= [
-    'disk6',
-    'disk7',
-    'disk8',
+DATASETS = [
+    "disk6",
+    "disk7",
+    "disk8",
 ]
 
-DATA_DIR = Path('/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/cellpose-data/compiled-cellpose-masks')
+DATA_DIR = Path(
+    "/hpc/projects/group.bioengineering/LFM_scope/hb_investigations/cellpose-data/compiled-cellpose-masks"
+)
 
 clindata = pd.read_csv(f"{PTH}/../inputs/rwanda_mch_data.csv")
 
 
 def compile_masks(d: Path):
-    
     expt_id = d.stem
     disk_id = d.parent.parent.stem
 
     masks = np.zeros((100, 772, 1032))
 
-    for i, f in enumerate(Path(f'{d}/sub_sample_imgs').glob("*.png")):
-        with open(f'{DATA_DIR}/../per-img-masks/{disk_id}_{expt_id}{f.stem}.npy', 'rb') as fnp:
+    for i, f in enumerate(Path(f"{d}/sub_sample_imgs").glob("*.png")):
+        with open(
+            f"{DATA_DIR}/../per-img-masks/{disk_id}_{expt_id}{f.stem}.npy", "rb"
+        ) as fnp:
             img_mask = np.load(fnp)
             masks[i, :, :] = img_mask
-                
-    with open(f'{DATA_DIR}/{disk_id}_{expt_id}.npy', 'wb') as fsave:
+
+    with open(f"{DATA_DIR}/{disk_id}_{expt_id}.npy", "wb") as fsave:
         np.save(fsave, masks)
 
 
-print(f'\n***** Processing batch from: {csv} *****\n')
-for dataset in tqdm(clindata['path'].to_list(), desc='Dataset'):
+print(f"\n***** Processing batch from: {csv} *****\n")
+for dataset in tqdm(clindata["path"].to_list(), desc="Dataset"):
     compile_masks(Path(dataset))
-

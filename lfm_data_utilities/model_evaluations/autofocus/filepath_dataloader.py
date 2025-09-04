@@ -84,7 +84,8 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return sample, target, img_path
 
 
-class InvalidDatasetDescriptionFile(Exception): ...
+class InvalidDatasetDescriptionFile(Exception):
+    ...
 
 
 @dataclass

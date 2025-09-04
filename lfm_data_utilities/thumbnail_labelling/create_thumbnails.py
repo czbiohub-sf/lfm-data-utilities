@@ -23,9 +23,8 @@ DEFAULT_LABELS_PATH = Path(
 
 
 class TasksJsonGenerationFunc(Protocol):
-    def __call__(
-        self, image_path: Path, label_path: Path, tasks_path: Path
-    ) -> None: ...
+    def __call__(self, image_path: Path, label_path: Path, tasks_path: Path) -> None:
+        ...
 
 
 def create_tasks_file_from_path_to_run(

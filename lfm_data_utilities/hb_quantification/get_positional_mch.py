@@ -41,41 +41,51 @@ PTH = Path(__file__).parent
 # molar extinction coefficient: 270548 L / (cm * mol) = 270548e3 cm^2 / mol
 # Hb has molar mass 64500e12 pg/mol
 
-EPSILON = 270548e3 / 64500e12 # cm^2 / pg
+EPSILON = 270548e3 / 64500e12  # cm^2 / pg
 
 # 2x binning, 30x mag
-LEN_PER_PX = 3.45e-4 * 2/ 40 # cm
-AREA_PER_PX = LEN_PER_PX ** 2 # cm^2
+LEN_PER_PX = 3.45e-4 * 2 / 40  # cm
+AREA_PER_PX = LEN_PER_PX**2  # cm^2
 
 # print(f'\nLEN_PER_PX = {LEN_PER_PX} cm\nAREA_PER_PX = {AREA_PER_PX:.3e} cm^2 \nEPSILON = {EPSILON:.3e}')
+
 
 def calc_position(masks: np.ndarray[int], cell_id: int) -> list[float, float]:
     px_row, px_col = np.where(masks == cell_id)
     return np.mean(px_row), np.mean(px_col)
 
+
 def calc_pg_per_px(absorbance: np.ndarray[float]) -> np.ndarray[float]:
-    hb_mass = np.multiply(absorbance, AREA_PER_PX  / EPSILON) # pg
+    hb_mass = np.multiply(absorbance, AREA_PER_PX / EPSILON)  # pg
     return hb_mass
 
+
 def calc_mch_pg(pg_img: np.ndarray[float], masks: np.ndarray[int]) -> list[float]:
-    mch = np.array([np.sum(pg_img[masks == cell_id]) for cell_id in range(np.max(masks))])
+    mch = np.array(
+        [np.sum(pg_img[masks == cell_id]) for cell_id in range(np.max(masks))]
+    )
     pos = np.array([calc_position(masks, cell_id) for cell_id in range(np.max(masks))])
-        
+
     return np.column_stack((mch, pos))
+
 
 def calc_hct(masks: np.ndarray[int]) -> float:
     cell_pxs = np.sum(masks == 0)
     bkg_pxs = np.sum(masks != 0)
     return cell_pxs / (cell_pxs + bkg_pxs)
 
+
 def calc_vol_fl(masks: np.ndarray[int]) -> list[float]:
-    return [np.sum(masks == i) * AREA_PER_PX * 5 / 1e-8 for i in range(np.max(masks))] # um^3 = fL
+    return [
+        np.sum(masks == i) * AREA_PER_PX * 5 / 1e-8 for i in range(np.max(masks))
+    ]  # um^3 = fL
 
 
 ##### SEGMENTATION PARAMETERS #####
 flow_threshold = 0.0
 cellprob_threshold = -1
 tile_norm_blocksize = 0
+
 
 def init_model() -> models.CellposeModel:
     # io.logger_setup() # run this to get printing of progress
@@ -90,8 +100,13 @@ def get_img_metadata(f: str) -> Tuple[float, float, float]:
         # print(f'Loaded img {f.name}')
 
         t0 = time.perf_counter()
-        masks, flows, styles = model.eval(img, batch_size=32, flow_threshold=flow_threshold, cellprob_threshold=cellprob_threshold,
-                                        normalize={"tile_norm_blocksize": tile_norm_blocksize})
+        masks, flows, styles = model.eval(
+            img,
+            batch_size=32,
+            flow_threshold=flow_threshold,
+            cellprob_threshold=cellprob_threshold,
+            normalize={"tile_norm_blocksize": tile_norm_blocksize},
+        )
         t1 = time.perf_counter()
         # print(f'Generated masks for img {f.name} in {t1-t0:.3f}s')
 
@@ -104,42 +119,55 @@ def get_img_metadata(f: str) -> Tuple[float, float, float]:
         files = [f] * NUM_CELLS
 
         return np.column_stack((calc_mch_pg(pg_img, masks), files))
-    
+
     except Exception as e:
-        print(f'Could not process {f}:\n{e}')
+        print(f"Could not process {f}:\n{e}")
         pass
 
-def get_dataset_metadata(dataset: Path, savedir: Path = Path('outputs/')) -> Optional[float]:
+
+def get_dataset_metadata(
+    dataset: Path, savedir: Path = Path("outputs/")
+) -> Optional[float]:
     try:
         dir = dataset / "sub_sample_imgs"
 
         if not dir.exists():
-            raise FileNotFoundError(f'Directory does not exist: {dir}')
+            raise FileNotFoundError(f"Directory does not exist: {dir}")
 
         # list all files
-        files = natsorted([f for f in dir.glob("*.png") if "_masks" not in f.name and "_flows" not in f.name])
+        files = natsorted(
+            [
+                f
+                for f in dir.glob("*.png")
+                if "_masks" not in f.name and "_flows" not in f.name
+            ]
+        )
 
-        if(len(files)==0):
-            raise FileNotFoundError("No image files found, did you specify the correct folder and extension?")
+        if len(files) == 0:
+            raise FileNotFoundError(
+                "No image files found, did you specify the correct folder and extension?"
+            )
         else:
             print(f"{len(files)} images in directory: {dir}")
 
-        mch_out = np.array([row for f in tqdm(files, desc='Image  ') for row in get_img_metadata(f)])
+        mch_out = np.array(
+            [row for f in tqdm(files, desc="Image  ") for row in get_img_metadata(f)]
+        )
 
         df = pd.DataFrame()
-        df['mch_pg'] = mch_out[:, 0]
-        df['pos_x'] = mch_out[:, 1]
-        df['pos_y'] = mch_out[:, 2]
-        df['dir'] = mch_out[:, 3]
+        df["mch_pg"] = mch_out[:, 0]
+        df["pos_x"] = mch_out[:, 1]
+        df["pos_y"] = mch_out[:, 2]
+        df["dir"] = mch_out[:, 3]
 
         rn = datetime.now()
         df.to_csv(
-            savedir / f'{Path(dataset).stem}positional_hbquant.csv',
+            savedir / f"{Path(dataset).stem}positional_hbquant.csv",
             # f'cellpose-hb-data/{Path(dataset).stem}{rn.strftime("%Y%m%d-%H%M%S")}.csv
         )
 
     except Exception as e:
-        print(f'ERROR:\n{e}\n')
+        print(f"ERROR:\n{e}\n")
         return None
 
 
@@ -151,15 +179,17 @@ print(" / __)(  )  (  )(  ( \\(  )/ __) / _\\ (  )    ( \\/ ) / __)/ )( \\")
 print("( (__ / (_/\\ )( /    / )(( (__ /    \\/ (_/\\  / \\/ \\( (__ ) __ (")
 print(" \\___)\\____/(__)\\_)__)(__)\\___)\\_/\\_/\\____/  \\_)(_/ \\___)\\_)(_/")
 
-csv = input("Path to .csv with headers ['path', 'mch_pg'] or click Enter to manually run single dataset:\n")
+csv = input(
+    "Path to .csv with headers ['path', 'mch_pg'] or click Enter to manually run single dataset:\n"
+)
 
-if not csv == '':
+if not csv == "":
     df = pd.read_csv(csv)
-    if not ('path' in df.columns and 'mch_pg' in df.columns):
+    if not ("path" in df.columns and "mch_pg" in df.columns):
         raise ValueError(".csv is missing 'path' and/or 'mch_pg' header(s)")
 
     try:
-        dataset_name = f'{Path(csv).stem}_positions'
+        dataset_name = f"{Path(csv).stem}_positions"
         savedir = PTH / "outputs" / dataset_name
         os.mkdir(savedir)
         # print(f'\nDirectory {savedir} created successfully')
@@ -169,15 +199,16 @@ if not csv == '':
 
     model = init_model()
 
-    print(f'\n***** Processing batch from: {csv} *****\n')
-    for dataset in tqdm(df['path'].to_list(), desc='Dataset'):
-        get_dataset_metadata(Path(dataset), savedir=savedir) 
+    print(f"\n***** Processing batch from: {csv} *****\n")
+    for dataset in tqdm(df["path"].to_list(), desc="Dataset"):
+        get_dataset_metadata(Path(dataset), savedir=savedir)
 
 else:
-    expt = input("Enter single dataset path as per .../LFM_scope/<dataset>/sub_sample_imgs/:\n")
-    dataset = Path(f'/hpc/projects/group.bioengineering/LFM_scope/{expt}')
+    expt = input(
+        "Enter single dataset path as per .../LFM_scope/<dataset>/sub_sample_imgs/:\n"
+    )
+    dataset = Path(f"/hpc/projects/group.bioengineering/LFM_scope/{expt}")
 
     model = init_model()
 
     get_dataset_metadata(dataset)
-

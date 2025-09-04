@@ -10,16 +10,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-csv = input(f"Path to .csv with headers ['path', 'hct_clinical', 'cell_count_estimate]:\n")
+csv = input(
+    f"Path to .csv with headers ['path', 'hct_clinical', 'cell_count_estimate]:\n"
+)
 df = pd.read_csv(csv)
 
 # min = np.min(df[f'hct_clinical'])
 # max = np.max(df[f'hct_clinical'])
 # plt.plot([min, max], [min, max], linestyle='--', c='orange', lw=1)
 
-plt.scatter(df[f'hct_clinical'], df[f'cell_count_estimate'])
+plt.scatter(df[f"hct_clinical"], df[f"cell_count_estimate"])
 
-plt.xlabel(f'Clinical hematocrit (%)')
-plt.ylabel(f'Estimated cell count')
-plt.title(f'Estimated cell count vs clinical hematocrit')
+plt.xlabel(f"Clinical hematocrit (%)")
+plt.ylabel(f"Estimated cell count")
+plt.title(f"Estimated cell count vs clinical hematocrit")
 plt.show()

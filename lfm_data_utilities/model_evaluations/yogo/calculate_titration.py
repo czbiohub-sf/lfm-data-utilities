@@ -194,7 +194,9 @@ def plot_normalized_parasitemia(points, counts, plot_dir, model_name):
         points,
         [c[1:5].sum().item() / c[:5].sum().item() for c in counts],
     )
-    ax.plot(points, [initial_parasitemia / 2**i for i in range(len(titration_results))])
+    ax.plot(
+        points, [initial_parasitemia / 2**i for i in range(len(titration_results))]
+    )
     ax.legend(["YOGO predictions", "Ground Truth"])
 
     file_name = f"normalized_{Path(model_name).with_suffix('.png')}"
