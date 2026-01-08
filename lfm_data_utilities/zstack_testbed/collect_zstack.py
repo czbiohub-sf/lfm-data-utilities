@@ -6,6 +6,11 @@ import cv2
 from zaber_controller import ZaberCon
 from avt_cam import AVTCam
 
+BASE_DIR = '/home/pi/Desktop/zstacks'  # Where zstack images folder is saved
+NUM_FRAMES = 80  # Number of images taken in stack
+STACK_STEP_SIZE = 0.19  # um needs to be in 0.19 increments
+EST_FOCUS_POS = 24731  # um Moves stage to this position before manual focus prompt
+START_EXPOSURE = 14265  # us
 
 # Function for opening up camera to allow for manual focus
 def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
@@ -156,12 +161,7 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
     return True
 
 
-def main() -> None:
-    BASE_DIR = '/home/pi/Desktop/zstacks'  # Where zstack images folder is saved
-    NUM_FRAMES = 80  # Number of images taken in stack
-    STACK_STEP_SIZE = 0.19  # um needs to be in 0.19 increments
-    EST_FOCUS_POS = 24731  # um Moves stage to this position before manual focus prompt
-    START_EXPOSURE = 14265  # us
+def main():
 
     logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
@@ -193,6 +193,11 @@ def main() -> None:
     save_dir.mkdir(parents=True, exist_ok=True)
 
     focus_pos = zc.get_pos('h')
+    if focus_pos is None:
+        print("Error: Could not get focus position")
+        cam.close()
+        zc.close()
+        return
 
     # Move stage to starting position
     zc.move_arm('h', -NUM_FRAMES // 2 * STACK_STEP_SIZE, speed=1000, is_relative=True)
@@ -200,7 +205,10 @@ def main() -> None:
     for i in range(NUM_FRAMES):
         print(i, zc.get_pos('h'))
         img = cam.snap()
-        cv2.imwrite(f'{save_dir}/{i}.png', img)
+        if img is None:
+            print(f"Warning: Failed to capture frame {i}, skipping")
+            continue
+        cv2.imwrite(str(save_dir / f'{i}.png'), img)
         zc.move_arm('h', STACK_STEP_SIZE, speed=1000, is_relative=True)
 
     # Move stage back to focus position
