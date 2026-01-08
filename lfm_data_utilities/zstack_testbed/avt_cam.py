@@ -32,7 +32,7 @@ class AVTCam(QObject):
     new_img = pyqtSignal(np.ndarray)
     streaming = pyqtSignal(bool)
 
-    def __init__(self, preview : bool = False):
+    def __init__(self, preview: bool = False):
         super().__init__()
 
         sys.excepthook = self._camera_excepthook
@@ -41,18 +41,19 @@ class AVTCam(QObject):
         self.queue = queue.Queue(maxsize=1)
         self.show_preview = preview
 
-
     def open(self, camera_id: Optional[str] = None):
         self.vmb = VmbSystem.get_instance()
         self.vmb.__enter__()
-        
+
         if camera_id:
             try:
                 self.cam = self.vmb.get_camera_by_id(camera_id)
 
             except VmbCameraError:
                 # TODO test if this elegantly exits when camera is unplugged
-                logging.error('Failed to access AVT camera \'{}\'. Abort.'.format(camera_id))
+                logging.error(
+                    "Failed to access AVT camera '{}'. Abort.".format(camera_id)
+                )
                 raise IOError("Failed to access AVT camera")
 
         else:
@@ -60,11 +61,11 @@ class AVTCam(QObject):
             logging.info("AVT cameras found: {}".format(len(cams)))
 
             if not cams:
-                logging.error('No AVT cameras accessible. Abort.')
+                logging.error("No AVT cameras accessible. Abort.")
                 raise IOError("No AVT cameras accessible")
 
             self.cam = cams[0]
-        
+
         self.cam.__enter__()
 
         self._setup_camera()
@@ -76,7 +77,7 @@ class AVTCam(QObject):
                 self.cam.start_streaming(
                     handler=self._frame_handler,
                     # buffer_count=10,
-                    allocation_mode=AllocationMode.AnnounceFrame
+                    allocation_mode=AllocationMode.AnnounceFrame,
                 )
                 logging.debug("AVT camera started streaming")
                 self.streaming.emit(True)
@@ -114,7 +115,7 @@ class AVTCam(QObject):
             img = frame.as_numpy_ndarray()[:, :, 0].copy()
 
             if show:
-                cv2.imshow('Preview', img)
+                cv2.imshow("Preview", img)
 
             return img
 
@@ -145,7 +146,7 @@ class AVTCam(QObject):
             logging.debug("AVT camera GeV packet size adjusted")
 
         except (AttributeError, VmbCameraError) as e:
-            logging.debug(f'AVT camera GeV packet size adjustment aborted:\n{e}')
+            logging.debug(f"AVT camera GeV packet size adjustment aborted:\n{e}")
             pass
 
     def _frame_handler(self, cam: Camera, stream: Stream, frame: Frame):
@@ -153,7 +154,7 @@ class AVTCam(QObject):
             img = frame.as_numpy_ndarray()[:, :, 0].copy()
 
             if self.show_preview:
-                cv2.imshow('Preview', img)
+                cv2.imshow("Preview", img)
 
             self.new_img.emit(img)
 
@@ -173,24 +174,26 @@ class AVTCam(QObject):
 
         except AttributeError as e:
             pass
-            
+
         sys.__excepthook__(*exc_info)
 
     def get_exposure_time(self):
         return self.cam.ExposureTime.get(), self.cam.ExposureTime.get_increment()
 
-    def set_exposure_time(self, exposure_time: float) -> float:        
+    def set_exposure_time(self, exposure_time: float) -> float:
         cur_exposure_time = self.cam.ExposureTime.get()
         inc = self.cam.ExposureTime.get_increment()
 
-        new_exposure_time = cur_exposure_time + round((exposure_time - cur_exposure_time) / inc) * inc
+        new_exposure_time = (
+            cur_exposure_time + round((exposure_time - cur_exposure_time) / inc) * inc
+        )
 
         self.cam.ExposureTime.set(new_exposure_time)
 
         return new_exposure_time
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
         format="{asctime} - {levelname} - {message}",
@@ -204,7 +207,7 @@ if __name__ == '__main__':
     cam.set_exposure_time(5000)
     print(cam.get_exposure_time())
 
-    cv2.namedWindow('Preview', cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Preview", cv2.WINDOW_NORMAL)
 
     # Live preview until you press Enter
     while True:
@@ -212,7 +215,7 @@ if __name__ == '__main__':
         if img is None:
             continue
 
-        cv2.imshow('Preview', img)
+        cv2.imshow("Preview", img)
 
         # waitKey(1) gives OpenCV time to process GUI events
         key = cv2.waitKey(1) & 0xFF

@@ -1,14 +1,26 @@
 import logging
+from pathlib import Path
+from datetime import datetime
+import cv2
+
 from zaber_controller import ZaberCon
 from avt_cam import AVTCam
-import os
-from pathlib import Path
-import cv2
-from datetime import datetime
+
 
 # Function for opening up camera to allow for manual focus
 def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
-    """Open up camera to allow for manual focus"""
+    print("Position target in focus.\nClick Enter to take Z-stack centered at current position.")
+
+    # Setting up text formatting for displaying instructions
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1.3
+    thickness = 2
+    padding = 8  # px padding inside the background box
+    text_color = (255, 255, 255)  # white
+    box_alpha = 0.6  # transparency for background box (0.0 transparent, 1.0 opaque)
+
+    # Opening up preview window
+    cv2.namedWindow('Preview', cv2.WINDOW_NORMAL)
 
     # Set stage know mode to displacement for steps of 1
     for ax in zaber_stage.stage_alias.values():
@@ -18,17 +30,18 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
     zaber_stage.manual_drive(True)
 
     # Get exposure and exposure increment from camera
-    exposure, exp_inc = camera.get_exposure_time()
-    
+    exposure, cam_exp_inc = camera.get_exposure_time()
+    exp_inc = cam_exp_inc * 100
+
     # Stage movement step size
-    stage_step = 1.9 # um
+    stage_step = 1.9  # um
 
     while True:
         img = camera.snap()
         if img is None:
             continue
 
-                # ---- Prepare overlay texts ----
+        # ---- Prepare overlay texts ----
         exp_text = f"Exposure: {int(exposure)} us"
         step_text = f"Exp Step: {int(exp_inc)} us"
         stage_step_text = f"Stage Step: {stage_step:.2f}"
@@ -72,7 +85,7 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
         # show
         cv2.imshow('Preview', img)
         key = cv2.waitKey(1) & 0xFF
-	
+
         # ---- Exposure control ----
         if key == ord('+') or key == ord('='):  # treat '=' as shifted '+'
             exposure += exp_inc
@@ -85,7 +98,7 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
 
         elif key == ord('-'):
             exposure = max(1, exposure - exp_inc)
-            try:    
+            try:
                 exposure = camera.set_exposure_time(exposure)
                 print(f"Exposure set to {int(exposure)} us")
             except Exception:
@@ -97,7 +110,7 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
             print(f"Exposure increment set to {int(exp_inc)} us")
 
         elif key == ord('['):
-            exp_inc = max(1, int(exp_inc // 10))
+            exp_inc = max(cam_exp_inc, int(exp_inc // 10))
             print(f"Step set to {int(exp_inc)} us")
 
         # ---- Stage movement control (arrow keys) ----
@@ -115,8 +128,6 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
             except Exception as e:
                 print(f"Warning: Unable to move stage: {e}")
 
-                print(f"Warning: Unable to move stage: {e}")
-
         # ---- Stage step size control (up/down arrows) ----
         elif key == 82 or key == 0:  # Up arrow - increase step 10x
             stage_step = min(25000, stage_step * 10)
@@ -126,7 +137,7 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
             stage_step = max(0.19, stage_step / 10)
             print(f"Stage step set to {stage_step:.2f}")
 
-         # Enter advances / exits loop
+        # Enter advances / exits loop
         elif key in (13, 10):
             cv2.destroyAllWindows()
             zaber_stage.manual_drive(False)
@@ -139,65 +150,65 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
             zaber_stage.manual_drive(False)
             return False  # Exit script
 
-    # Catch any other keys and exit loop
+    # Catch to prevent infinite loop
     cv2.destroyAllWindows()
     zaber_stage.manual_drive(False)
     return True
 
-def main() -> None:
-	
-	BASE_DIR = '/home/pi/Desktop/zstacks' # Where zstack images folder is saved
-	NUM_FRAMES = 80 # Number of images taken in stack
-	STACK_STEP_SIZE = 0.19 #um needs to be in 0.19 increments
-	EST_FOCUS_POS = 24731 #um Moves stage to this position before manual focus prompt
-	START_EXPOSURE = 14265 #us
-	
-	logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-	
-	user_note = input("Enter folder name prefix. ")
-	
-	# Setting up image save directory
-	date_dir = datetime.now().strftime("%Y_%m_%d")
-	session_dir_name = user_note + '_' + datetime.now().strftime("%Y_%m_%d_%H_%M")
-	save_dir = Path(BASE_DIR) / date_dir / session_dir_name
-	save_dir.mkdir(parents=True, exist_ok=True)
-	
-	# Setting up stage
-	zc = ZaberCon()
-	print('Manual control disabled. Run script to completion to re-enable manual control.')
-	zc.manual_drive(False)
-	
-	# Setting up camera
-	cam = AVTCam(preview=True)
-	cam.open(camera_id="DEV_1AB22C018DE3")
-	
-	cam.set_exposure_time(START_EXPOSURE)
 
-	# Begin taking the z stack
-	zc.move_arm('h', EST_FOCUS_POS, speed=1000, is_relative=False) # move close to focus point
-	
-	if not live_focus(zaber_stage=zc, camera=cam):
-		print("Exiting script...")
-		cam.close()
-		zc.close()
-		return
-	
-	focus_pos = zc.get_pos('h')
-	
-	# Move stage to starting position
-	zc.move_arm('h', -NUM_FRAMES//2 * STACK_STEP_SIZE, speed=1000, is_relative=True)
-	
-	for i in range(NUM_FRAMES):
-		print(i, zc.get_pos('h'))
-		img = cam.snap()
-		cv2.imwrite(f'{save_dir}/{i}.png', img)
-		zc.move_arm('h', STACK_STEP_SIZE, speed=1000, is_relative=True)
-		
-	# Move stage back to focus position
-	zc.move_arm('h', focus_pos, speed=1000, is_relative=False)
-		
-	cam.close()
-	zc.close()
-	
+def main() -> None:
+    BASE_DIR = '/home/pi/Desktop/zstacks'  # Where zstack images folder is saved
+    NUM_FRAMES = 80  # Number of images taken in stack
+    STACK_STEP_SIZE = 0.19  # um needs to be in 0.19 increments
+    EST_FOCUS_POS = 24731  # um Moves stage to this position before manual focus prompt
+    START_EXPOSURE = 14265  # us
+
+    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+
+    experiment_note = input("Enter folder name prefix. ")  # Experiment note for the folder name
+
+    # Setting up stage
+    zc = ZaberCon()
+    print('Manual control disabled. Run script to completion to re-enable manual control.')
+    zc.manual_drive(False)
+
+    # Setting up camera
+    cam = AVTCam(preview=True)
+    cam.open(camera_id="DEV_1AB22C018DE3")
+    cam.set_exposure_time(START_EXPOSURE)
+
+    # Manual focus
+    zc.move_arm('h', EST_FOCUS_POS, speed=1000, is_relative=False)  # move close to focus point
+
+    if not live_focus(zaber_stage=zc, camera=cam):
+        print("Exiting script...")
+        cam.close()
+        zc.close()
+        return
+
+    # Setting up image save directory
+    date_dir = datetime.now().strftime("%Y_%m_%d")
+    session_dir_name = experiment_note + '_' + datetime.now().strftime("%Y_%m_%d_%H_%M")
+    save_dir = Path(BASE_DIR) / date_dir / session_dir_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    focus_pos = zc.get_pos('h')
+
+    # Move stage to starting position
+    zc.move_arm('h', -NUM_FRAMES // 2 * STACK_STEP_SIZE, speed=1000, is_relative=True)
+
+    for i in range(NUM_FRAMES):
+        print(i, zc.get_pos('h'))
+        img = cam.snap()
+        cv2.imwrite(f'{save_dir}/{i}.png', img)
+        zc.move_arm('h', STACK_STEP_SIZE, speed=1000, is_relative=True)
+
+    # Move stage back to focus position
+    zc.move_arm('h', focus_pos, speed=1000, is_relative=False)
+
+    cam.close()
+    zc.close()
+
+
 if __name__ == "__main__":
-	main()
+    main()
