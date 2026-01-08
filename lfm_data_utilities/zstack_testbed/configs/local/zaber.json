@@ -1,0 +1,29 @@
+{
+    "zaber_config": {
+        "port": "/dev/ttyACM0",
+        "axis": {
+            "x": 3,
+            "y": 2,
+            "h": 1,
+            "_description": "Axis number that each stage is connected to on the Zaber controller"
+        },
+        "home": {
+            "x": 0,
+            "y": 37500,
+            "h": 25000,
+            "_description": "The zero home position"
+        },
+        "max_position": {
+            "x": 300000,
+            "y": 75000,
+            "h": 25000,
+            "_description": "The max stage axis position in command data units"
+        },
+        "max_speed": {
+            "x": 46000,
+            "y": 46000,
+            "h": 10000,
+            "_description": "The speed of the stages for all general movements in command data units"
+        }
+    }
+}
