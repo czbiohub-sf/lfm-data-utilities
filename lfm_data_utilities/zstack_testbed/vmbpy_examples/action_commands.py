@@ -31,23 +31,23 @@ from vmbpy import *
 
 
 def print_preamble():
-    print('/////////////////////////////////////')
-    print('/// VmbPy Action Commands Example ///')
-    print('/////////////////////////////////////\n')
+    print("/////////////////////////////////////")
+    print("/// VmbPy Action Commands Example ///")
+    print("/////////////////////////////////////\n")
 
 
 def print_usage():
-    print('Usage:')
-    print('    python action_commands.py <camera_id>')
-    print('    python action_commands.py [/h] [-h]')
+    print("Usage:")
+    print("    python action_commands.py <camera_id>")
+    print("    python action_commands.py [/h] [-h]")
     print()
-    print('Parameters:')
-    print('    camera_id      ID of the camera to be used')
+    print("Parameters:")
+    print("    camera_id      ID of the camera to be used")
     print()
 
 
 def abort(reason: str, return_code: int = 1, usage: bool = False):
-    print(reason + '\n')
+    print(reason + "\n")
 
     if usage:
         print_usage()
@@ -61,7 +61,7 @@ def parse_args() -> Optional[str]:
 
     cam_id = ""
     for arg in args:
-        if arg in ('/h', '-h'):
+        if arg in ("/h", "-h"):
             print_usage()
             sys.exit(0)
         elif not cam_id:
@@ -74,7 +74,7 @@ def parse_args() -> Optional[str]:
 
 
 def get_input() -> str:
-    prompt = 'Press \'a\' to send action command. Press \'q\' to stop example. Enter:'
+    prompt = "Press 'a' to send action command. Press 'q' to stop example. Enter:"
     print(prompt, flush=True)
     return input()
 
@@ -86,19 +86,19 @@ def get_camera(camera_id: Optional[str]) -> Camera:
                 return vmb.get_camera_by_id(camera_id)
 
             except VmbCameraError:
-                abort('Failed to access camera \'{}\'. Abort.'.format(camera_id))
+                abort("Failed to access camera '{}'. Abort.".format(camera_id))
 
         else:
             cams = vmb.get_all_cameras()
             if not cams:
-                abort('No cameras accessible. Abort.')
+                abort("No cameras accessible. Abort.")
 
             return cams[0]
 
 
 def frame_handler(cam: Camera, stream: Stream, frame: Frame):
     if frame.get_status() == FrameStatus.Complete:
-        print('Frame(ID: {}) has been received.'.format(frame.get_id()), flush=True)
+        print("Frame(ID: {}) has been received.".format(frame.get_id()), flush=True)
 
     cam.queue_frame(frame)
 
@@ -127,14 +127,14 @@ def main():
                 pass
 
             try:
-                cam.TriggerSelector.set('FrameStart')
-                cam.TriggerSource.set('Action0')
-                cam.TriggerMode.set('On')
+                cam.TriggerSelector.set("FrameStart")
+                cam.TriggerSource.set("Action0")
+                cam.TriggerMode.set("On")
                 cam.ActionDeviceKey.set(device_key)
                 cam.ActionGroupKey.set(group_key)
                 cam.ActionGroupMask.set(group_mask)
             except (AttributeError, VmbFeatureError):
-                abort('The selected camera does not seem to support action commands')
+                abort("The selected camera does not seem to support action commands")
 
             # Enter streaming mode and wait for user input.
             try:
@@ -143,10 +143,10 @@ def main():
                 while True:
                     ch = get_input()
 
-                    if ch == 'q':
+                    if ch == "q":
                         break
 
-                    elif ch == 'a':
+                    elif ch == "a":
                         inter.ActionDeviceKey.set(device_key)
                         inter.ActionGroupKey.set(group_key)
                         inter.ActionGroupMask.set(group_mask)
@@ -156,5 +156,5 @@ def main():
                 cam.stop_streaming()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

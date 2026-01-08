@@ -6,7 +6,9 @@ from pathlib import Path
 
 from zaber_motion import Units
 from zaber_motion.ascii import Connection
-from zaber_motion.exceptions.connection_failed_exception import ConnectionFailedException
+from zaber_motion.exceptions.connection_failed_exception import (
+    ConnectionFailedException,
+)
 from zaber_motion.exceptions.movement_failed_exception import MovementFailedException
 from zaber_motion.exceptions.bad_data_exception import BadDataException
 # TODO standardize comments
@@ -16,25 +18,27 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject
 
 # TODO: Auto-populate well positions and well plate types
 
+
 class ZaberCon(QObject):
     """Communicate with Zaber devices over serial to move the stages
-        Note that this class is using the zaber_motion.binary library instead of 
-        zaber_motion.ascii because of older T-series devices that do not support the ASCII Protocol
+    Note that this class is using the zaber_motion.binary library instead of
+    zaber_motion.ascii because of older T-series devices that do not support the ASCII Protocol
     """
+
     error = pyqtSignal(str)
     manual = pyqtSignal(bool)
 
     update_h = pyqtSignal(float)
     update_x = pyqtSignal(float)
-    update_y = pyqtSignal(float)    
+    update_y = pyqtSignal(float)
 
     update = {
-        'h': update_h,
-        'x': update_x,
-        'y': update_y,
+        "h": update_h,
+        "x": update_x,
+        "y": update_y,
     }
 
-    def __init__(self, env='prod'):
+    def __init__(self, env="prod"):
         """Setup the serial connection with the zaber device
 
         :param config: Path to the config folder containing
@@ -45,11 +49,11 @@ class ZaberCon(QObject):
         """
 
         super().__init__()
-        
+
         # Load .json config
-        with open(self.get_config_path(), 'r') as f:
+        with open(self.get_config_path(), "r") as f:
             zc_cfg = json.load(f)
-        self.config = zc_cfg['zaber_config']
+        self.config = zc_cfg["zaber_config"]
 
         self.zaber = None
         self.stage_alias = {}
@@ -57,36 +61,38 @@ class ZaberCon(QObject):
         self._connect()
 
     def get_config_path(self):
-        file = Path(__file__).parent / 'configs' / 'local' / 'zaber.json'
+        file = Path(__file__).parent / "configs" / "local" / "zaber.json"
         if file.exists():
             return file
-        
-        raise(FileNotFoundError(
-            f"Missing local (untracked in Git) zaber.json config file in {file.parent}. "
-            "Copy default version (tracked in Git) from configs\\default\\"
-        ))
+
+        raise (
+            FileNotFoundError(
+                f"Missing local (untracked in Git) zaber.json config file in {file.parent}. "
+                "Copy default version (tracked in Git) from configs\\default\\"
+            )
+        )
 
     def _connect(self):
         """Create a serial communication with the zaber devices
 
         :raises ConnectionFailedException: Logs critical if the connection fails
         """
-        
+
         try:
-            if self.env == 'prod':
-                logging.info('Establishing connection with Zaber devices')
-                self.zaber = Connection.open_serial_port(self.config['port'])
-                logging.info('Zaber devices successfully connected')
+            if self.env == "prod":
+                logging.info("Establishing connection with Zaber devices")
+                self.zaber = Connection.open_serial_port(self.config["port"])
+                logging.info("Zaber devices successfully connected")
 
                 self.controller = self.zaber.detect_devices()[0]
                 # Set the names and velocities for each axis
                 self._set_axis()
 
                 self.home_all()
-            elif self.env == 'dev':
-                logging.info('Establishing connection with mock Zaber devices')
-                self.zaber = Zaber(self.config['port'])
-                logging.info('Zaber devices successfully connected')
+            elif self.env == "dev":
+                logging.info("Establishing connection with mock Zaber devices")
+                self.zaber = Zaber(self.config["port"])
+                logging.info("Zaber devices successfully connected")
 
                 self.controller = self.zaber.detect_devices()[0]
                 # Set the names for each axis
@@ -104,26 +110,30 @@ class ZaberCon(QObject):
         :type stage: tuple of zaber device objects
         """
 
-        for alias in ['h']:
+        for alias in ["h"]:
             try:
-                stage = self.controller.get_axis(int(self.config['axis'][alias]))
+                stage = self.controller.get_axis(int(self.config["axis"][alias]))
             except ValueError:
                 # Ignore _description entry in .json
                 break
             name = stage.identity.peripheral_name
 
             self.stage_alias[alias] = stage
-            self.stage_alias[alias].settings.set("maxspeed", self.config['max_speed'][alias], Units.VELOCITY_MICROMETRES_PER_SECOND)
+            self.stage_alias[alias].settings.set(
+                "maxspeed",
+                self.config["max_speed"][alias],
+                Units.VELOCITY_MICROMETRES_PER_SECOND,
+            )
 
-            logging.info(f'Set stage {name} as {alias} axis')
+            logging.info(f"Set stage {name} as {alias} axis")
 
-        logging.info('Done setting all axes')
+        logging.info("Done setting all axes")
 
     def home_all(self):
         """Home either all or a subset of the devices
 
         The devices include the x, y, p stages. The order in which
-        it homes is dependent on the list passed. The order is important 
+        it homes is dependent on the list passed. The order is important
         to ensure the device does not crash while homing.
 
         :param arm: list of the devices to home in the desired sequence,
@@ -133,20 +143,20 @@ class ZaberCon(QObject):
         """
 
         wait = True
-        for axis in ['h']:
+        for axis in ["h"]:
             try:
                 self.move_arm(axis, wait=wait)
-                wait = False # only wait for h axis
+                wait = False  # only wait for h axis
             except:
                 raise
-    
+
     def move_arm(
         self,
         arm: str,
-        dist: Optional[float]=None,
-        is_relative: bool=False,
-        speed: Optional[int]=None,
-        wait: bool=True,
+        dist: Optional[float] = None,
+        is_relative: bool = False,
+        speed: Optional[int] = None,
+        wait: bool = True,
     ):
         """Move any arm 'x','y','h' by a fixed amount
 
@@ -165,15 +175,17 @@ class ZaberCon(QObject):
         name = device_arm.identity.peripheral_name
 
         if speed is None:
-            speed = self.config['max_speed'][arm]
-        if speed > self.config['max_speed'][arm]:
-            logging.warning(f"Capping '{arm}' speed at {self.config['max_speed'][arm]:.2f} um/s (requested speed = {speed:.2f} um/s) ")
-            speed = self.config['max_speed'][arm]
+            speed = self.config["max_speed"][arm]
+        if speed > self.config["max_speed"][arm]:
+            logging.warning(
+                f"Capping '{arm}' speed at {self.config['max_speed'][arm]:.2f} um/s (requested speed = {speed:.2f} um/s) "
+            )
+            speed = self.config["max_speed"][arm]
 
         try:
             if dist is None:
                 logging.debug(f"Homing '{arm}' arm ({name})")
-                pos = self.config['home'][arm]
+                pos = self.config["home"][arm]
                 device_arm.move_absolute(
                     pos,
                     Units.LENGTH_MICROMETRES,
@@ -214,19 +226,21 @@ class ZaberCon(QObject):
             logging.error(msg)
             self.error.emit(msg)
         except ConnectionFailedException:
-            msg = 'Zaber connection failed'
+            msg = "Zaber connection failed"
             logging.error(msg)
             self.error.emit(msg)
 
     def manual_drive(self, enabled: bool):
         for ax in self.stage_alias.values():
-            ax.settings.set('knob.enable', enabled) 
-        logging.info(("Enabled" if enabled else "Disabled") + " manual drive on all axes")
+            ax.settings.set("knob.enable", enabled)
+        logging.info(
+            ("Enabled" if enabled else "Disabled") + " manual drive on all axes"
+        )
 
         self.manual.emit(enabled)
 
     def get_signal(self, arm: str) -> pyqtSignal:
-        return getattr(self, f'update_{arm}')
+        return getattr(self, f"update_{arm}")
 
     def get_pos(self, arm: str) -> float:
         """returns the position of the zaber stage
@@ -236,7 +250,7 @@ class ZaberCon(QObject):
         :return: The stage location position in um
         :rtype: float
         """
-        
+
         device_arm = self.stage_alias[arm]
         name = device_arm.identity.peripheral_name
 
@@ -245,26 +259,27 @@ class ZaberCon(QObject):
             self.get_signal(arm).emit(curr_pos)
             return curr_pos
         except ConnectionFailedException:
-            logging.critical('Zaber connection failed')
+            logging.critical("Zaber connection failed")
 
     def close(self):
-        """Closes the serial Connection
-        """
+        """Closes the serial Connection"""
 
         # Re-enable manual control
         self.manual_drive(True)
 
         self.zaber.close()
-        logging.info('Closed Zaber device connection')
+        logging.info("Closed Zaber device connection")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format="%(levelname)s - %(message)s")
 
     zc = ZaberCon()
     # zc.move_arm('h', 2, speed=100000.0, is_relative=True)
 
-    print('Manual control disabled. Run script to completion to re-enable manual control.')
+    print(
+        "Manual control disabled. Run script to completion to re-enable manual control."
+    )
     zc.manual_drive(False)
 
     # input("Click enter to move Z axis via software control")

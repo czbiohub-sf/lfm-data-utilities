@@ -2,23 +2,13 @@ import logging
 from zaber_controller import ZaberCon
 from avt_cam import AVTCam
 import os
+from pathlib import Path
 import cv2
 from datetime import datetime
 
 # Function for opening up camera to allow for manual focus
-def live_focus(zaber_stage, camera):
-    print("Position target in focus.\nClick Enter to take Z-stack centered at current position.")
-
-    # Setting up text formatting for displaying instructions
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1.3
-    thickness = 2
-    padding = 8  # px padding inside the background box
-    text_color = (255, 255, 255)  # white
-    box_alpha = 0.6  # transparency for background box (0.0 transparent, 1.0 opaque)
-
-    # Opening up preview window
-    cv2.namedWindow('Preview', cv2.WINDOW_NORMAL)
+def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
+    """Open up camera to allow for manual focus"""
 
     # Set stage know mode to displacement for steps of 1
     for ax in zaber_stage.stage_alias.values():
@@ -154,8 +144,7 @@ def live_focus(zaber_stage, camera):
     zaber_stage.manual_drive(False)
     return True
 
-
-def main():
+def main() -> None:
 	
 	BASE_DIR = '/home/pi/Desktop/zstacks' # Where zstack images folder is saved
 	NUM_FRAMES = 80 # Number of images taken in stack
@@ -170,8 +159,8 @@ def main():
 	# Setting up image save directory
 	date_dir = datetime.now().strftime("%Y_%m_%d")
 	session_dir_name = user_note + '_' + datetime.now().strftime("%Y_%m_%d_%H_%M")
-	save_dir = os.path.join(BASE_DIR, date_dir, session_dir_name)
-	os.makedirs(save_dir, exist_ok=True)
+	save_dir = Path(BASE_DIR) / date_dir / session_dir_name
+	save_dir.mkdir(parents=True, exist_ok=True)
 	
 	# Setting up stage
 	zc = ZaberCon()

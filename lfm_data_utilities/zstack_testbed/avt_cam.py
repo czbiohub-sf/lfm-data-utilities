@@ -104,7 +104,7 @@ class AVTCam(QObject):
         except AttributeError as e:
             pass
 
-    def snap(self, show=False):
+    def snap(self, show: bool = False) -> Optional[np.ndarray]:
         try:
             frame = self.cam.get_frame()
         except AttributeError as e:
@@ -173,15 +173,13 @@ class AVTCam(QObject):
 
         except AttributeError as e:
             pass
-        except AttributeError as e:
-            pass        
             
         sys.__excepthook__(*exc_info)
 
     def get_exposure_time(self):
         return self.cam.ExposureTime.get(), self.cam.ExposureTime.get_increment()
 
-    def set_exposure_time(self, exposure_time: float):
+    def set_exposure_time(self, exposure_time: float) -> float:        
         cur_exposure_time = self.cam.ExposureTime.get()
         inc = self.cam.ExposureTime.get_increment()
 
