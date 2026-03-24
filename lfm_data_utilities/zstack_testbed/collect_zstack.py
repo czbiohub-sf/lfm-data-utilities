@@ -54,8 +54,8 @@ def live_focus(zaber_stage: ZaberCon, camera: AVTCam) -> bool:
             "Controls:",
             "+ / -   : increase / decrease exposure",
             "[ / ]   : decrease / increase exp step",
-            " Left / Right : move stage left / right",
-            " Up / Down : stage step x10 / x0.1",
+            "Left / Right : move stage left / right",
+            "Up / Down : stage step x10 / x0.1",
             "Enter   : take Z-stack (advance)",
             "Esc     : cancel / exit"
         ]
