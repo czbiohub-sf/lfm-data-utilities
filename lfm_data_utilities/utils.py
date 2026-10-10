@@ -198,7 +198,10 @@ def make_video(
     starts = range(0, num_frames, step)
 
     def read_block(s):
-        block = np.ascontiguousarray(np.moveaxis(zf[:, :, s : min(s + step, num_frames)], 2, 0))
+        # Per-frame reads: slicing many frames along the last axis is a slow strided copy
+        block = np.empty((min(step, num_frames - s), height, width), dtype=np.uint8)
+        for j in range(len(block)):
+            block[j] = zf[:, :, s + j]
         if add_im_counter_text:
             for j, img in enumerate(block):
                 cv2.putText(img, f"{s + j}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255 if contrast_boost else 0, 1)
