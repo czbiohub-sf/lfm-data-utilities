@@ -1,4 +1,6 @@
 import traceback
+import subprocess
+import sys
 import multiprocessing as mp
 import time
 import git
@@ -153,75 +155,92 @@ def get_rms(data: List[float]):
 
 def make_video(
     dataset: Dataset,
-    save_dir: PathLike,
     ds_factor: int = 1,
-    ssaf1_model_name: Optional[str] = "",
-    ssaf_vals_1: Optional[list] = None,
-    ssaf2_model_name: Optional[str] = "",
-    ssaf_vals_2: Optional[list] = None,
     add_im_counter_text: bool = True,
+    contrast_boost: bool = False,
 ):
+    """Pipe raw frames to ffmpeg (lossless FFV1), saved next to the zarr file."""
     zf = dataset.zarr_file
     per_img_csv = dataset.per_img_metadata
 
     # Get duration in seconds
     start = float(per_img_csv["vals"]["timestamp"][0])
     end = float(per_img_csv["vals"]["timestamp"][-1])
-    duration = end - start
     num_frames = zf.initialized
-    framerate = num_frames / duration
-    height, width = zf[:, :, 0].shape
+    framerate = num_frames / (end - start)
+    height, width = zf.shape[:2]
 
-    save_dir.mkdir(exist_ok=True)
-    output_path = Path(save_dir) / Path(
-        dataset.dp.zarr_path.stem + f"ds_{ds_factor}.avi"
+    zarr_path = Path(dataset.dp.zarr_path)
+    suffix = (f"ds_{ds_factor}" if ds_factor != 1 else "") + (
+        "-contrast-boost" if contrast_boost else ""
     )
+    output_path = zarr_path.with_name(f"{zarr_path.stem}{suffix}.avi")
 
-    writer = cv2.VideoWriter(
-        f"{output_path}",
-        fourcc=cv2.VideoWriter_fourcc(*"FFV1"),
-        fps=framerate,
-        frameSize=(width // ds_factor, height // ds_factor),
-        isColor=False,
-    )
+    filters = []
+    if ds_factor != 1:
+        filters.append(f"scale={width // ds_factor}:{height // ds_factor}")
+    if contrast_boost:
+        # Map [190, 255] -> [0, 255]
+        filters.append("lut=y=clip((val-190)*255/65\\,0\\,255)")
+    cmd = [
+        "ffmpeg", "-hide_banner", "-loglevel", "warning", "-nostdin", "-y",
+        "-f", "rawvideo", "-pixel_format", "gray", "-video_size", f"{width}x{height}",
+        "-framerate", str(framerate), "-i", "pipe:0", "-an",
+    ]
+    if filters:
+        cmd += ["-vf", ",".join(filters)]
+    cmd += [
+        "-c:v", "ffv1", "-level", "3", "-coder", "0", "-context", "0",
+        "-slicecrc", "0", "-threads", "0", "-pix_fmt", "gray", "-f", "avi", str(output_path),
+    ]
 
-    for i, _ in enumerate(tqdm(range(num_frames))):
-        img = cv2.resize(zf[:, :, i], (width // ds_factor, height // ds_factor))
+    step = zf.chunks[2] * max(1, 64 // zf.chunks[2])
+    starts = range(0, num_frames, step)
 
+    def read_block(s):
+        block = np.ascontiguousarray(np.moveaxis(zf[:, :, s : min(s + step, num_frames)], 2, 0))
         if add_im_counter_text:
-            img = cv2.putText(
-                img,
-                f"{i}",
-                (50 // ds_factor, 50 // ds_factor),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1 // ds_factor,
-                (0, 0, 0),
-                1,
-            )
+            for j, img in enumerate(block):
+                cv2.putText(img, f"{s + j}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255 if contrast_boost else 0, 1)
+        return block
 
-            if ssaf_vals_1 is not None and i > 0:
-                img = cv2.putText(
-                    img,
-                    f"{ssaf1_model_name}: {ssaf_vals_1[i-1]:.1f}",
-                    (50 // ds_factor, 80 // ds_factor),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1 // ds_factor,
-                    (225, 0, 0),
-                    1,
-                )
-            if ssaf_vals_2 is not None and i > 0:
-                img = cv2.putText(
-                    img,
-                    f"{ssaf2_model_name}: {ssaf_vals_2[i-1]:.1f}",
-                    (50 // ds_factor, 110 // ds_factor),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1 // ds_factor,
-                    (225, 0, 0),
-                    1,
-                )
+    last_progress = 0.0
 
-        writer.write(img)
-    writer.release()
+    def show_progress(done, final=False):
+        nonlocal last_progress
+        now = time.monotonic()
+        if not final and done and now - last_progress < 0.1:
+            return
+        last_progress = now
+        ratio = done / num_frames
+        filled = round(24 * ratio)
+        bar = "#" * filled + "-" * (24 - filled)
+        print(f"\r[{bar}] {ratio:6.2%}  {done}/{num_frames}", end="\n" if final else "", file=sys.stderr, flush=True)
+
+    print(output_path, file=sys.stderr)
+    process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    show_progress(0)
+    try:
+        with ThreadPoolExecutor(max_workers=4) as reader:
+            # Bounded prefetch: keep a few blocks in flight ahead of ffmpeg
+            futures = [reader.submit(read_block, s) for s in starts[:4]]
+            for i, s in enumerate(starts):
+                block = futures[i].result()
+                futures[i] = None
+                if i + 4 < len(starts):
+                    futures.append(reader.submit(read_block, starts[i + 4]))
+                process.stdin.write(block.data)
+                show_progress(min(s + step, num_frames))
+        process.stdin.close()
+    except BaseException:
+        print(file=sys.stderr)
+        process.kill()
+        process.wait()
+        raise
+    if process.wait():
+        print(file=sys.stderr)
+        raise RuntimeError(f"ffmpeg failed for {output_path}")
+    show_progress(num_frames, final=True)
 
 
 def is_not_hidden_path(path: PathLike) -> bool:
